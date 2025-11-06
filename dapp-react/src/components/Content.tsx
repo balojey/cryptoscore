@@ -3,6 +3,7 @@ import { useMemo, useState, useCallback } from 'react'
 import { useAccount, useChainId, useChains } from 'wagmi'
 import { shortenAddress } from '../utils/formatters'
 import Balance from './Balance'
+import { Markets } from './Markets' // Import Markets component
 
 export default function Content() {
   // Account and contract hooks
@@ -51,71 +52,75 @@ export default function Content() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-            {/* User Info Panel */}
-            <div className="card bg-white shadow-lg border border-gray-200 h-fit lg:h-full">
-                <div className="card-body">
-                <h2 className="card-title text-black mb-4 flex items-center">
-                    <span className="icon-[mdi--account-circle] w-5 h-5 mr-2" />
-                    Account Info
-                </h2>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+          {/* User Info Panel (Left Side) */}
+          <div className="card bg-white shadow-lg border border-gray-200 h-fit lg:col-span-1">
+            <div className="card-body">
+              <h2 className="card-title text-black mb-4 flex items-center">
+                <span className="icon-[mdi--account-circle] w-5 h-5 mr-2" />
+                Account Info
+              </h2>
 
-                {/* Wallet Address */}
-                <div className="mb-4">
-                    <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-600">Wallet Address</span>
-                    <button
-                        type="button"
-                        className="btn btn-ghost btn-xs hover:-translate-y-px transition-transform"
-                        disabled={!address}
-                        onClick={copyAddress}
-                    >
-                        <span className="icon-[mdi--content-copy] w-3 h-3" />
-                    </button>
-                    </div>
-                    <div className="font-mono text-sm bg-gray-50 p-2 rounded border">
-                    {displayAddress}
-                    </div>
+              {/* Wallet Address */}
+              <div className="mb-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-gray-600">Wallet Address</span>
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-xs hover:-translate-y-px transition-transform"
+                    disabled={!address}
+                    onClick={copyAddress}
+                  >
+                    <span className="icon-[mdi--content-copy] w-3 h-3" />
+                  </button>
+                </div>
+                <div className="font-mono text-sm bg-gray-50 p-2 rounded border">
+                  {displayAddress}
+                </div>
+              </div>
+
+              {/* Network & Balance Grid */}
+              <div className="grid grid-cols-2 gap-4">
+                {/* Network Info */}
+                <div>
+                  <div className="text-sm font-medium text-gray-600 mb-2">
+                    Network
+                  </div>
+                  <div className="text-sm text-gray-800">
+                    {connectedChain.name}
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    Chain ID: {' '}
+                    {connectedChain.id}
+                  </div>
                 </div>
 
-                {/* Network & Balance Grid */}
-                <div className="grid grid-cols-2 gap-4">
-                    {/* Network Info */}
-                    <div>
-                    <div className="text-sm font-medium text-gray-600 mb-2">
-                        Network
-                    </div>
-                    <div className="text-sm text-gray-800">
-                        {connectedChain.name}
-                    </div>
-                    <div className="text-xs text-gray-500 mt-1">
-                        Chain ID:
-                        {' '}
-                        {connectedChain.id}
-                    </div>
-                    </div>
-
-                    {/* Balance Info */}
-                    <div>
-                    <div className="text-sm font-medium text-gray-600 mb-2">
-                        Balance
-                    </div>
-                    <div className="flex items-center space-x-1 mb-1">
-                        {address ? <Balance address={address} /> : <span className="font-mono font-semibold">0 PAS</span>}
-                    </div>
-                    <a
-                        href="https://faucet.polkadot.io/?parachain=1111"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-blue-600 hover:text-blue-800 flex items-center space-x-1"
-                    >
-                        <span className="icon-[mdi--water] w-3 h-3" />
-                        <span>Get Testnet PAS</span>
-                    </a>
-                    </div>
+                {/* Balance Info */}
+                <div>
+                  <div className="text-sm font-medium text-gray-600 mb-2">
+                    Balance
+                  </div>
+                  <div className="flex items-center space-x-1 mb-1">
+                    {address ? <Balance address={address} /> : <span className="font-mono font-semibold">0 PAS</span>}
+                  </div>
+                  <a
+                    href="https://faucet.polkadot.io/?parachain=1111"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-blue-600 hover:text-blue-800 flex items-center space-x-1"
+                  >
+                    <span className="icon-[mdi--water] w-3 h-3" />
+                    <span>Get Testnet PAS</span>
+                  </a>
                 </div>
-                </div>
+              </div>
             </div>
+          </div>
+
+          {/* Markets Component (Right Side) */}
+          <div className="lg:col-span-2">
+            <Markets />
+          </div>
         </div>
       </div>
 
