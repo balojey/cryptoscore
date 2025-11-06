@@ -5,12 +5,11 @@ export default function Header() {
     <div className="navbar bg-base-100 border-b border-gray-200">
       <div className="container mx-auto flex items-center">
         <div className="navbar-start">
-          <a href="https://polkadot.com" target="_blank" rel="noopener noreferrer" className="flex items-center">
-            <span className="icon-[token-branded--polkadot] text-2xl" />
+          <div className="flex items-center">
             <span className="text-xl font-bold font-mono text-black tracking-wide ml-1">
-              Dapp
+              CryptoScore
             </span>
-          </a>
+          </div>
         </div>
         <div className="navbar-end">
           <Connect />
