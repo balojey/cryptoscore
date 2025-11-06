@@ -1,5 +1,5 @@
 import type { Chain } from 'wagmi/chains'
-import { useMemo, useState, useCallback } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useAccount, useChainId, useChains } from 'wagmi'
 import { shortenAddress } from '../utils/formatters'
 import Balance from './Balance'
@@ -90,7 +90,9 @@ export default function Content() {
                     {connectedChain.name}
                   </div>
                   <div className="text-xs text-gray-500 mt-1">
-                    Chain ID: {' '}
+                    Chain ID:
+                    {' '}
+                    {' '}
                     {connectedChain.id}
                   </div>
                 </div>
