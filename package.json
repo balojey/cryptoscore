@@ -1,0 +1,24 @@
+{
+  "name": "cryptoscore",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A comprehensive full-stack Polkadot development template featuring Hardhat for Solidity smart contract development and modern frontend applications with Wagmi integration.",
+  "workspaces": [
+    "hardhat",
+    "dapp-react"
+  ],
+  "scripts": {
+    "compile": "npm run compile -w hardhat",
+    "lint": "npm run lint --workspaces --if-present",
+    "lint:hardhat": "npm run lint -w hardhat",
+    "lint:dapp-react": "npm run lint -w dapp-react",
+    "build:dapp-react": "npm run build -w dapp-react",
+    "dev:dapp-react": "npm run dev -w dapp-react"
+  },
+  "overrides": {
+    "lru-cache": "^11.1.0"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT"
+}
