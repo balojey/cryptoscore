@@ -14,6 +14,7 @@ const COMPETITIONS = [
 export const Markets = () => {
   const [matches, setMatches] = useState([]);
   const [competition, setCompetition] = useState('PL');
+  const [dateFilter, setDateFilter] = useState('today');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -21,8 +22,28 @@ export const Markets = () => {
     const fetchMatches = async () => {
       setLoading(true);
       setError(null);
+
+      const today = new Date();
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const nextWeek = new Date(today);
+      nextWeek.setDate(nextWeek.getDate() + 7);
+
+      const formatDate = (date: Date) => date.toISOString().split('T')[0];
+
+      let dateFrom = '';
+      let dateTo = '';
+
+      if (dateFilter === 'today') {
+        dateFrom = formatDate(today);
+        dateTo = formatDate(tomorrow);
+      } else if (dateFilter === 'next7days') {
+        dateFrom = formatDate(today);
+        dateTo = formatDate(nextWeek);
+      }
+
       try {
-        const response = await fetch(`https://corsproxy.io/?https://api.football-data.org/v4/competitions/${competition}/matches?status=SCHEDULED`, {
+        const response = await fetch(`https://corsproxy.io/?https://api.football-data.org/v4/competitions/${competition}/matches?status=SCHEDULED&dateFrom=${dateFrom}&dateTo=${dateTo}`, {
           headers: {
             'X-Auth-Token': import.meta.env.VITE_FOOTBALL_DATA_API_KEY, // Replace with your actual API key
           },
@@ -41,7 +62,7 @@ export const Markets = () => {
     };
 
     fetchMatches();
-  }, [competition]);
+  }, [competition, dateFilter]);
 
   return (
     <div>
@@ -55,6 +76,20 @@ export const Markets = () => {
             {comp.name}
           </button>
         ))}
+      </div>
+      <div className="date-filter">
+        <button
+            className={dateFilter === 'today' ? 'active' : ''}
+            onClick={() => setDateFilter('today')}
+        >
+            Today
+        </button>
+        <button
+            className={dateFilter === 'next7days' ? 'active' : ''}
+            onClick={() => setDateFilter('next7days')}
+        >
+            Next 7 days
+        </button>
       </div>
       {loading && <p>Loading matches...</p>}
       {error && <p>{error}</p>}
