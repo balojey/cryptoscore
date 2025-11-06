@@ -1,7 +1,15 @@
 import { useState, useEffect } from 'react';
 import { Market } from './Market';
 
-const COMPETITIONS = ['PL', 'CL', 'EL', 'BL1', 'SA', 'PD', 'FL1'];
+const COMPETITIONS = [
+  { code: 'PL', name: 'Premier League' },
+  { code: 'CL', name: 'Champions League' },
+  { code: 'EL', name: 'Europa League' },
+  { code: 'BL1', name: 'Bundesliga' },
+  { code: 'SA', name: 'Serie A' },
+  { code: 'PD', name: 'La Liga' },
+  { code: 'FL1', name: 'Ligue 1' },
+];
 
 export const Markets = () => {
   const [matches, setMatches] = useState([]);
@@ -37,10 +45,14 @@ export const Markets = () => {
 
   return (
     <div>
-      <div>
+      <div className="competition-filter">
         {COMPETITIONS.map((comp) => (
-          <button key={comp} onClick={() => setCompetition(comp)}>
-            {comp}
+          <button
+            key={comp.code}
+            className={competition === comp.code ? 'active' : ''}
+            onClick={() => setCompetition(comp.code)}
+          >
+            {comp.name}
           </button>
         ))}
       </div>

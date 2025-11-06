@@ -15,3 +15,37 @@
   --radius-box: 0rem;
   --depth: 0;
 }
+
+.competition-filter {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.competition-filter button {
+  background-color: transparent;
+  border: 1px solid #ccc;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.competition-filter button:first-child {
+  border-top-left-radius: 0.5rem;
+  border-bottom-left-radius: 0.5rem;
+}
+
+.competition-filter button:last-child {
+  border-top-right-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
+}
+
+.competition-filter button.active {
+  background-color: #333;
+  color: white;
+  border-color: #333;
+}
+
+.competition-filter button:not(:last-child) {
+  border-right: none;
+}
