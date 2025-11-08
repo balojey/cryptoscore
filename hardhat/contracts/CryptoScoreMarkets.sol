@@ -128,6 +128,27 @@ contract CryptoScoreMarkets {
         return false;
     }
 
+        /**
+     * @notice Checks whether a given address has already created a market for a match.
+     * @param _matchId The match ID from the football-data.org API
+     * @param _creator The address of the user to check
+     * @return exists True if the user has already created a market for this match
+     */
+    function hasCreatedMarket(uint256 _matchId, address _creator)
+        external
+        view
+        returns (bool exists)
+    {
+        MatchMarket[] storage arr = marketsByMatchId[_matchId];
+        for (uint256 i = 0; i < arr.length; i++) {
+            if (arr[i].creator == _creator) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
     /* -------------------------------------------------------------------
        Core Functions
        ------------------------------------------------------------------- */
