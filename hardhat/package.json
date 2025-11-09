@@ -9,7 +9,7 @@
   "scripts": {
     "lint": "eslint . --fix",
     "compile": "hardhat compile",
-    "deploy": "hardhat ignition deploy ./ignition/modules/CryptoScoreMarketsModule.ts --network passetHub",
+    "deploy": "hardhat ignition deploy ./ignition/modules/CryptoScoreFactoryModule.ts --network passetHub",
     "interact": "hardhat run scripts/interact-cryptoscoremarkets.ts --network passetHub",
     "accounts": "hardhat run scripts/show-accounts.ts --network passetHub"
   },
