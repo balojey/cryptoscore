@@ -1,85 +1,95 @@
-import type { CryptoScoreFactory, CryptoScoreMarket } from '../typechain-types'
+import type { CryptoScoreFactory, CryptoScoreMarket, CryptoScoreDashboard } from '../typechain-types'
 import hre from 'hardhat'
 import process from 'node:process'
 
 async function main() {
-  // Put your deployed CryptoScoreFactory address here
-  const factoryAddress = '0xc775bF567D67018dfFac4E89a7Cf10f0EDd0Be93'
+  try {
+    const [signer] = await hre.ethers.getSigners()
 
-  // Attach to the deployed CryptoScoreFactory
-  const Factory = await hre.ethers.getContractFactory('CryptoScoreFactory')
-  const code = await hre.ethers.provider.getCode("0xc775bF567D67018dfFac4E89a7Cf10f0EDd0Be93")
-  console.log(code)
-  const factory = Factory.attach(factoryAddress) as CryptoScoreFactory
+    // === 0. Set deployed addresses ===
+    const factoryAddress = '0xbeC6419cD931e29ef41157fe24C6928a0C952f0b'
+    const dashboardAddress = '0x55027d3dBBcEA0327eF73eFd74ba0Af42A13A966'
 
-  console.log('CryptoScoreFactory attached at:', factoryAddress)
+    // === 1. Attach to deployed contracts ===
+    const Factory = await hre.ethers.getContractFactory('CryptoScoreFactory')
+    const code = await hre.ethers.provider.getCode(factoryAddress)
+    console.log(code)
+    const factory = Factory.attach(factoryAddress) as CryptoScoreFactory
+    console.log('CryptoScoreFactory attached at:', factoryAddress)
 
-  // Example: Create a new market
-  console.log('\n=== 1. Creating a new market ===')
-  const entryFee = hre.ethers.parseEther('0.01') // 0.01 ETH as entry fee
-  const matchId = 12345 // Example match ID
+    const Dashboard = await hre.ethers.getContractFactory('CryptoScoreDashboard')
+    const dashboardCode = await hre.ethers.provider.getCode(dashboardAddress)
+    console.log(dashboardCode)
+    const dashboard = Dashboard.attach(dashboardAddress) as CryptoScoreDashboard
+    console.log('CryptoScoreDashboard attached at:', dashboardAddress)
 
-  let tx = await factory.createMarket(matchId, entryFee)
-  const receipt = await tx.wait()
-  console.log('✓ Market created for matchId', matchId)
+    // === 2. Create a new market ===
+    console.log('\n=== 2. Creating a new market ===')
+    const entryFee = hre.ethers.parseEther('0.01') // 0.01 ETH
+    const matchId = 12345
+    const isPublic = false // Example: private market
+    const startTime = Math.floor(Date.now() / 1000) + 3600 // starts in 1 hour
 
-  // Fetch all markets for this match
-  console.log('\n=== 2. Fetching markets for match ===')
-  const markets = await factory.getMarkets(matchId)
-  markets.forEach((m, i) => {
-    console.log(`[${i}] Address: ${m.marketAddress}, Creator: ${m.creator}, EntryFee: ${hre.ethers.formatEther(m.entryFee)} ETH`)
-  })
+    const txCreate = await factory.createMarket(matchId, entryFee, isPublic, startTime)
+    await txCreate.wait()
+    console.log('✓ Market created for matchId', matchId)
 
-  // Fetch paginated dashboard globally
-  console.log('\n=== 3. Global market dashboard ===')
-  const dashboardGlobal = await factory.getMarketsDashboardPaginated(0, 10)
-  dashboardGlobal.forEach((m, i) => {
-    console.log(
-      `[${i}] Market: ${m.marketAddress}, Match: ${m.matchId}, Resolved: ${m.resolved}, Winner: ${m.winner}, Participants: ${m.participantsCount}`
-    )
-  })
+    // === 3. Fetch all markets for this match ===
+    console.log('\n=== 3. Fetching markets for match ===')
+    const markets = await factory.getMarkets(matchId)
+    for (let i = 0; i < markets.length; i++) {
+      const info = await factory.getMarketInfo(markets[i])
+      console.log(`[${i}] Address: ${info.marketAddress}, Creator: ${info.creator}, EntryFee: ${hre.ethers.formatEther(info.entryFee)} ETH, Public: ${info.isPublic}, StartTime: ${info.startTime}`)
+    }
 
-  // Fetch paginated dashboard for user (createdOnly = true)
-  const [signer] = await hre.ethers.getSigners()
-  const dashboardUserCreated = await factory.getUserMarketsDashboardPaginated(signer.address, 0, 10, true)
-  console.log('\n=== 4. User-created markets ===')
-  dashboardUserCreated.forEach((m, i) => {
-    console.log(
-      `[${i}] Market: ${m.marketAddress}, Match: ${m.matchId}, Resolved: ${m.resolved}, Winner: ${m.winner}, Participants: ${m.participantsCount}`
-    )
-  })
+    // === 4. Fetch global dashboard from Dashboard contract ===
+    console.log('\n=== 4. Global paginated dashboard ===')
+    const dashboardGlobal = await dashboard.getMarketsDashboardPaginated(0, 10, false)
+    dashboardGlobal.forEach((m, i) => {
+      console.log(`[${i}] Market: ${m.marketAddress}, Match: ${m.matchId}, Resolved: ${m.resolved}, Winner: ${m.winner}, Participants: ${m.participantsCount}, Public: ${m.isPublic}, StartTime: ${m.startTime}`)
+    })
 
-  // Join the first market
-  console.log('\n=== 5. Joining first market ===')
-  const firstMarketAddr = markets[0].marketAddress
-  const Market = await hre.ethers.getContractFactory('CryptoScoreMarket')
-  const market = Market.attach(firstMarketAddr) as CryptoScoreMarket
+    // === 5. Fetch user-created markets from Dashboard ===
+    console.log('\n=== 5. User-created markets ===')
+    const dashboardUserCreated = await dashboard.getUserMarketsDashboardPaginated(signer.address, 0, 10, true)
+    dashboardUserCreated.forEach((m, i) => {
+      console.log(`[${i}] Market: ${m.marketAddress}, Match: ${m.matchId}, Resolved: ${m.resolved}, Winner: ${m.winner}, Participants: ${m.participantsCount}, Public: ${m.isPublic}, StartTime: ${m.startTime}`)
+    })
 
-  // Join with prediction: HOME (example)
-  tx = await market.join(1, { value: entryFee })
-  await tx.wait()
-  console.log(`✓ Joined market ${firstMarketAddr} as HOME`)
+    // === 6. Join the first market ===
+    console.log('\n=== 6. Joining first market ===')
+    const firstMarketAddr = markets[0]
+    const Market = await hre.ethers.getContractFactory('CryptoScoreMarket')
+    const marketCode = await hre.ethers.provider.getCode(firstMarketAddr)
+    console.log(marketCode)
+    const market = Market.attach(firstMarketAddr) as CryptoScoreMarket
 
-  // Resolve market (only participant can call)
-  console.log('\n=== 6. Resolving market ===')
-  tx = await market.resolve(1)
-  await tx.wait()
-  console.log('✓ Market resolved')
+    const prediction = 1 // HOME
+    const txJoin = await market.join(prediction, { value: entryFee })
+    await txJoin.wait()
+    console.log(`✓ Joined market ${firstMarketAddr} as HOME`)
 
-  // Withdraw reward
-  console.log('\n=== 7. Withdrawing rewards ===')
-  tx = await market.withdraw()
-  await tx.wait()
-  console.log('✓ Reward withdrawn')
+    // === 7. Resolve market ===
+    console.log('\n=== 7. Resolving market ===')
+    const txResolve = await market.resolve(prediction)
+    await txResolve.wait()
+    console.log('✓ Market resolved')
 
-  // Fetch user dashboard including participant markets
-  const dashboardUserParticipant = await factory.getUserMarketsDashboardPaginated(signer.address, 0, 10, false)
-  console.log('\n=== 8. User participant markets ===')
-  dashboardUserParticipant.forEach((m, i) => {
-    console.log(
-      `[${i}] Market: ${m.marketAddress}, Match: ${m.matchId}, Resolved: ${m.resolved}, Winner: ${m.winner}, Participants: ${m.participantsCount}`
-    )
-  })
+    // === 8. Withdraw rewards ===
+    console.log('\n=== 8. Withdrawing rewards ===')
+    const txWithdraw = await market.withdraw()
+    await txWithdraw.wait()
+    console.log('✓ Reward withdrawn')
+
+    // === 9. Fetch user participant markets from Dashboard ===
+    console.log('\n=== 9. User participant markets ===')
+    const dashboardUserParticipant = await dashboard.getUserMarketsDashboardPaginated(signer.address, 0, 10, false)
+    dashboardUserParticipant.forEach((m, i) => {
+      console.log(`[${i}] Market: ${m.marketAddress}, Match: ${m.matchId}, Resolved: ${m.resolved}, Winner: ${m.winner}, Participants: ${m.participantsCount}, Public: ${m.isPublic}, StartTime: ${m.startTime}`)
+    })
+  } catch (error) {
+    console.error('Error:', error)
+  }
 }
 
 main()
