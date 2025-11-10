@@ -12,6 +12,10 @@ contract CryptoScoreMarket {
     bool public resolved;
     Prediction public winner;
 
+    // New features
+    bool public isPublic;        // True if market is public, false if private
+    uint256 public startTime;    // UNIX timestamp for match start
+
     mapping(address => Prediction) public predictions;
     mapping(address => uint256) public rewards;
     address[] public participants;
@@ -26,16 +30,25 @@ contract CryptoScoreMarket {
         _;
     }
 
-    constructor(address _creator, uint256 _matchId, uint256 _entryFee) {
+    constructor(
+        address _creator,
+        uint256 _matchId,
+        uint256 _entryFee,
+        bool _isPublic,
+        uint256 _startTime
+    ) {
         factory = msg.sender;
         creator = _creator;
         matchId = _matchId;
         entryFee = _entryFee;
+        isPublic = _isPublic;
+        startTime = _startTime;
     }
 
     /// @notice Join the market with a prediction
     function join(Prediction _prediction) external payable {
         require(!resolved, "Market resolved");
+        require(block.timestamp < startTime, "Match already started");
         require(_prediction != Prediction.NONE, "Invalid prediction");
         require(predictions[msg.sender] == Prediction.NONE, "Already joined");
         require(msg.value == entryFee, "Incorrect fee");
@@ -47,8 +60,6 @@ contract CryptoScoreMarket {
     }
 
     /// @notice Resolve the market and distribute rewards
-    /// @dev Any participant can call this after match results are known
-    ///      1% to creator and 1% to factory owner from each winner’s share
     function resolve(Prediction _winner) external onlyParticipant {
         require(!resolved, "Already resolved");
         require(_winner != Prediction.NONE, "Invalid winner");
@@ -90,7 +101,6 @@ contract CryptoScoreMarket {
         emit Resolved(_winner, msg.sender);
     }
 
-    /// @notice Withdraw your reward after resolution
     function withdraw() external {
         uint256 amount = rewards[msg.sender];
         require(amount > 0, "No reward to withdraw");
@@ -102,12 +112,10 @@ contract CryptoScoreMarket {
         emit Withdrawn(msg.sender, amount);
     }
 
-    /// @notice Get participant count
     function getParticipantsCount() external view returns (uint256) {
         return participants.length;
     }
 
-    /// @notice Check if an address is a participant
     function isParticipant(address user) external view returns (bool) {
         return predictions[user] != Prediction.NONE;
     }
