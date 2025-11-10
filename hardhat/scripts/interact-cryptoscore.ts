@@ -7,8 +7,8 @@ async function main() {
     const [signer] = await hre.ethers.getSigners()
 
     // === 0. Set deployed addresses ===
-    const factoryAddress = '0xbeC6419cD931e29ef41157fe24C6928a0C952f0b'
-    const dashboardAddress = '0x55027d3dBBcEA0327eF73eFd74ba0Af42A13A966'
+    const factoryAddress = '0x1c1521cf734CD13B02e8150951c3bF2B438be780'
+    const dashboardAddress = '0x0B1a87021ec75fBaE919b1e86b2B1335FFC8F4d3'
 
     // === 1. Attach to deployed contracts ===
     const Factory = await hre.ethers.getContractFactory('CryptoScoreFactory')
