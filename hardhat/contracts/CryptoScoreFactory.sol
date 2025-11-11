@@ -3,7 +3,7 @@ pragma solidity ^0.8.28;
 
 import "./CryptoScoreMarket.sol";
 
-/// @title CryptoScoreFactory - Deploys and stores match markets
+/// @title CryptoScoreFactory - Deploys and stores match markets (Polkadot-compatible)
 contract CryptoScoreFactory {
     address public owner;
     uint256 public totalMarkets;
@@ -23,30 +23,38 @@ contract CryptoScoreFactory {
     mapping(uint256 => address[]) public marketsByMatch;
 
     event MarketCreated(uint256 indexed matchId, address indexed marketAddress, address indexed creator);
+    event MarketDeploymentFailed(address indexed creator, uint256 matchId);
 
     constructor() {
         owner = msg.sender;
     }
 
-    /// @notice Deploy a new market
+    /// @notice Deploy a new market using inline bytecode for Polkadot EVM compatibility
     function createMarket(
         uint256 _matchId,
         uint256 _entryFee,
         bool _isPublic,
         uint256 _startTime
-    ) external returns (address) {
+    ) external returns (address marketAddr) {
         require(_entryFee > 0, "Fee must be > 0");
 
-        CryptoScoreMarket market = new CryptoScoreMarket(
-            msg.sender,
-            _matchId,
-            _entryFee,
-            _isPublic,
-            _startTime
+        bytes memory bytecode = type(CryptoScoreMarket).creationCode;
+        bytes memory initCode = abi.encodePacked(
+            bytecode,
+            abi.encode(msg.sender, _matchId, _entryFee, _isPublic, _startTime)
         );
 
+        assembly {
+            marketAddr := create(0, add(initCode, 0x20), mload(initCode))
+        }
+
+        if (marketAddr == address(0)) {
+            emit MarketDeploymentFailed(msg.sender, _matchId);
+            revert("Market deployment failed");
+        }
+
         MarketInfo memory info = MarketInfo({
-            marketAddress: address(market),
+            marketAddress: marketAddr,
             matchId: _matchId,
             creator: msg.sender,
             entryFee: _entryFee,
@@ -55,14 +63,14 @@ contract CryptoScoreFactory {
         });
 
         allMarkets.push(info);
-        marketInfoByAddress[address(market)] = info;
-        userMarkets[msg.sender].push(address(market));
-        marketsByMatch[_matchId].push(address(market));
+        marketInfoByAddress[marketAddr] = info;
+        userMarkets[msg.sender].push(marketAddr);
+        marketsByMatch[_matchId].push(marketAddr);
 
         totalMarkets++;
-        emit MarketCreated(_matchId, address(market), msg.sender);
+        emit MarketCreated(_matchId, marketAddr, msg.sender);
 
-        return address(market);
+        return marketAddr;
     }
 
     /// @notice Get all markets for a match
