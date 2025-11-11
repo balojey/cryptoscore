@@ -38,23 +38,16 @@ contract CryptoScoreFactory {
     ) external returns (address marketAddr) {
         require(_entryFee > 0, "Fee must be > 0");
 
-        bytes memory bytecode = type(CryptoScoreMarket).creationCode;
-        bytes memory initCode = abi.encodePacked(
-            bytecode,
-            abi.encode(msg.sender, _matchId, _entryFee, _isPublic, _startTime)
+        CryptoScoreMarket market = new CryptoScoreMarket(
+            msg.sender,
+            _matchId,
+            _entryFee,
+            _isPublic,
+            _startTime
         );
 
-        assembly {
-            marketAddr := create(0, add(initCode, 0x20), mload(initCode))
-        }
-
-        if (marketAddr == address(0)) {
-            emit MarketDeploymentFailed(msg.sender, _matchId);
-            revert("Market deployment failed");
-        }
-
         MarketInfo memory info = MarketInfo({
-            marketAddress: marketAddr,
+            marketAddress: address(market),
             matchId: _matchId,
             creator: msg.sender,
             entryFee: _entryFee,
@@ -63,14 +56,14 @@ contract CryptoScoreFactory {
         });
 
         allMarkets.push(info);
-        marketInfoByAddress[marketAddr] = info;
-        userMarkets[msg.sender].push(marketAddr);
-        marketsByMatch[_matchId].push(marketAddr);
+        marketInfoByAddress[address(market)] = info;
+        userMarkets[msg.sender].push(address(market));
+        marketsByMatch[_matchId].push(address(market));
 
         totalMarkets++;
-        emit MarketCreated(_matchId, marketAddr, msg.sender);
+        emit MarketCreated(_matchId, address(market), msg.sender);
 
-        return marketAddr;
+        return address(market);
     }
 
     /// @notice Get all markets for a match

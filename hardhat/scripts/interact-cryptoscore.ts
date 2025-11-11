@@ -7,8 +7,8 @@ async function main() {
     const [signer] = await hre.ethers.getSigners()
     console.log('Using signer:', signer.address)
 
-    const factoryAddress = '0x02e8910B3B89690d4aeC9fcC0Ae2cD16fB6A4828'
-    const dashboardAddress = '0x484242986F57dFcA98EeC2C78427931C63F1C4ce'
+    const factoryAddress = '0x8B342f4Ddcc71Af65e4D2dA9CD00cc0E945cFD12'
+    const dashboardAddress = '0x15F2ea83eB97ede71d84Bd04fFF29444f6b7cd52'
 
     const Factory = await hre.ethers.getContractFactory('CryptoScoreFactory')
     const factory = Factory.attach(factoryAddress).connect(signer) as CryptoScoreFactory
