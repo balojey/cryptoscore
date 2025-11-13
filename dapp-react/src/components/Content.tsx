@@ -3,6 +3,7 @@ import { useCallback, useMemo, useState } from 'react'
 import type { Chain } from 'wagmi/chains'
 import { useAccount, useChainId, useChains } from 'wagmi'
 import { Markets } from './Markets' // Import Markets component
+import PublicMarkets from './PublicMarkets'
 
 export default function Content() {
   // Account and contract hooks
@@ -69,6 +70,9 @@ export default function Content() {
             </div>
           </div>
         </dialog>
+
+        <PublicMarkets />
+
       </div>
 
       {/* Toast Notification */}
