@@ -18,10 +18,19 @@ export default function Balance({ address }: BalanceProps) {
   }
 
   return (
-    <span className="font-mono font-semibold">
-      {balance?.formatted || '0'}
-      {' '}
-      PAS
-    </span>
+    <div className="flex items-center gap-2">
+      <span className="font-mono font-semibold">
+        {balance?.formatted || '0'}
+        {' '}
+        PAS
+      </span>
+      <a
+        href="https://faucet.polkadot.io/?parachain=1111"
+        target="_blank"
+        rel="noreferrer"
+        className="icon-[mdi--faucet] w-4 h-4 text-gray-400 hover:text-gray-600"
+        title="Get more PAS from faucet"
+      />
+    </div>
   )
 }

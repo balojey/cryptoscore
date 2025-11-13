@@ -1,8 +1,8 @@
 import type { Chain } from 'wagmi/chains'
 import { useMemo, useRef } from 'react'
 import { useAccount, useChainId, useChains, useConnect, useConnectorClient, useDisconnect } from 'wagmi'
+import Account from './Account'
 import { ensurePaseoTestnet } from '../utils/chain'
-import { shortenAddress } from '../utils/formatters'
 
 // Popular wallets for when no connectors are available
 const popularWallets = [
@@ -23,7 +23,6 @@ export default function Connect() {
   const chainId = useChainId()
   const chains = useChains()
   const { connect, connectors, error, status } = useConnect()
-  const { disconnect } = useDisconnect()
   const { address, isConnected, connector } = useAccount()
   const { data: connectorClient } = useConnectorClient()
 
@@ -70,57 +69,30 @@ export default function Connect() {
     }
   }
 
-  function handleDisconnect() {
-    disconnect()
-    localStorage.clear()
-  }
-
   return (
     <>
       {/* Connect/Disconnect Buttons */}
       <div className="flex items-center gap-2">
-        <button
-          type="button"
-          className="btn btn-outline btn-sm font-mono"
-          onClick={openConnectModal}
-        >
-          {!isConnected
-            ? (
+        {!isConnected
+          ? (
+              <button
+                type="button"
+                className="btn btn-outline btn-sm font-mono"
+                onClick={openConnectModal}
+              >
                 <div className="flex items-center gap-2">
                   <span className="icon-[mdi--wallet] w-4 h-4" />
                   <span>Connect Wallet</span>
                 </div>
-              )
-            : (
-                <div className="flex items-center gap-2">
-                  {connector?.icon
-                    ? (
-                        <img
-                          src={connector.icon}
-                          alt={connector.name}
-                          className="w-4 h-4"
-                        />
-                      )
-                    : (
-                        <span className="icon-[mdi--wallet] w-4 h-4" />
-                      )}
-                  <span className="hidden sm:block">
-                    {address ? shortenAddress(address) : ''}
-                  </span>
-                </div>
-              )}
-        </button>
-
-        {/* Disconnect Button (only shown when connected) */}
-        {isConnected && (
-          <button
-            type="button"
-            className="btn btn-outline btn-sm font-mono"
-            onClick={handleDisconnect}
-          >
-            <span className="icon-[mdi--logout] w-4 h-4" />
-          </button>
-        )}
+              </button>
+            )
+          : (
+              <Account
+                address={address as `0x${string}`}
+                connectorName={connector?.name}
+                connectorIcon={connector?.icon}
+              />
+            )}
       </div>
 
       {/* Modal */}
