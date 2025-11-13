@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import type { Chain } from 'wagmi/chains'
 import { useCallback, useMemo, useState } from 'react'
 import { useAccount, useChainId, useChains } from 'wagmi'
@@ -37,6 +38,11 @@ export default function Content() {
           <p className="text-xl text-gray-600 font-mono flex items-center justify-center gap-2">
             <span>Predict the outcome of your favorite sports</span>
           </p>
+          <div className="mt-4">
+            <Link to="/my-markets" className="btn btn-primary">
+              My Markets
+            </Link>
+          </div>
         </div>
 
         <div className="mb-8">
