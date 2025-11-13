@@ -1,6 +1,6 @@
-import { Link } from 'react-router-dom';
-import type { Chain } from 'wagmi/chains'
+import { Link } from 'react-router-dom'
 import { useCallback, useMemo, useState } from 'react'
+import type { Chain } from 'wagmi/chains'
 import { useAccount, useChainId, useChains } from 'wagmi'
 import { Markets } from './Markets' // Import Markets component
 
@@ -17,6 +17,7 @@ export default function Content() {
 
   const [toastMessage, setToastMessage] = useState('')
   const [showToast, setShowToast] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   // Toast notification utility
   const showToastNotification = useCallback((message: string) => {
@@ -38,19 +39,36 @@ export default function Content() {
           <p className="text-xl text-gray-600 font-mono flex items-center justify-center gap-2">
             <span>Predict the outcome of your favorite sports</span>
           </p>
-          <div className="mt-4">
+          <p className="text-gray-600 mt-4">
+            Ready to launch your own match market? Click below to create one!
+          </p>
+          <div className="mt-4 flex justify-center gap-4">
             <Link to="/my-markets" className="btn btn-primary">
               My Markets
             </Link>
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="btn btn-secondary"
+            >
+              Create Markets
+            </button>
           </div>
         </div>
 
-        <div className="mb-8">
-          {/* Markets Component (Right Side) */}
-          <div className="lg:col-span-2">
-            <Markets />
+        {/* Modal for Creating Markets */}
+        <dialog id="markets_modal" className={`modal ${isModalOpen ? 'modal-open' : ''}`}>
+          <div className="modal-box w-11/12 max-w-5xl">
+            <h3 className="font-bold text-lg">Create a New Market</h3>
+            <div className="py-4">
+              <Markets />
+            </div>
+            <div className="modal-action">
+              <form method="dialog">
+                <button onClick={() => setIsModalOpen(false)} className="btn">Close</button>
+              </form>
+            </div>
           </div>
-        </div>
+        </dialog>
       </div>
 
       {/* Toast Notification */}
