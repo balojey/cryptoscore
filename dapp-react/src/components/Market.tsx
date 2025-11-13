@@ -2,6 +2,7 @@ import { useWriteContract, useTransactionReceipt } from 'wagmi'
 import { parseEther } from 'viem'
 import { CRYPTO_SCORE_FACTORY_ADDRESS, CryptoScoreFactoryABI } from '../config/contracts'
 import type { Match } from './Markets'
+import { useState } from 'react'
 
 interface MarketProps {
   match: Match
@@ -10,8 +11,13 @@ interface MarketProps {
 }
 
 export function Market({ match, userHasMarket, refetchMarkets }: MarketProps) {
+  const [isCreating, setIsCreating] = useState(false)
+  const [entryFee, setEntryFee] = useState('0.01')
+  const [isPublic, setIsPublic] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
   // Hook for writing to the createMarket function
-  const { data: txHash, writeContract, isPending: isCreateMarketLoading } = useWriteContract()
+  const { data: txHash, writeContract, isPending: isCreateMarketLoading, error: writeContractError } = useWriteContract()
 
   // Hook to wait for the transaction to be mined
   const { isLoading: isTxLoading, isSuccess: isTxSuccess } = useTransactionReceipt({
@@ -26,18 +32,27 @@ export function Market({ match, userHasMarket, refetchMarkets }: MarketProps) {
   }
 
   const handleCreateMarket = () => {
-    // Hardcoded values for entry fee and public status
-    const entryFee = parseEther('0.01') // 0.01 ETH
-    const isPublic = true
-    // Convert match date to Unix timestamp in seconds
-    const startTime = Math.floor(new Date(match.utcDate).getTime() / 1000)
+    setError(null)
+    // Validate entry fee
+    if (Number(entryFee) <= 0) {
+      setError('Entry fee must be greater than 0.')
+      return
+    }
 
-    writeContract({
-      address: CRYPTO_SCORE_FACTORY_ADDRESS,
-      abi: CryptoScoreFactoryABI,
-      functionName: 'createMarket',
-      args: [match.id, entryFee, isPublic, startTime],
-    })
+    try {
+      const entryFeeWei = parseEther(entryFee)
+      const startTime = Math.floor(new Date(match.utcDate).getTime() / 1000)
+
+      writeContract({
+        address: CRYPTO_SCORE_FACTORY_ADDRESS,
+        abi: CryptoScoreFactoryABI,
+        functionName: 'createMarket',
+        args: [match.id, entryFeeWei, isPublic, startTime],
+      })
+    }
+    catch (e) {
+      setError('Invalid entry fee.')
+    }
   }
   const handleViewMarket = () => {
     // Placeholder for viewing market details
@@ -71,9 +86,54 @@ export function Market({ match, userHasMarket, refetchMarkets }: MarketProps) {
           </button>
           )
         : (
-          <button onClick={handleCreateMarket} disabled={isLoading}>
-            {isLoading ? 'Creating...' : 'Create Market'}
-          </button>
+          <>
+            {!isCreating
+              ? (
+                <button onClick={() => setIsCreating(true)}>
+                  Create Market
+                </button>
+                )
+              : (
+                <div style={{ marginTop: '10px' }}>
+                  <h4>Set Market Details</h4>
+                  <div style={{ marginBottom: '10px' }}>
+                    <label htmlFor="entryFee">
+                      Entry Fee (PAS)
+                      {' '}
+                    </label>
+                    <input
+                      id="entryFee"
+                      type="number"
+                      value={entryFee}
+                      onChange={e => setEntryFee(e.target.value)}
+                      placeholder="e.g., 0.01"
+                      style={{ marginLeft: '5px' }}
+                    />
+                  </div>
+                  <div style={{ marginBottom: '10px' }}>
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={isPublic}
+                        onChange={e => setIsPublic(e.target.checked)}
+                      />
+                      Public Market
+                    </label>
+                    <span style={{ fontSize: '12px', marginLeft: '10px', cursor: 'pointer' }} title="Public markets are visible to everyone; private markets are accessible only via link">
+                      ℹ️
+                    </span>
+                  </div>
+                  <button onClick={handleCreateMarket} disabled={isLoading}>
+                    {isLoading ? 'Creating...' : 'Confirm & Create'}
+                  </button>
+                  <button onClick={() => setIsCreating(false)} style={{ marginLeft: '10px' }}>
+                    Cancel
+                  </button>
+                  {error && <p style={{ color: 'red' }}>{error}</p>}
+                  {writeContractError && <p style={{ color: 'red' }}>{writeContractError.message}</p>}
+                </div>
+                )}
+          </>
           )}
       {isTxSuccess && <p>Market created successfully!</p>}
     </div>
