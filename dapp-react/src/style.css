@@ -2,10 +2,64 @@
 @plugin "@iconify/tailwind4";
 @plugin "daisyui";
 
+:root {
+  /* CryptoScore DLS v1.0 Tokens */
+
+  /* Primary Colors */
+  --cs-primary--blue: #0a84ff;
+  --cs-primary--green: #0bc95a;
+
+  /* Neutrals */
+  --cs-neutral--off-white: #f5f7fa;
+  --cs-neutral--slate-gray: #1e293b;
+  --cs-neutral--jet-black: #0b0e11;
+
+  /* Semantic Colors */
+  --cs-semantic--success: #16a34a;
+  --cs-semantic--error: #dc2626;
+  --cs-semantic--warning: #f59e0b;
+  --cs-semantic--info: #0ea5e9;
+
+  /* Surfaces & Text */
+  --cs-surface: var(--cs-neutral--off-white);
+  --cs-text--primary: var(--cs-neutral--slate-gray);
+
+  /* Typography */
+  --cs-font--primary: "Inter", sans-serif;
+  --cs-font--secondary: "Plus Jakarta Sans", sans-serif;
+
+  /* Radius */
+  --cs-radius--card: 16px;
+  --cs-radius--button: 12px;
+  --cs-radius--input: 12px;
+
+  /* Shadows */
+  --cs-shadow--card: 0px 2px 6px rgba(0, 0, 0, 0.08);
+
+  /* Spacing */
+  --cs-spacing--xs: 4px;
+  --cs-spacing--sm: 8px;
+  --cs-spacing--md: 16px;
+  --cs-spacing--lg: 24px;
+  --cs-spacing--xl: 32px;
+  --cs-spacing--2xl: 48px;
+  --cs-spacing--3xl: 64px;
+
+  /* Transitions */
+  --cs-transition--fast: 120ms ease;
+}
+
+html {
+  font-family: var(--cs-font--primary);
+  background-color: var(--cs-surface);
+  color: var(--cs-text--primary);
+}
+
 .container {
   max-width: 1200px;
   margin: 0 auto;
 }
+
 
 @plugin "daisyui/theme" {
   name: "light";
