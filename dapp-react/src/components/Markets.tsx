@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useAccount, useContractRead } from 'wagmi'
-import { Market } from './Market'
 import { CRYPTO_SCORE_FACTORY_ADDRESS, CryptoScoreFactoryABI } from '../config/contracts'
+import { Market } from './Market'
 
 // --- TYPES ---
 export interface Match {
@@ -188,16 +188,19 @@ export function Markets() {
     const end = new Date(today)
     if (dateFilter === 'today') {
       end.setDate(start.getDate() + 1)
-    } else if (dateFilter === 'next7days') {
+    }
+    else if (dateFilter === 'next7days') {
       end.setDate(start.getDate() + 7)
-    } else {
+    }
+    else {
       // default to next 7 days
       end.setDate(start.getDate() + 7)
     }
 
-    const filtered = dummyMatches.filter(m => {
+    const filtered = dummyMatches.filter((m) => {
       // filter by competition code
-      if (m.competition.code !== competition) return false
+      if (m.competition.code !== competition)
+        return false
       const dt = new Date(m.utcDate)
       return dt >= start && dt <= end
     })

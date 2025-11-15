@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useAccount, useReadContract } from 'wagmi'
 import { CRYPTO_SCORE_DASHBOARD_ADDRESS, CryptoScoreDashboardABI } from '../config/contracts'
 import PublicMarketCard from './PublicMarketCard'
@@ -22,7 +22,8 @@ export default function PublicMarkets() {
     if (data && Array.isArray(data)) {
       if (data.length < PAGE_SIZE) {
         setHasMore(false)
-      } else {
+      }
+      else {
         setHasMore(true)
       }
       // Filter out markets created by the current user

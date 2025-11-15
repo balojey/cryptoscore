@@ -1,6 +1,6 @@
 import { useDisconnect } from 'wagmi'
-import Balance from './Balance'
 import { shortenAddress } from '../utils/formatters'
+import Balance from './Balance'
 
 interface AccountProps {
   address: `0x${string}`

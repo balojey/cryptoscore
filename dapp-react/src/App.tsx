@@ -1,9 +1,9 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import Content from './components/Content';
-import Footer from './components/Footer';
-import Header from './components/Header';
-import { MyMarkets } from './pages/MyMarkets';
-import { MarketDetail } from './pages/MarketDetail';
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import Content from './components/Content'
+import Footer from './components/Footer'
+import Header from './components/Header'
+import { MarketDetail } from './pages/MarketDetail'
+import { MyMarkets } from './pages/MyMarkets'
 
 function App() {
   return (
@@ -20,7 +20,7 @@ function App() {
         <Footer />
       </div>
     </BrowserRouter>
-  );
+  )
 }
 
-export default App;
+export default App

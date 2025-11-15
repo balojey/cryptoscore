@@ -24,7 +24,10 @@ export default function PublicMarketCard({
   return (
     <div className="card bg-base-100 shadow-xl">
       <div className="card-body">
-        <h2 className="card-title">Match #{matchId.toString()}</h2>
+        <h2 className="card-title">
+          Match #
+          {matchId.toString()}
+        </h2>
         <p>
           Created by:
           <span className="font-mono">{shortenAddress(creator)}</span>

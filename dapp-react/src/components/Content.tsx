@@ -1,6 +1,6 @@
-import { Link } from 'react-router-dom'
-import { useCallback, useMemo, useState } from 'react'
 import type { Chain } from 'wagmi/chains'
+import { useCallback, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAccount, useChainId, useChains } from 'wagmi'
 import { Markets } from './Markets' // Import Markets component
 import PublicMarkets from './PublicMarkets'
