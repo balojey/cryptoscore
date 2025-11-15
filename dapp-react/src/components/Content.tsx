@@ -1,33 +1,12 @@
-import type { Chain } from 'wagmi/chains'
-import { useCallback, useMemo, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useAccount, useChainId, useChains } from 'wagmi'
 import { Markets } from './Markets' // Import Markets component
 import PublicMarkets from './PublicMarkets'
 
 export default function Content() {
-  // Account and contract hooks
-  const { address } = useAccount()
-  const chainId = useChainId()
-  const chains = useChains()
-
-  // Get the connected chain instead of using config
-  const connectedChain = useMemo(() => {
-    return chains.find((chain: Chain) => chain.id === chainId) || chains[0]
-  }, [chains, chainId])
-
-  const [toastMessage, setToastMessage] = useState('')
-  const [showToast, setShowToast] = useState(false)
+  // const [toastMessage, setToastMessage] = useState('')
+  // const [showToast, setShowToast] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
-
-  // Toast notification utility
-  const showToastNotification = useCallback((message: string) => {
-    setToastMessage(message)
-    setShowToast(true)
-    setTimeout(() => {
-      setShowToast(false)
-    }, 3000)
-  }, [])
 
   return (
     <div className="bg-gray-50">
@@ -76,14 +55,14 @@ export default function Content() {
       </div>
 
       {/* Toast Notification */}
-      {showToast && (
+      {/* {showToast && (
         <div className="toast toast-top toast-end">
           <div className="alert alert-success">
             <span className="icon-[mdi--check-circle] w-4 h-4" />
             <span>{toastMessage}</span>
           </div>
         </div>
-      )}
+      )} */}
     </div>
   )
 }
