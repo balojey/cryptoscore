@@ -35,13 +35,42 @@ export function MyMarkets() {
   const { address } = useAccount()
   const [activeTab, setActiveTab] = useState<'created' | 'joined'>('created')
 
-  const { data: allInvolvedMarkets, isLoading: isLoadingInvolved } = useReadContract({
+  const { data: allInvolvedCreatedMarkets, isLoading: isLoadingCreated } = useReadContract({
     abi: CryptoScoreDashboardABI,
     address: CRYPTO_SCORE_DASHBOARD_ADDRESS,
     functionName: 'getUserMarketsDashboardPaginated',
-    args: [address, 0, 100, false], // createdOnly = false -> gets all
+    args: [address, 0, 100, true],
     query: { enabled: !!address },
   }) as { data: MarketDashboardInfo[] | undefined, isLoading: boolean }
+
+  const { data: allInvolvedJoinedMarkets, isLoading: isLoadingJoined } = useReadContract({
+    abi: CryptoScoreDashboardABI,
+    address: CRYPTO_SCORE_DASHBOARD_ADDRESS,
+    functionName: 'getUserMarketsDashboardPaginated',
+    args: [address, 0, 100, false],
+    query: { enabled: !!address },
+  }) as { data: MarketDashboardInfo[] | undefined, isLoading: boolean }
+
+  const allInvolvedMarkets = useMemo(() => {
+      if (!allInvolvedCreatedMarkets && !allInvolvedJoinedMarkets) return []
+  
+      const combinedMarkets = [
+        ...(allInvolvedCreatedMarkets || []),
+        ...(allInvolvedJoinedMarkets || []),
+      ]
+  
+      // Remove duplicates based on marketAddress
+      const uniqueMarketsMap = new Map<string, MarketDashboardInfo>()
+      combinedMarkets.forEach(market => {
+        uniqueMarketsMap.set(market.marketAddress, market)
+      })
+  
+      // Convert back to array and sort by creation date (assuming market has a creationDate property)
+      const uniqueMarkets = Array.from(uniqueMarketsMap.values())
+      uniqueMarkets.sort((a, b) => Number(b.startTime) - Number(a.startTime))
+  
+      return uniqueMarkets
+    }, [allInvolvedCreatedMarkets, allInvolvedJoinedMarkets])
 
   const { createdMarkets, joinedMarkets } = useMemo(() => {
     const created: MarketDashboardInfo[] = []
@@ -99,14 +128,14 @@ export function MyMarkets() {
           {activeTab === 'created' && (
             <MarketList
               markets={createdMarkets}
-              isLoading={isLoadingInvolved}
+              isLoading={isLoadingCreated || isLoadingJoined}
               emptyMessage="You haven't created any markets yet."
             />
           )}
           {activeTab === 'joined' && (
             <MarketList
               markets={joinedMarkets}
-              isLoading={isLoadingInvolved}
+              isLoading={isLoadingCreated || isLoadingJoined}
               emptyMessage="You haven't joined any markets yet."
             />
           )}

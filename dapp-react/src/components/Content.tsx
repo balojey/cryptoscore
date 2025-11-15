@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Markets } from './Markets'
 import PublicMarkets from './PublicMarkets'
+import { UserMarkets } from './UserMarkets'
 
 export default function Content() {
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -16,9 +17,9 @@ export default function Content() {
 
   return (
     <div className="bg-[#F5F7FA] min-h-screen">
-      <div className="container mx-auto px-4 py-16 sm:py-24">
+      <div className="container mx-auto px-4 py-16 sm:py-24 space-y-24">
         {/* Hero Section */}
-        <div className="text-center max-w-3xl mx-auto mb-16">
+        <div className="text-center max-w-3xl mx-auto">
           <h1 className="font-jakarta text-4xl sm:text-5xl font-bold text-[#1E293B] mb-4 tracking-tight">
             The Premier Sports Prediction Market
           </h1>
@@ -42,6 +43,11 @@ export default function Content() {
               <span>My Markets</span>
             </Link>
           </div>
+        </div>
+
+        {/* User's Markets Section */}
+        <div className="max-w-7xl mx-auto">
+          <UserMarkets />
         </div>
 
         {/* Public Markets Section */}

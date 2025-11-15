@@ -69,3 +69,20 @@ export interface Match {
   }
   referees: any[]
 }
+
+// Unified Market type for props
+export interface Market {
+  marketAddress: `0x${string}`
+  matchId: bigint
+  entryFee: bigint
+  creator: `0x${string}`
+  participantsCount: bigint
+  resolved: boolean
+  isPublic: boolean
+  startTime: bigint
+}
+
+export interface MarketCardProps {
+  market: Market
+  variant?: 'default' | 'compact'
+}

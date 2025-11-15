@@ -3,23 +3,7 @@ import { formatEther } from 'viem'
 import { useAccount } from 'wagmi'
 import { shortenAddress } from '../utils/formatters'
 import { useMatchData } from '../hooks/useMatchData'
-
-// Unified Market type for props
-export interface Market {
-  marketAddress: `0x${string}`
-  matchId: bigint
-  entryFee: bigint
-  creator: `0x${string}`
-  participantsCount: bigint
-  resolved: boolean
-  isPublic: boolean
-  startTime: bigint
-}
-
-interface MarketCardProps {
-  market: Market
-  variant?: 'default' | 'compact'
-}
+import { MarketCardProps, Market } from '../types'
 
 // Skeleton component for loading state
 export const MarketCardSkeleton = () => (
