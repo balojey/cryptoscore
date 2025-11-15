@@ -9,12 +9,14 @@ const popularWallets = [
   {
     id: 'metamask',
     name: 'MetaMask',
+    icon: 'https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg',
     downloadUrl: 'https://metamask.io/download/',
   },
   {
     id: 'talisman',
-    name: 'Talisman Wallet',
-    downloadUrl: 'https://talisman.xyz/',
+    name: 'Talisman',
+    icon: 'https://pbs.twimg.com/profile_images/1777249249997590528/5sS2f7pS_400x400.jpg',
+    downloadUrl: 'https://www.talisman.xyz/',
   },
 ]
 
@@ -26,15 +28,13 @@ export default function Connect() {
   const { address, isConnected, connector } = useAccount()
   const { data: connectorClient } = useConnectorClient()
 
-  // Get the connected chain instead of using config
   const connectedChain = useMemo(() => {
     return chains.find((chain: Chain) => chain.id === chainId) || chains[0]
   }, [chains, chainId])
 
-  // Filter connectors to show only MetaMask and Talisman
   const filteredConnectors = useMemo(() => {
-    return connectors.filter((connector) => {
-      const id = connector.id.toLowerCase()
+    return connectors.filter((c) => {
+      const id = c.id.toLowerCase()
       return id.includes('metamask') || id.includes('talisman')
     })
   }, [connectors])
@@ -49,18 +49,10 @@ export default function Connect() {
 
   async function handleConnect(connector: any) {
     try {
-      // Connect first to get the client
       connect({ connector, chainId: connectedChain.id as any })
       closeConnectModal()
-
-      // Add chain after connection if client is available
       if (connectorClient) {
-        try {
-          await ensurePaseoTestnet(connectorClient)
-        }
-        catch (err) {
-          console.error('Failed to add chain:', err)
-        }
+        await ensurePaseoTestnet(connectorClient)
       }
     }
     catch (err) {
@@ -77,13 +69,11 @@ export default function Connect() {
           ? (
               <button
                 type="button"
-                className="btn btn-outline btn-sm font-mono"
+                className="flex items-center gap-2 h-10 px-4 bg-[#0A84FF] text-white rounded-[12px] font-sans text-sm font-bold uppercase tracking-wider transition-all hover:bg-blue-600 active:bg-blue-700 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30"
                 onClick={openConnectModal}
               >
-                <div className="flex items-center gap-2">
-                  <span className="icon-[mdi--wallet] w-4 h-4" />
-                  <span>Connect Wallet</span>
-                </div>
+                <span className="icon-[mdi--wallet]" />
+                <span>Connect</span>
               </button>
             )
           : (
@@ -97,131 +87,106 @@ export default function Connect() {
 
       {/* Modal */}
       <dialog ref={connectModalRef} className="modal modal-bottom sm:modal-middle">
-        <div className="modal-box max-w-md">
+        <div className="modal-box max-w-sm bg-[#1E293B] text-[#F5F7FA] rounded-[16px] shadow-2xl">
           {/* Header */}
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-start justify-between mb-6">
             <div>
-              <h2 className="text-lg font-medium text-black uppercase tracking-wider">
-                CONNECT WALLET
+              <h2 className="font-header font-bold text-xl text-white">
+                Connect Wallet
               </h2>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-slate-400 mt-1">
                 Network:
                 {' '}
-                {connectedChain.name}
+                <span className="font-semibold text-slate-300">{connectedChain.name}</span>
               </p>
             </div>
-            <button type="button" className="btn btn-sm btn-circle btn-ghost" onClick={closeConnectModal}>
-              <span className="icon-[mdi--close] w-4 h-4" />
+            <button type="button" className="btn btn-sm btn-circle btn-ghost text-slate-400 hover:bg-slate-700" onClick={closeConnectModal}>
+              <span className="icon-[mdi--close] w-5 h-5" />
             </button>
           </div>
 
-          {/* Available Connectors */}
-          {filteredConnectors.length > 0
-            ? (
-                <div className="mb-6">
-                  <h3 className="text-xs text-gray-500 uppercase tracking-wider mb-3">
-                    Available Wallets
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {/* Wallets */}
+          <div className="space-y-4">
+            {filteredConnectors.length > 0
+              ? (
+                  /* Available Connectors */
+                  <div className="space-y-3">
                     {filteredConnectors.map(conn => (
-                      <div
+                      <button
                         key={conn.id}
-                        className="card card-compact bg-base-100 border border-base-300 hover:border-primary hover:shadow-md transition-all cursor-pointer"
+                        type="button"
+                        disabled={status === 'pending'}
+                        className="w-full flex items-center gap-4 p-4 bg-slate-800/50 rounded-[12px] border border-slate-700 transition-all hover:border-[#0A84FF] hover:bg-slate-800 disabled:opacity-50 disabled:cursor-wait"
                         onClick={() => handleConnect(conn)}
                       >
-                        <div className="card-body items-center text-center">
-                          <div className="flex items-center justify-center w-12 h-12 mb-2">
-                            {conn.icon
-                              ? (
-                                  <img
-                                    src={conn.icon}
-                                    alt={conn.name}
-                                    className="w-8 h-8"
-                                  />
-                                )
-                              : (
-                                  <span className="icon-[mdi--wallet-outline] w-8 h-8" />
-                                )}
-                          </div>
-                          <div className="text-sm font-medium text-black">
-                            {conn.name}
-                          </div>
-                          <button
-                            type="button"
-                            disabled={status === 'pending'}
-                            className="btn btn-neutral btn-sm w-32 uppercase tracking-wider mt-2"
-                          >
-                            {status === 'pending'
-                              ? (
-                                  <>
-                                    <span className="icon-[mdi--loading] animate-spin" />
-                                    <span>Connecting</span>
-                                  </>
-                                )
-                              : (
-                                  <>
-                                    <span>Connect</span>
-                                    <span className="icon-[mdi--chevron-right]" />
-                                  </>
-                                )}
-                          </button>
-                        </div>
-                      </div>
+                        {conn.icon
+                          ? (
+                              <img
+                                src={conn.icon}
+                                alt={conn.name}
+                                className="w-8 h-8 rounded-full"
+                              />
+                            )
+                          : (
+                              <span className="icon-[mdi--wallet-outline] w-8 h-8 text-slate-300" />
+                            )}
+                        <span className="font-sans font-semibold text-base text-white">
+                          {status === 'pending' ? 'Connecting...' : conn.name}
+                        </span>
+                        {status === 'pending' && <span className="icon-[mdi--loading] animate-spin ml-auto" />}
+                      </button>
                     ))}
                   </div>
-                </div>
-              )
-            : (
-          /* No Connectors Available - Show Popular Wallets */
-                <div className="space-y-3">
-                  <div className="text-center mb-4">
-                    <div className="icon-[mdi--wallet-outline] w-16 h-16 mx-auto text-gray-300 mb-2" />
-                    <p className="text-sm text-gray-500">
-                      No wallet extensions detected
-                    </p>
-                    <p className="text-xs text-gray-400">
-                      Download a wallet to get started
-                    </p>
-                  </div>
-
-                  <h3 className="text-xs text-gray-500 uppercase tracking-wider mb-3">
-                    Popular Wallets
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {popularWallets.map(wallet => (
-                      <div
-                        key={wallet.id}
-                        className="card card-compact bg-base-100 border border-base-300 hover:border-primary hover:shadow-md transition-all"
-                      >
-                        <div className="card-body items-center text-center">
-                          <div className="text-sm font-medium text-black mb-3">
+                )
+              : (
+                  /* No Connectors - Show Popular Wallets */
+                  <div className="space-y-4 pt-2">
+                    <div className="text-center">
+                      <span className="icon-[mdi--wallet-off-outline] w-12 h-12 mx-auto text-slate-600 mb-2" />
+                      <p className="text-base font-medium text-slate-300">
+                        No wallet extensions detected.
+                      </p>
+                      <p className="text-sm text-slate-400">
+                        Please install a wallet to continue.
+                      </p>
+                    </div>
+                    <div className="space-y-3">
+                      {popularWallets.map(wallet => (
+                        <a
+                          key={wallet.id}
+                          href={wallet.downloadUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-full flex items-center gap-4 p-4 bg-slate-800/50 rounded-[12px] border border-slate-700 transition-all hover:border-[#0A84FF] hover:bg-slate-800"
+                        >
+                          <img
+                            src={wallet.icon}
+                            alt={wallet.name}
+                            className="w-8 h-8 rounded-full"
+                          />
+                          <span className="font-sans font-semibold text-base text-white">
+                            Install
+                            {' '}
                             {wallet.name}
-                          </div>
-                          <a
-                            href={wallet.downloadUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="btn btn-neutral btn-sm w-32 uppercase tracking-wider"
-                          >
-                            <span>Download</span>
-                            <span className="icon-[mdi--download] w-4 h-4" />
-                          </a>
-                        </div>
-                      </div>
-                    ))}
+                          </span>
+                          <span className="icon-[mdi--arrow-top-right-thin-circle-outline] w-5 h-5 text-slate-500 ml-auto" />
+                        </a>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+          </div>
 
           {/* Error Display */}
           {error && (
-            <div className="alert alert-error mt-4">
+            <div className="flex items-center gap-2 mt-6 p-3 rounded-[12px] bg-[#DC2626]/10 border border-[#DC2626]/20 text-sm text-red-400">
+              <span className="icon-[mdi--alert-circle-outline] w-5 h-5" />
               <span>{error.message}</span>
             </div>
           )}
         </div>
         <form method="dialog" className="modal-backdrop">
-          <button type="button">close</button>
+          <button type="button" onClick={closeConnectModal}>close</button>
         </form>
       </dialog>
     </>
