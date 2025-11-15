@@ -86,3 +86,10 @@ export interface MarketCardProps {
   market: Market
   variant?: 'default' | 'compact'
 }
+
+export interface MarketProps {
+  match: Match
+  userHasMarket: boolean
+  marketAddress?: `0x${string}`
+  refetchMarkets: () => void
+}

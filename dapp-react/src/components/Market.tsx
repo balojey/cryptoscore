@@ -1,16 +1,10 @@
-import type { Match } from '../types'
 import { useEffect, useState } from 'react'
 import { parseEther, parseEventLogs } from 'viem'
 import { useAccount, useReadContract, useTransactionReceipt, useWriteContract } from 'wagmi'
 import { Link } from 'react-router-dom'
 import { CRYPTO_SCORE_FACTORY_ADDRESS, CryptoScoreFactoryABI } from '../config/contracts'
-
-interface MarketProps {
-  match: Match
-  userHasMarket: boolean
-  marketAddress?: `0x${string}`
-  refetchMarkets: () => void
-}
+import { MarqueeText } from './MarqueeText'
+import { MarketProps } from '../types'
 
 export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: MarketProps) {
   const { address: userAddress } = useAccount()
@@ -103,7 +97,7 @@ export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: 
   const TeamDisplay = ({ team }: { team: { name: string, crest: string } }) => (
     <div className="flex flex-col items-center gap-2 w-2/5 text-center">
       <img src={team.crest} alt={team.name} className="w-12 h-12 object-contain" onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/50' }} />
-      <h4 className="font-sans font-bold text-base text-[#1E293B] truncate" title={team.name}>{team.name}</h4>
+      <MarqueeText text={team.name} threshold={10} className="font-sans font-bold text-base text-[#1E293B]" />
     </div>
   )
 
