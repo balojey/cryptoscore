@@ -103,113 +103,165 @@ export function Markets() {
     )
   }, [allMarkets, userAddress])
 
+  // useEffect(() => {
+  //   setLoading(true)
+  //   setError(null)
+
+  //   const today = new Date()
+  //   const in1 = new Date(today)
+  //   in1.setDate(today.getDate() + 1)
+  //   const in5 = new Date(today)
+  //   in5.setDate(today.getDate() + 5)
+
+  //   const toISO = (d: Date) => d.toISOString()
+
+  //   const dummyMatches: Match[] = [
+  //     {
+  //       id: 1,
+  //       utcDate: toISO(today),
+  //       status: 'SCHEDULED',
+  //       matchday: 1,
+  //       stage: 'REGULAR_SEASON',
+  //       group: null,
+  //       lastUpdated: toISO(today),
+  //       area: { id: 1, name: 'England', code: 'ENG', flag: '' },
+  //       competition: { id: 100, name: 'Premier League', code: 'PL', type: 'LEAGUE', emblem: '' },
+  //       season: { id: 1, startDate: toISO(today), endDate: toISO(in5), currentMatchday: 1, winner: null },
+  //       homeTeam: { id: 11, name: 'Team A', shortName: 'A', tla: 'TMA', crest: '' },
+  //       awayTeam: { id: 12, name: 'Team B', shortName: 'B', tla: 'TMB', crest: '' },
+  //       score: {
+  //         winner: null,
+  //         duration: 'REGULAR',
+  //         fullTime: { home: null, away: null },
+  //         halfTime: { home: null, away: null },
+  //       },
+  //       odds: { msg: '' },
+  //       referees: [],
+  //     },
+  //     {
+  //       id: 2,
+  //       utcDate: toISO(in1),
+  //       status: 'SCHEDULED',
+  //       matchday: 1,
+  //       stage: 'KNOCKOUT_STAGE',
+  //       group: null,
+  //       lastUpdated: toISO(in1),
+  //       area: { id: 2, name: 'Europe', code: 'EUR', flag: '' },
+  //       competition: { id: 200, name: 'Champions League', code: 'CL', type: 'CUP', emblem: '' },
+  //       season: { id: 2, startDate: toISO(today), endDate: toISO(in5), currentMatchday: 1, winner: null },
+  //       homeTeam: { id: 21, name: 'Team C', shortName: 'C', tla: 'TMC', crest: '' },
+  //       awayTeam: { id: 22, name: 'Team D', shortName: 'D', tla: 'TMD', crest: '' },
+  //       score: {
+  //         winner: null,
+  //         duration: 'REGULAR',
+  //         fullTime: { home: null, away: null },
+  //         halfTime: { home: null, away: null },
+  //       },
+  //       odds: { msg: '' },
+  //       referees: [],
+  //     },
+  //     {
+  //       id: 3,
+  //       utcDate: toISO(in5),
+  //       status: 'SCHEDULED',
+  //       matchday: 5,
+  //       stage: 'REGULAR_SEASON',
+  //       group: null,
+  //       lastUpdated: toISO(in5),
+  //       area: { id: 1, name: 'England', code: 'ENG', flag: '' },
+  //       competition: { id: 100, name: 'Premier League', code: 'PL', type: 'LEAGUE', emblem: '' },
+  //       season: { id: 1, startDate: toISO(today), endDate: toISO(in5), currentMatchday: 5, winner: null },
+  //       homeTeam: { id: 13, name: 'Team E', shortName: 'E', tla: 'TME', crest: '' },
+  //       awayTeam: { id: 14, name: 'Team F', shortName: 'F', tla: 'TMF', crest: '' },
+  //       score: {
+  //         winner: null,
+  //         duration: 'REGULAR',
+  //         fullTime: { home: null, away: null },
+  //         halfTime: { home: null, away: null },
+  //       },
+  //       odds: { msg: '' },
+  //       referees: [],
+  //     },
+  //   ]
+
+  //   const start = new Date(today)
+  //   const end = new Date(today)
+  //   if (dateFilter === 'today') {
+  //     end.setDate(start.getDate() + 1)
+  //   }
+  //   else if (dateFilter === 'next7days') {
+  //     end.setDate(start.getDate() + 7)
+  //   }
+  //   else {
+  //     // default to next 7 days
+  //     end.setDate(start.getDate() + 7)
+  //   }
+
+  //   const filtered = dummyMatches.filter((m) => {
+  //     // filter by competition code
+  //     if (m.competition.code !== competition)
+  //       return false
+  //     const dt = new Date(m.utcDate)
+  //     return dt >= start && dt <= end
+  //   })
+
+  //   // simulate async behaviour briefly
+  //   setTimeout(() => {
+  //     setMatches(filtered)
+  //     setLoading(false)
+  //   }, 200)
+  // }, [competition, dateFilter])
+
   useEffect(() => {
-    setLoading(true)
-    setError(null)
+    const fetchMatches = async () => {
+      setLoading(true)
+      setError(null)
 
-    const today = new Date()
-    const in1 = new Date(today)
-    in1.setDate(today.getDate() + 1)
-    const in5 = new Date(today)
-    in5.setDate(today.getDate() + 5)
+      const today = new Date()
+      const tomorrow = new Date(today)
+      tomorrow.setDate(tomorrow.getDate() + 1)
+      const nextWeek = new Date(today)
+      nextWeek.setDate(nextWeek.getDate() + 7)
 
-    const toISO = (d: Date) => d.toISOString()
+      const formatDate = (date: Date) => date.toISOString().split('T')[0]
 
-    const dummyMatches: Match[] = [
-      {
-        id: 1,
-        utcDate: toISO(today),
-        status: 'SCHEDULED',
-        matchday: 1,
-        stage: 'REGULAR_SEASON',
-        group: null,
-        lastUpdated: toISO(today),
-        area: { id: 1, name: 'England', code: 'ENG', flag: '' },
-        competition: { id: 100, name: 'Premier League', code: 'PL', type: 'LEAGUE', emblem: '' },
-        season: { id: 1, startDate: toISO(today), endDate: toISO(in5), currentMatchday: 1, winner: null },
-        homeTeam: { id: 11, name: 'Team A', shortName: 'A', tla: 'TMA', crest: '' },
-        awayTeam: { id: 12, name: 'Team B', shortName: 'B', tla: 'TMB', crest: '' },
-        score: {
-          winner: null,
-          duration: 'REGULAR',
-          fullTime: { home: null, away: null },
-          halfTime: { home: null, away: null },
-        },
-        odds: { msg: '' },
-        referees: [],
-      },
-      {
-        id: 2,
-        utcDate: toISO(in1),
-        status: 'SCHEDULED',
-        matchday: 1,
-        stage: 'KNOCKOUT_STAGE',
-        group: null,
-        lastUpdated: toISO(in1),
-        area: { id: 2, name: 'Europe', code: 'EUR', flag: '' },
-        competition: { id: 200, name: 'Champions League', code: 'CL', type: 'CUP', emblem: '' },
-        season: { id: 2, startDate: toISO(today), endDate: toISO(in5), currentMatchday: 1, winner: null },
-        homeTeam: { id: 21, name: 'Team C', shortName: 'C', tla: 'TMC', crest: '' },
-        awayTeam: { id: 22, name: 'Team D', shortName: 'D', tla: 'TMD', crest: '' },
-        score: {
-          winner: null,
-          duration: 'REGULAR',
-          fullTime: { home: null, away: null },
-          halfTime: { home: null, away: null },
-        },
-        odds: { msg: '' },
-        referees: [],
-      },
-      {
-        id: 3,
-        utcDate: toISO(in5),
-        status: 'SCHEDULED',
-        matchday: 5,
-        stage: 'REGULAR_SEASON',
-        group: null,
-        lastUpdated: toISO(in5),
-        area: { id: 1, name: 'England', code: 'ENG', flag: '' },
-        competition: { id: 100, name: 'Premier League', code: 'PL', type: 'LEAGUE', emblem: '' },
-        season: { id: 1, startDate: toISO(today), endDate: toISO(in5), currentMatchday: 5, winner: null },
-        homeTeam: { id: 13, name: 'Team E', shortName: 'E', tla: 'TME', crest: '' },
-        awayTeam: { id: 14, name: 'Team F', shortName: 'F', tla: 'TMF', crest: '' },
-        score: {
-          winner: null,
-          duration: 'REGULAR',
-          fullTime: { home: null, away: null },
-          halfTime: { home: null, away: null },
-        },
-        odds: { msg: '' },
-        referees: [],
-      },
-    ]
+      let dateFrom = ''
+      let dateTo = ''
 
-    const start = new Date(today)
-    const end = new Date(today)
-    if (dateFilter === 'today') {
-      end.setDate(start.getDate() + 1)
-    }
-    else if (dateFilter === 'next7days') {
-      end.setDate(start.getDate() + 7)
-    }
-    else {
-      // default to next 7 days
-      end.setDate(start.getDate() + 7)
+      if (dateFilter === 'today') {
+        dateFrom = formatDate(today)
+        dateTo = formatDate(tomorrow)
+      }
+      else if (dateFilter === 'next7days') {
+        dateFrom = formatDate(today)
+        dateTo = formatDate(nextWeek)
+      }
+
+      try {
+        const response = await fetch(
+          `https://corsproxy.io/?https://api.football-data.org/v4/competitions/${competition}/matches?status=SCHEDULED&dateFrom=${dateFrom}&dateTo=${dateTo}`,
+          {
+            headers: {
+              'X-Auth-Token': import.meta.env.VITE_FOOTBALL_DATA_API_KEY,
+            },
+          },
+        )
+
+        if (!response.ok)
+          throw new Error('Failed to fetch matches')
+        const data = await response.json()
+        setMatches(data.matches || [])
+      }
+      catch (err) {
+        console.error(err)
+        setError('Could not fetch matches. Please try again later.')
+      }
+      finally {
+        setLoading(false)
+      }
     }
 
-    const filtered = dummyMatches.filter((m) => {
-      // filter by competition code
-      if (m.competition.code !== competition)
-        return false
-      const dt = new Date(m.utcDate)
-      return dt >= start && dt <= end
-    })
-
-    // simulate async behaviour briefly
-    setTimeout(() => {
-      setMatches(filtered)
-      setLoading(false)
-    }, 200)
+    fetchMatches()
   }, [competition, dateFilter])
 
   return (
