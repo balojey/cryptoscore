@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { formatEther } from 'viem'
+import { useAccount } from 'wagmi'
 import { shortenAddress } from '../utils/formatters'
 import { useMatchData } from '../hooks/useMatchData'
 
@@ -14,55 +15,119 @@ interface PublicMarketCardProps {
   isPublic: boolean
 }
 
+// Skeleton component for loading state
+export const PublicMarketCardSkeleton = () => (
+  <div className="bg-white rounded-[16px] shadow-md p-6 border border-slate-100 animate-pulse">
+    <div className="flex items-center justify-between">
+      <div className="w-1/3 h-5 bg-slate-200 rounded" />
+      <div className="w-1/4 h-5 bg-slate-200 rounded" />
+    </div>
+    <div className="flex items-center justify-between my-6">
+      <div className="flex flex-col items-center gap-2 w-2/5">
+        <div className="w-16 h-16 bg-slate-200 rounded-full" />
+        <div className="h-5 w-24 bg-slate-200 rounded" />
+      </div>
+      <div className="h-6 w-6 bg-slate-200 rounded" />
+      <div className="flex flex-col items-center gap-2 w-2/5">
+        <div className="w-16 h-16 bg-slate-200 rounded-full" />
+        <div className="h-5 w-24 bg-slate-200 rounded" />
+      </div>
+    </div>
+    <div className="space-y-3 border-t border-slate-100 pt-4">
+      <div className="h-5 w-full bg-slate-200 rounded" />
+      <div className="h-5 w-full bg-slate-200 rounded" />
+      <div className="h-5 w-full bg-slate-200 rounded" />
+    </div>
+    <div className="mt-6 h-12 w-full bg-slate-200 rounded-[12px]" />
+  </div>
+)
+
 export default function PublicMarketCard(props: PublicMarketCardProps) {
   const { marketAddress, matchId, entryFee, creator, participantsCount } = props
+  const { address: userAddress } = useAccount()
   const { data: matchData, loading, error } = useMatchData(Number(matchId))
 
-  return (
-    <div className="card bg-white shadow-lg hover:shadow-2xl transition-shadow duration-300 border rounded-lg">
-      <div className="card-body p-4">
-        {loading && <div className="h-24 flex items-center justify-center"><span className="loading loading-spinner text-primary"></span><p className='ml-2'>Loading match...</p></div>}
-        {error && <div className="h-24 flex items-center justify-center text-red-500">Match details unavailable.</div>}
-        {matchData && (
-          <div className="mb-4">
-            <div className="text-center text-sm text-gray-500 mb-2">
-              {matchData.competition.name} - Round {matchData.matchday}
-            </div>
-            <div className="grid grid-cols-3 items-center text-center">
-              <div className="flex flex-col items-center">
-                <img src={matchData.homeTeam.crest} alt={matchData.homeTeam.name} className="w-12 h-12 mx-auto" />
-                <span className="font-bold mt-1">{matchData.homeTeam.name}</span>
-              </div>
-              <div className="font-bold text-2xl">VS</div>
-              <div className="flex flex-col items-center">
-                <img src={matchData.awayTeam.crest} alt={matchData.awayTeam.name} className="w-12 h-12 mx-auto" />
-                <span className="font-bold mt-1">{matchData.awayTeam.name}</span>
-              </div>
-            </div>
-            <div className="text-center text-xs text-gray-500 mt-2">
-              {new Date(matchData.utcDate).toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'short' })}
-            </div>
-          </div>
-        )}
+  // Per DLS: Determine button state
+  // This is a simplified version. A real implementation would need more state.
+  // e.g., is user a participant? Is match started?
+  const isOwner = userAddress?.toLowerCase() === creator.toLowerCase()
+  const buttonText = isOwner ? 'View Your Market' : 'View & Join Market'
+  const buttonStyle
+    = 'w-full flex items-center justify-center gap-2 h-12 px-6 bg-[#0A84FF] text-white rounded-[12px] font-sans text-base font-bold uppercase tracking-wider transition-all hover:bg-blue-600 active:bg-blue-700 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30'
 
-        <div className="border-t-2 border-gray-100 pt-4 space-y-2">
-          <p className="text-sm">
-            <span className="font-semibold">Creator:</span>
-            <span className="font-mono ml-2 bg-gray-100 p-1 rounded">{shortenAddress(creator)}</span>
-          </p>
-          <p className="text-sm">
-            <span className="font-semibold">Entry:</span>
-            <span className="font-bold ml-2">{formatEther(entryFee)} PAS</span>
-          </p>
-          <p className="text-sm">
-            <span className="font-semibold">Participants:</span>
-            <span className="font-bold ml-2">{participantsCount.toString()}</span>
-          </p>
+  if (loading) {
+    return <PublicMarketCardSkeleton />
+  }
+
+  if (error || !matchData) {
+    return (
+      <div className="bg-white rounded-[16px] shadow-md p-6 border border-red-200 flex flex-col items-center justify-center text-center min-h-[400px]">
+        <span className="icon-[mdi--alert-circle-outline] w-12 h-12 text-red-400 mb-4" />
+        <h3 className="font-bold text-lg text-slate-800">Match Data Unavailable</h3>
+        <p className="text-sm text-slate-500">Could not load details for Match ID: {matchId.toString()}</p>
+      </div>
+    )
+  }
+
+  const TeamDisplay = ({ team }: { team: { name: string, crest: string } }) => (
+    <div className="flex flex-col items-center gap-3 w-2/5 text-center">
+      <img src={team.crest} alt={team.name} className="w-16 h-16 object-contain" onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/64' }} />
+      <h3 className="font-jakarta font-bold text-lg text-[#1E293B] leading-tight" title={team.name}>{team.name}</h3>
+    </div>
+  )
+
+  const InfoRow = ({ label, value, icon }: { label: string, value: React.ReactNode, icon: string }) => (
+    <div className="flex items-center justify-between text-sm">
+      <div className="flex items-center gap-2 text-slate-500">
+        <span className={`icon-[${icon}] w-4 h-4`} />
+        <span>{label}</span>
+      </div>
+      <span className="font-semibold text-[#1E293B]">{value}</span>
+    </div>
+  )
+
+  return (
+    <div className="bg-white rounded-[16px] shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col border border-slate-100/50">
+      <div className="p-6 flex-grow flex flex-col">
+        {/* Header */}
+        <div className="text-center">
+          <p className="font-sans text-sm font-medium text-slate-500">{matchData.competition.name}</p>
+          <p className="font-sans text-xs text-slate-400">{new Date(matchData.utcDate).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}</p>
         </div>
 
-        <div className="card-actions justify-end mt-4">
-          <Link to={`/market/${marketAddress}`} className="btn btn-primary btn-block">
-            View & Join Market
+        {/* Matchup */}
+        <div className="flex items-start justify-between my-6">
+          <TeamDisplay team={matchData.homeTeam} />
+          <div className="font-jakarta text-2xl font-bold text-slate-300 pt-6">VS</div>
+          <TeamDisplay team={matchData.awayTeam} />
+        </div>
+
+        {/* Spacer to push content below */}
+        <div className="flex-grow" />
+
+        {/* Market Info */}
+        <div className="space-y-3 border-t border-slate-100 pt-4">
+          <InfoRow
+            label="Entry Fee"
+            value={<>{formatEther(entryFee)} <span className="font-normal text-slate-400">PAS</span></>}
+            icon="mdi--login"
+          />
+          <InfoRow
+            label="Participants"
+            value={participantsCount.toString()}
+            icon="mdi--account-group-outline"
+          />
+          <InfoRow
+            label="Creator"
+            value={<span className="font-mono">{shortenAddress(creator)}</span>}
+            icon="mdi--account-edit-outline"
+          />
+        </div>
+
+        {/* Action */}
+        <div className="mt-6">
+          <Link to={`/market/${marketAddress}`} className={buttonStyle}>
+            {buttonText}
           </Link>
         </div>
       </div>
