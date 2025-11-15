@@ -21,7 +21,7 @@ export const useMatchData = (matchId: number) => {
       setError(null);
 
       try {
-        const response = await fetch(`${API_URL}${matchId}`, {
+        const response = await fetch(`https://corsproxy.io/?${API_URL}${matchId}`, {
           headers: {
             'X-Auth-Token': API_KEY,
           },
@@ -32,6 +32,7 @@ export const useMatchData = (matchId: number) => {
         }
 
         const result = await response.json();
+        console.log(result);
         setData(result as Match);
       } catch (e: any) {
         setError(e.message || 'Failed to fetch match data');

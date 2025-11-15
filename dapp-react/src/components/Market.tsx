@@ -1,4 +1,4 @@
-import type { Match } from './Markets'
+import type { Match } from '../types'
 import { useState } from 'react'
 import { parseEther } from 'viem'
 import { useTransactionReceipt, useWriteContract } from 'wagmi'
@@ -12,7 +12,7 @@ interface MarketProps {
 
 export function Market({ match, userHasMarket, refetchMarkets }: MarketProps) {
   const [isCreating, setIsCreating] = useState(false)
-  const [entryFee, setEntryFee] = useState('0.01')
+  const [entryFee, setEntryFee] = useState('100')
   const [isPublic, setIsPublic] = useState(true)
   const [error, setError] = useState<string | null>(null)
 

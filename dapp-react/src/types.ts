@@ -10,27 +10,62 @@ export interface MarketDashboardInfo {
   startTime: bigint
 }
 
-export interface Team {
-  id: number;
-  name: string;
-  shortName: string;
-  tla: string;
-  crest: string;
-}
-
-export interface Competition {
-  id: number;
-  name: string;
-  code: string;
-  type: string;
-  emblem: string;
-}
-
 export interface Match {
-  id: number;
-  competition: Competition;
-  utcDate: string;
-  matchday: number;
-  homeTeam: Team;
-  awayTeam: Team;
+  id: number
+  utcDate: string
+  status: string
+  matchday: number
+  stage: string
+  group: string | null
+  lastUpdated: string
+  area: {
+    id: number
+    name: string
+    code: string
+    flag: string
+  }
+  competition: {
+    id: number
+    name: string
+    code: string
+    type: string
+    emblem: string
+  }
+  season: {
+    id: number
+    startDate: string
+    endDate: string
+    currentMatchday: number
+    winner: string | null
+  }
+  homeTeam: {
+    id: number
+    name: string
+    shortName: string
+    tla: string
+    crest: string
+  }
+  awayTeam: {
+    id: number
+    name: string
+    shortName: string
+    tla: string
+    crest: string
+  }
+  score: {
+    winner: string | null
+    duration: string
+    fullTime: {
+      home: number | null
+      away: number | null
+    }
+    halfTime: {
+      home: number | null
+      away: number | null
+    }
+  }
+  odds: {
+    msg: string
+  }
+  referees: any[]
 }

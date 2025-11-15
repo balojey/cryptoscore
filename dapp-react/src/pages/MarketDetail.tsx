@@ -5,20 +5,7 @@ import { formatEther } from 'viem'
 import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi'
 import { CRYPTO_SCORE_FACTORY_ADDRESS, CryptoScoreFactoryABI, CryptoScoreMarketABI } from '../config/contracts'
 import { shortenAddress } from '../utils/formatters'
-
-// Mock function to get match details, in a real app this would come from an API or be stored on-chain
-function getMatchDetails(matchId: bigint) {
-  const details = {
-    1: { home: 'Arsenal', away: 'Chelsea' },
-    2: { home: 'Liverpool', away: 'Man City' },
-    3: { home: 'Real Madrid', away: 'Barcelona' },
-  }
-  const id = matchId.toString()
-  if (id in details)
-    return details[id as unknown as keyof typeof details]
-
-  return { home: 'Team A', away: 'Team B' }
-}
+import { useMatchData } from '../hooks/useMatchData'
 
 export function MarketDetail() {
   const { marketAddress } = useParams<{ marketAddress: Address }>()
@@ -37,6 +24,10 @@ export function MarketDetail() {
       enabled: !!marketAddress,
     },
   })
+
+  const { data: matchData, loading: isLoadingMatch, error: matchError } = useMatchData(
+    marketInfo ? Number((marketInfo as any)[1]) : 0,
+  )
 
   const { data: marketStatus, isLoading: isLoadingStatus, error: statusError } = useReadContract({
     abi: CryptoScoreMarketABI,
@@ -65,6 +56,8 @@ export function MarketDetail() {
       enabled: !!marketAddress && !!userAddress,
     },
   })
+  // normalize unknown returned type to a boolean for safe usage in JSX/conditionals
+  const isUserParticipant = Boolean(isParticipant)
 
   const { data: winningTeam } = useReadContract({
     abi: CryptoScoreMarketABI,
@@ -147,8 +140,8 @@ export function MarketDetail() {
     }
   }
 
-  const isLoading = isLoadingInfo || isLoadingStatus || isLoadingParticipants
-  const isError = infoError || statusError
+  const isLoading = isLoadingInfo || isLoadingStatus || isLoadingParticipants || isLoadingMatch
+  const isError = infoError || statusError || matchError
 
   if (isLoading) {
     return (
@@ -158,7 +151,7 @@ export function MarketDetail() {
     )
   }
 
-  if (isError || !marketInfo || (marketInfo as any)[0] === '0x0000000000000000000000000000000000000000') {
+  if (isError || !marketInfo || (marketInfo as any)[0] === '0x0000000000000000000000000000000000000000' || !matchData) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div role="alert" className="alert alert-error">
@@ -169,15 +162,24 @@ export function MarketDetail() {
     )
   }
 
-  const [, matchId, creator, entryFee, , startTime] = marketInfo as any
-  const matchDetails = getMatchDetails(matchId)
+  const [, , creator, entryFee, , startTime] = marketInfo as any
   const matchDate = new Date(Number(startTime) * 1000)
   const isMatchStarted = new Date() > matchDate
   const poolSize = totalVolume && participantsCount ? Number(participantsCount) * Number(formatEther(totalVolume as bigint)) : 0
 
+  const getTeamName = (index: number) => {
+    if (!matchData)
+      return 'N/A'
+    if (index === 0)
+      return matchData.homeTeam.name
+    if (index === 1)
+      return matchData.awayTeam.name
+    return 'Draw'
+  }
+
   const renderButtons = () => {
     if (marketStatus) { // Resolved
-      if (isParticipant) {
+      if (isUserParticipant) {
         return (
           <div className="flex items-center gap-4">
             <button className="btn btn-disabled">Resolved</button>
@@ -189,34 +191,35 @@ export function MarketDetail() {
     }
 
     if (isMatchStarted) {
-      if (isParticipant)
+      if (userAddress === creator)
         return <button className="btn btn-primary" onClick={handleResolveMarket}>Resolve Market</button>
 
       return <button className="btn btn-disabled">Market Closed</button>
     }
 
-    return <button className="btn btn-primary" onClick={handleJoinMarket} disabled={selectedTeam === null}>Join Market</button>
-  }
-
-  const getTeamName = (index: number) => {
-    if (index === 0)
-      return matchDetails.home
-    if (index === 1)
-      return matchDetails.away
-    return 'Draw'
+    return <button className="btn btn-primary" onClick={handleJoinMarket} disabled={selectedTeam === null || isUserParticipant}>Join Market</button>
   }
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="card bg-base-100 shadow-xl">
         <div className="card-body">
-          <h1 className="card-title text-4xl font-bold mb-4">
-            {matchDetails.home}
-            {' '}
-            vs
-            {' '}
-            {matchDetails.away}
-          </h1>
+          <div className="text-center mb-4">
+            <h2 className="text-xl font-semibold">{matchData.competition.name} - Matchday {matchData.matchday}</h2>
+            <p className="text-sm text-gray-500">{new Date(matchData.utcDate).toLocaleString()}</p>
+          </div>
+
+          <div className="flex justify-around items-center mb-6">
+            <div className="text-center">
+              <img src={matchData.homeTeam.crest} alt={matchData.homeTeam.name} className="w-24 h-24 mx-auto mb-2" />
+              <h1 className="text-3xl font-bold">{matchData.homeTeam.name}</h1>
+            </div>
+            <div className="text-5xl font-extrabold">VS</div>
+            <div className="text-center">
+              <img src={matchData.awayTeam.crest} alt={matchData.awayTeam.name} className="w-24 h-24 mx-auto mb-2" />
+              <h1 className="text-3xl font-bold">{matchData.awayTeam.name}</h1>
+            </div>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div>
@@ -262,22 +265,23 @@ export function MarketDetail() {
             )}
           </div>
 
-          {!marketStatus && (
+          {!marketStatus && !isMatchStarted && (
             <div className="mb-6">
               <h2 className="text-xl font-semibold mb-2">Your Prediction</h2>
               <div className="join">
                 <button className={`btn join-item ${selectedTeam === 0 ? 'btn-active' : ''}`} onClick={() => setSelectedTeam(0)}>
-                  {matchDetails.home}
+                  {matchData.homeTeam.name}
                   {' '}
                   Wins
                 </button>
                 <button className={`btn join-item ${selectedTeam === 2 ? 'btn-active' : ''}`} onClick={() => setSelectedTeam(2)}>Draw</button>
                 <button className={`btn join-item ${selectedTeam === 1 ? 'btn-active' : ''}`} onClick={() => setSelectedTeam(1)}>
-                  {matchDetails.away}
+                  {matchData.awayTeam.name}
                   {' '}
                   Wins
                 </button>
               </div>
+              {isUserParticipant && <p className="text-success mt-2">You have already joined this market.</p>}
             </div>
           )}
 

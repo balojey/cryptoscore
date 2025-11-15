@@ -2,67 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useAccount, useContractRead } from 'wagmi'
 import { CRYPTO_SCORE_FACTORY_ADDRESS, CryptoScoreFactoryABI } from '../config/contracts'
 import { Market } from './Market'
-
-// --- TYPES ---
-export interface Match {
-  id: number
-  utcDate: string
-  status: string
-  matchday: number
-  stage: string
-  group: string | null
-  lastUpdated: string
-  area: {
-    id: number
-    name: string
-    code: string
-    flag: string
-  }
-  competition: {
-    id: number
-    name: string
-    code: string
-    type: string
-    emblem: string
-  }
-  season: {
-    id: number
-    startDate: string
-    endDate: string
-    currentMatchday: number
-    winner: string | null
-  }
-  homeTeam: {
-    id: number
-    name: string
-    shortName: string
-    tla: string
-    crest: string
-  }
-  awayTeam: {
-    id: number
-    name: string
-    shortName: string
-    tla: string
-    crest: string
-  }
-  score: {
-    winner: string | null
-    duration: string
-    fullTime: {
-      home: number | null
-      away: number | null
-    }
-    halfTime: {
-      home: number | null
-      away: number | null
-    }
-  }
-  odds: {
-    msg: string
-  }
-  referees: any[]
-}
+import { Match } from '../types'
 
 const COMPETITIONS = [
   { code: 'PL', name: 'Premier League' },
