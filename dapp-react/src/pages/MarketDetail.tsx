@@ -253,7 +253,7 @@ export function MarketDetail() {
               {' '}
               {participantsCount?.toString() ?? '0'}
             </div>
-            {marketStatus && (
+            {!!marketStatus && (
               <div>
                 <span className="font-semibold">Winning Team:</span>
                 {' '}

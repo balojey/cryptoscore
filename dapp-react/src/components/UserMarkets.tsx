@@ -31,7 +31,7 @@ export function UserMarkets() {
   })
 
   const { data: createdMarketsData } = useReadContracts({
-    contracts: createdMarketAddresses?.map((marketAddress: string) => ({
+    contracts: (createdMarketAddresses as any)?.map((marketAddress: string) => ({
       abi: CryptoScoreDashboardABI,
       address: CRYPTO_SCORE_DASHBOARD_ADDRESS,
       functionName: 'marketInfoByAddress',
@@ -43,7 +43,7 @@ export function UserMarkets() {
   })
 
   const { data: joinedMarketsData } = useReadContracts({
-    contracts: joinedMarketAddresses?.map((marketAddress: string) => ({
+    contracts: (joinedMarketAddresses as any)?.map((marketAddress: string) => ({
       abi: CryptoScoreDashboardABI,
       address: CRYPTO_SCORE_DASHBOARD_ADDRESS,
       functionName: 'marketInfoByAddress',
