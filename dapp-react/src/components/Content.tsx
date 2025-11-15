@@ -1,68 +1,91 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Markets } from './Markets' // Import Markets component
+import { Markets } from './Markets'
 import PublicMarkets from './PublicMarkets'
 
 export default function Content() {
-  // const [toastMessage, setToastMessage] = useState('')
-  // const [showToast, setShowToast] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
+  function openModal() {
+    setIsModalOpen(true)
+  }
+
+  function closeModal() {
+    setIsModalOpen(false)
+  }
+
   return (
-    <div className="bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header Section */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-mono font-bold text-black mb-2 tracking-wide">
-            Sports Predictive Market
+    <div className="bg-[#F5F7FA] min-h-screen">
+      <div className="container mx-auto px-4 py-16 sm:py-24">
+        {/* Hero Section */}
+        <div className="text-center max-w-3xl mx-auto mb-16">
+          <h1 className="font-jakarta text-4xl sm:text-5xl font-bold text-[#1E293B] mb-4 tracking-tight">
+            The Premier Sports Prediction Market
           </h1>
-          <p className="text-xl text-gray-600 font-mono flex items-center justify-center gap-2">
-            <span>Predict the outcome of your favorite sports</span>
+          <p className="text-lg sm:text-xl text-slate-600">
+            Challenge the crowd, predict game outcomes, and earn rewards. Your sports knowledge is your greatest asset.
           </p>
-          <p className="text-gray-600 mt-4">
-            Ready to launch your own match market? Click below to create one!
-          </p>
-          <div className="mt-4 flex justify-center gap-4">
-            <Link to="/my-markets" className="btn btn-primary">
-              My Markets
-            </Link>
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
             <button
-              onClick={() => setIsModalOpen(true)}
-              className="btn btn-secondary"
+              type="button"
+              onClick={openModal}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 h-12 px-8 bg-[#0A84FF] text-white rounded-[12px] font-sans text-base font-bold uppercase tracking-wider transition-all hover:bg-blue-600 active:bg-blue-700 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30"
             >
-              Create Markets
+              <span className="icon-[mdi--plus-circle-outline] w-5 h-5" />
+              <span>Create Market</span>
             </button>
+            <Link
+              to="/my-markets"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 h-12 px-8 bg-transparent text-[#0A84FF] rounded-[12px] font-sans text-base font-bold uppercase tracking-wider transition-all border-2 border-[#0A84FF] hover:bg-[#0A84FF]/10 active:bg-[#0A84FF]/20"
+            >
+              <span className="icon-[mdi--view-dashboard-outline] w-5 h-5" />
+              <span>My Markets</span>
+            </Link>
           </div>
         </div>
 
-        {/* Modal for Creating Markets */}
-        <dialog id="markets_modal" className={`modal ${isModalOpen ? 'modal-open' : ''}`}>
-          <div className="modal-box w-11/12 max-w-5xl">
-            <h3 className="font-bold text-lg">Create a New Market</h3>
-            <div className="py-4">
-              <Markets />
-            </div>
-            <div className="modal-action">
-              <form method="dialog">
-                <button onClick={() => setIsModalOpen(false)} className="btn">Close</button>
-              </form>
-            </div>
+        {/* Public Markets Section */}
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center gap-3 mb-8">
+            <span className="icon-[mdi--stadium-outline] w-8 h-8 text-[#0BC95A]" />
+            <h2 className="font-jakarta text-3xl font-bold text-[#1E293B]">
+              Open Markets
+            </h2>
           </div>
-        </dialog>
-
-        <PublicMarkets />
+          <PublicMarkets />
+        </div>
 
       </div>
 
-      {/* Toast Notification */}
-      {/* {showToast && (
-        <div className="toast toast-top toast-end">
-          <div className="alert alert-success">
-            <span className="icon-[mdi--check-circle] w-4 h-4" />
-            <span>{toastMessage}</span>
+      {/* Create Market Modal */}
+      {isModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          onClick={closeModal}
+        >
+          <div
+            className="bg-white rounded-[16px] shadow-2xl w-11/12 max-w-5xl flex flex-col max-h-[90vh]"
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-slate-200">
+              <h3 className="font-jakarta text-2xl font-bold text-[#1E293B]">Create a New Market</h3>
+              <button
+                type="button"
+                className="h-10 w-10 flex items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors"
+                onClick={closeModal}
+              >
+                <span className="icon-[mdi--close] w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto">
+              <Markets />
+            </div>
           </div>
         </div>
-      )} */}
+      )}
     </div>
   )
 }
