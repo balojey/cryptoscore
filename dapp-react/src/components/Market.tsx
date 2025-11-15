@@ -1,7 +1,7 @@
 import type { Match } from '../types'
-import { useState } from 'react'
-import { parseEther } from 'viem'
-import { useTransactionReceipt, useWriteContract } from 'wagmi'
+import { useEffect, useState } from 'react'
+import { parseEther, parseEventLogs } from 'viem'
+import { useAccount, useReadContract, useTransactionReceipt, useWriteContract } from 'wagmi'
 import { Link } from 'react-router-dom'
 import { CRYPTO_SCORE_FACTORY_ADDRESS, CryptoScoreFactoryABI } from '../config/contracts'
 
@@ -13,21 +13,66 @@ interface MarketProps {
 }
 
 export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: MarketProps) {
+  const { address: userAddress } = useAccount()
   const [isCreating, setIsCreating] = useState(false)
+  const [newlyCreatedMarket, setNewlyCreatedMarket] = useState<{ matchId: number, address: `0x${string}` } | null>(null)
   const [entryFee, setEntryFee] = useState('100')
   const [isPublic, setIsPublic] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   const { data: txHash, writeContract, isPending: isCreateMarketLoading, error: writeContractError } = useWriteContract()
-  const { isLoading: isTxLoading, isSuccess: isTxSuccess } = useTransactionReceipt({
+  const { data: receipt, isLoading: isTxLoading, isSuccess: isTxSuccess } = useTransactionReceipt({
     hash: txHash,
-    query: { enabled: !!txHash },
   })
 
-  if (isTxSuccess) {
-    refetchMarkets()
-    // Maybe show a toast here
+  // When a market is created, parse the logs to find the new market address
+  useEffect(() => {
+    if (isTxSuccess && receipt) {
+      const logs = parseEventLogs({
+        abi: CryptoScoreFactoryABI,
+        logs: receipt.logs,
+        eventName: 'MarketCreated',
+      }) as any[]
+
+      const marketLog = logs.find((log: any) => log.args?.matchId === BigInt(match.id) && log.args?.creator === userAddress)
+
+      if (marketLog?.args?.marketAddress) {
+        setNewlyCreatedMarket({ matchId: match.id, address: marketLog.args.marketAddress as `0x${string}` })
+      }
+      // Refetch markets to update the parent state
+      refetchMarkets()
+    }
+  }, [isTxSuccess, receipt, refetchMarkets, match.id, userAddress])
+
+  // Fallback: If userHasMarket is true but address is missing, fetch it directly
+  const { data: fetchedMarkets } = useReadContract({
+    address: CRYPTO_SCORE_FACTORY_ADDRESS,
+    abi: CryptoScoreFactoryABI,
+    functionName: 'getMarkets',
+    args: [match.id],
+    query: {
+      enabled: userHasMarket && !marketAddress,
+    },
+  })
+
+  const getEffectiveMarketAddress = () => {
+    // Priority 1: Newly created market in this component instance
+    if (newlyCreatedMarket?.matchId === match.id) {
+      return newlyCreatedMarket.address
+    }
+    // Priority 2: Address passed via props
+    if (marketAddress) {
+      return marketAddress
+    }
+    // Priority 3: Fallback fetch for existing markets
+    if (Array.isArray(fetchedMarkets) && fetchedMarkets.length > 0) {
+      return fetchedMarkets[0] // Assuming the first market is the relevant one
+    }
+    return undefined
   }
+
+  const effectiveMarketAddress = getEffectiveMarketAddress()
+  const hasMarket = userHasMarket || !!effectiveMarketAddress
 
   const handleCreateMarket = () => {
     setError(null)
@@ -83,16 +128,25 @@ export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: 
 
       {/* Actions & Form */}
       <div className="min-h-[140px] flex flex-col justify-center">
-        {userHasMarket
+        {hasMarket
           ? (
               <div className="text-center space-y-3">
-                <p className="font-sans text-sm text-slate-600">You have created a market for this match.</p>
-                <Link
-                  to={`/market/${marketAddress}`}
-                  className="inline-flex items-center justify-center gap-2 h-10 px-6 bg-transparent text-[#0A84FF] rounded-[12px] font-sans text-sm font-bold uppercase tracking-wider transition-all border-2 border-[#0A84FF] hover:bg-[#0A84FF]/10 active:bg-[#0A84FF]/20"
-                >
-                  View Market
-                </Link>
+                <p className="font-sans text-sm text-slate-600">You have a market for this match.</p>
+                {effectiveMarketAddress
+                  ? (
+                    <Link
+                      to={`/market/${effectiveMarketAddress}`}
+                      className="inline-flex items-center justify-center gap-2 h-10 px-6 bg-transparent text-[#0A84FF] rounded-[12px] font-sans text-sm font-bold uppercase tracking-wider transition-all border-2 border-[#0A84FF] hover:bg-[#0A84FF]/10 active:bg-[#0A84FF]/20"
+                    >
+                      View Market
+                    </Link>
+                    )
+                  : (
+                    <div className="flex items-center justify-center gap-2 h-10 text-slate-500">
+                      <span className="icon-[mdi--loading] animate-spin" />
+                      <span>Loading Market...</span>
+                    </div>
+                    )}
               </div>
             )
           : (
