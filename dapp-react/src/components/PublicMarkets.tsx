@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react'
 import { useAccount, useReadContract } from 'wagmi'
 import { CRYPTO_SCORE_DASHBOARD_ADDRESS, CryptoScoreDashboardABI } from '../config/contracts'
-import PublicMarketCard, { PublicMarketCardSkeleton } from './PublicMarketCard'
+import MarketCard, { MarketCardSkeleton } from './MarketCard'
+import type { Market } from './MarketCard'
 
 const PAGE_SIZE = 6
 
 export default function PublicMarkets() {
   const { address } = useAccount()
   const [offset, setOffset] = useState(0)
-  const [markets, setMarkets] = useState<any[]>([])
+  const [markets, setMarkets] = useState<Market[]>([])
   const [hasMore, setHasMore] = useState(true)
 
   const { data, isLoading, isError, error, refetch } = useReadContract({
@@ -28,7 +29,7 @@ export default function PublicMarkets() {
         ? data.filter((market: any) => market.creator.toLowerCase() !== address.toLowerCase())
         : data
 
-      setMarkets(filteredData as any[])
+      setMarkets(filteredData as Market[])
     }
   }, [data, address])
 
@@ -60,7 +61,7 @@ export default function PublicMarkets() {
   if (isLoading && markets.length === 0) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {[...Array(PAGE_SIZE)].map((_, i) => <PublicMarketCardSkeleton key={i} />)}
+        {[...Array(PAGE_SIZE)].map((_, i) => <MarketCardSkeleton key={i} />)}
       </div>
     )
   }
@@ -88,16 +89,10 @@ export default function PublicMarkets() {
     <div>
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {markets.map((m, i) => (
-          <PublicMarketCard
+          <MarketCard
             key={`${m.marketAddress}-${i}`}
-            marketAddress={m.marketAddress}
-            matchId={m.matchId}
-            entryFee={m.entryFee}
-            creator={m.creator}
-            participantsCount={m.participantsCount}
-            resolved={m.resolved}
-            startTime={m.startTime}
-            isPublic={m.isPublic}
+            market={m}
+            variant="default"
           />
         ))}
       </div>
