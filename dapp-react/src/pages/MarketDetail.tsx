@@ -106,17 +106,42 @@ export function MarketDetail() {
   }
 
   const handleResolveMarket = async () => {
-    if (selectedTeam === null) {
-      setActionStatus('Please select the winning team to resolve.')
+    if (!matchData) {
+      setActionStatus('Match data not available.')
       return
     }
+
+    const status = (matchData as any).status
+    if (status !== 'FINISHED') {
+      setActionStatus('Match has not finished yet.')
+      return
+    }
+
+    // Determine winner:
+    // contract expects: 1 = home, 2 = away, 3 = draw
+    let outcome: number
+    const winnerTag = (matchData as any)?.score?.winner
+    if (winnerTag) {
+      if (winnerTag === 'HOME_TEAM') outcome = 1
+      else if (winnerTag === 'AWAY_TEAM') outcome = 2
+      else outcome = 3
+    }
+    else {
+      const full = (matchData as any)?.score?.fullTime ?? {}
+      const home = Number(full.homeTeam ?? 0)
+      const away = Number(full.awayTeam ?? 0)
+      if (home > away) outcome = 1
+      else if (away > home) outcome = 2
+      else outcome = 3
+    }
+
     try {
       setActionStatus('Resolving market...')
       await writeContractAsync({
         abi: CryptoScoreMarketABI,
         address: marketAddress!,
         functionName: 'resolve',
-        args: [selectedTeam],
+        args: [outcome],
       })
     }
     catch (e) {
