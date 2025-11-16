@@ -65,7 +65,7 @@ export function MyMarkets() {
         uniqueMarketsMap.set(market.marketAddress, market)
       })
   
-      // Convert back to array and sort by creation date (assuming market has a creationDate property)
+      // Convert back to array and sort by starting date
       const uniqueMarkets = Array.from(uniqueMarketsMap.values())
       uniqueMarkets.sort((a, b) => Number(b.startTime) - Number(a.startTime))
   
