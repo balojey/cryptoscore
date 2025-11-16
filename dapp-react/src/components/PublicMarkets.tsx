@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useAccount, useReadContract } from 'wagmi'
 import { CRYPTO_SCORE_DASHBOARD_ADDRESS, CryptoScoreDashboardABI } from '../config/contracts'
 import MarketCard, { MarketCardSkeleton } from './MarketCard'
-import type { Market } from './MarketCard'
+import { Market } from '../types'
 
 const PAGE_SIZE = 6
 
