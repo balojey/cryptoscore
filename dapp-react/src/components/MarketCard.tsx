@@ -34,7 +34,7 @@ export const MarketCardSkeleton = () => (
 
 const TeamDisplay = ({ team }: { team: { name: string, crest: string } }) => (
   <div className="flex flex-col items-center gap-3 w-2/5 text-center">
-    <img src={team.crest} alt={team.name} className="w-16 h-16 object-contain" onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/64' }} />
+    <img src={'https://corsproxy.io/?' + team.crest} alt={team.name} className="w-16 h-16 object-contain" onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/64' }} />
     <h3 className="font-jakarta font-bold text-lg text-[#1E293B] leading-tight" title={team.name}>{team.name}</h3>
   </div>
 )

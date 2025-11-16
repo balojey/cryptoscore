@@ -18,12 +18,12 @@ const MatchHeader = ({ matchData }: { matchData: Match }) => (
     </div>
     <div className="flex items-center justify-around">
       <div className="flex flex-col items-center gap-4 w-1/3 text-center">
-        <img src={matchData.homeTeam.crest} alt={matchData.homeTeam.name} className="w-24 h-24 object-contain" />
+        <img src={'https://corsproxy.io/?' + matchData.homeTeam.crest} alt={matchData.homeTeam.name} className="w-24 h-24 object-contain" />
         <h2 className="font-jakarta font-bold text-3xl text-[#1E293B]">{matchData.homeTeam.name}</h2>
       </div>
       <div className="font-jakarta text-5xl font-bold text-slate-300 pt-6">VS</div>
       <div className="flex flex-col items-center gap-4 w-1/3 text-center">
-        <img src={matchData.awayTeam.crest} alt={matchData.awayTeam.name} className="w-24 h-24 object-contain" />
+        <img src={'https://corsproxy.io/?' + matchData.awayTeam.crest} alt={matchData.awayTeam.name} className="w-24 h-24 object-contain" />
         <h2 className="font-jakarta font-bold text-3xl text-[#1E293B]">{matchData.awayTeam.name}</h2>
       </div>
     </div>
@@ -83,7 +83,7 @@ const ActionPanel = ({ matchData, marketStatus, isMatchStarted, isUserParticipan
           : 'border-slate-200 bg-slate-50 hover:border-slate-400'
         }`}
     >
-      <img src={team?.crest} alt={team?.name} className="w-16 h-16 object-contain mx-auto mb-3" />
+      <img src={'https://corsproxy.io/?' + team?.crest} alt={team?.name} className="w-16 h-16 object-contain mx-auto mb-3" />
       <p className="font-sans font-semibold text-slate-600">Predict</p>
       <h4 className="font-jakarta font-bold text-xl text-[#1E293B]">{team?.name || 'Draw'}</h4>
     </button>

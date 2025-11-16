@@ -96,7 +96,7 @@ export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: 
 
   const TeamDisplay = ({ team }: { team: { name: string, crest: string } }) => (
     <div className="flex flex-col items-center gap-2 w-2/5 text-center">
-      <img src={team.crest} alt={team.name} className="w-12 h-12 object-contain" onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/50' }} />
+      <img src={'https://corsproxy.io/?' + team.crest} alt={team.name} className="w-12 h-12 object-contain" onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/50' }} />
       <MarqueeText text={team.name} threshold={10} className="font-sans font-bold text-base text-[#1E293B]" />
     </div>
   )
