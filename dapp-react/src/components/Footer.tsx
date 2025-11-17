@@ -1,7 +1,7 @@
 export default function Footer() {
   return (
     <footer className="w-full border-t border-[var(--cs-neutral--slate-gray)]/10">
-      <div className="container mx-auto flex h-20 items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className="max-w-screen-2xl mx-auto flex h-20 items-center justify-between px-4 sm:px-6 lg:px-8">
         <p className="text-sm text-[var(--cs-text--primary)]/60">
           Copyright © 2025 CryptoScore. All rights reserved.
         </p>

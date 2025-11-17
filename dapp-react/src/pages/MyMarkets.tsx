@@ -91,7 +91,7 @@ export function MyMarkets() {
 
   if (!address) {
     return (
-      <div className="container mx-auto px-4 py-16 text-center">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
         <span className="icon-[mdi--wallet-outline] w-24 h-24 text-slate-300 mx-auto" />
         <h1 className="font-jakarta text-3xl font-bold text-[#1E293B] mt-4">Connect Your Wallet</h1>
         <p className="text-lg text-slate-500 mt-2">Please connect your wallet to view your markets.</p>
@@ -115,7 +115,7 @@ export function MyMarkets() {
 
   return (
     <div className="bg-[#F5F7FA] min-h-screen">
-      <div className="container mx-auto px-4 py-12">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-8">
           <h1 className="font-jakarta text-4xl font-bold text-[#1E293B]">My Markets</h1>
           <div className="border-b border-slate-200 flex">

@@ -247,7 +247,7 @@ export function MarketDetail() {
 
   if (isError || !marketInfo || (marketInfo as any)[0] === '0x0000000000000000000000000000000000000000' || !matchData) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-[16px] text-center" role="alert">
           <h4 className="font-bold">Market Not Found</h4>
           <p>The requested market does not exist or failed to load.</p>
@@ -292,7 +292,7 @@ export function MarketDetail() {
 
   return (
     <div className="bg-[#F5F7FA] min-h-screen">
-      <div className="container mx-auto px-4 py-8">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <Link to="/" className="text-sm font-medium text-slate-500 hover:text-[#0A84FF] flex items-center gap-2">
             <span className="icon-[mdi--arrow-left]" />

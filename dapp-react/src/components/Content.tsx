@@ -17,7 +17,7 @@ export default function Content() {
 
   return (
     <div className="bg-[#F5F7FA] min-h-screen">
-      <div className="container mx-auto px-4 py-16 sm:py-24 space-y-24">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 space-y-24">
         {/* Hero Section */}
         <div className="text-center max-w-3xl mx-auto">
           <h1 className="font-jakarta text-4xl sm:text-5xl font-bold text-[#1E293B] mb-4 tracking-tight">
