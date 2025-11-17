@@ -256,7 +256,7 @@ export function MarketDetail() {
     )
   }
 
-  const [, , creator, , , startTime] = marketInfo as any
+  const [, , , , , startTime] = marketInfo as any
   const isMatchStarted = new Date() > new Date(Number(startTime) * 1000)
   const poolSize = entryFeeValue && participantsCount ? Number(participantsCount) * Number(formatEther(entryFeeValue as bigint)) : 0
 
