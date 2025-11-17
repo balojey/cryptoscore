@@ -18,6 +18,36 @@ const popularWallets = [
     icon: 'https://pbs.twimg.com/profile_images/1777249249997590528/5sS2f7pS_400x400.jpg',
     downloadUrl: 'https://www.talisman.xyz/',
   },
+  {
+    id: 'polkadot-js',
+    name: 'Polkadot{.js} Extension',
+    icon: 'https://polkadot.js.org/assets/polkadotjs-logo.svg',
+    downloadUrl: 'https://polkadot.js.org/extension/',
+  },
+  {
+    id: 'fearless',
+    name: 'Fearless Wallet',
+    icon: 'https://fearlesswallet.io/assets/images/fearless-logo-512.png',
+    downloadUrl: 'https://fearlesswallet.io/',
+  },
+  {
+    id: 'subwallet',
+    name: 'SubWallet',
+    icon: 'https://subwallet.app/icons/icon-192x192.png',
+    downloadUrl: 'https://subwallet.app/',
+  },
+  {
+    id: 'polkawallet',
+    name: 'PolkaWallet',
+    icon: 'https://polkawallet.io/static/media/icon-512.3b6f4f0b.png',
+    downloadUrl: 'https://polkawallet.io/',
+  },
+  {
+    id: 'nova',
+    name: 'Nova Wallet',
+    icon: 'https://nova.app/static/media/nova-icon.6f3b3c7a.png',
+    downloadUrl: 'https://nova.app/',
+  },
 ]
 
 export default function Connect() {
@@ -35,7 +65,26 @@ export default function Connect() {
   const filteredConnectors = useMemo(() => {
     return connectors.filter((c) => {
       const id = c.id.toLowerCase()
-      return id.includes('metamask') || id.includes('talisman')
+      const allowed = [
+        'metamask',
+        'talisman',
+        'polkadot',
+        'polkadot-js',
+        'polkadotjs',
+        'fearless',
+        'subwallet',
+        'polkawallet',
+        'nova',
+        'walletconnect',
+        'walletconnectv2',
+        'coinbase',
+        'injected',
+        'brave',
+        'trust',
+        'ledger',
+        'argent',
+      ]
+      return allowed.some((substr) => id.includes(substr))
     })
   }, [connectors])
 
