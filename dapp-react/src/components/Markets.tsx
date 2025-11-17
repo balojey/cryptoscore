@@ -3,6 +3,7 @@ import { useAccount, useContractRead } from 'wagmi'
 import { CRYPTO_SCORE_FACTORY_ADDRESS, CryptoScoreFactoryABI } from '../config/contracts'
 import { Market } from './Market'
 import type { Match } from '../types'
+import { getRandomApiKey } from '../utils/apiKey'
 
 const COMPETITIONS = [
   { code: 'PL', name: 'Premier League' },
@@ -111,10 +112,11 @@ export function Markets() {
       }
 
       try {
+        const apiKey = getRandomApiKey();
         const response = await fetch(
           `https://corsproxy.io/?https://api.football-data.org/v4/competitions/${competition}/matches?status=SCHEDULED&dateFrom=${dateFrom}&dateTo=${dateTo}`,
           {
-            headers: { 'X-Auth-Token': import.meta.env.VITE_FOOTBALL_DATA_API_KEY },
+            headers: { 'X-Auth-Token': apiKey },
           },
         )
 
@@ -136,7 +138,7 @@ export function Markets() {
 
     fetchMatches()
   }, [competition, dateFilter])
-
+  
   return (
     <div className="space-y-8">
       {/* Filters */}

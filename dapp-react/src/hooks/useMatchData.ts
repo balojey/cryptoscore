@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from 'react';
 import { Match } from '../types';
+import { getRandomApiKey } from '../utils/apiKey';
 
-const API_KEY = import.meta.env.VITE_FOOTBALL_DATA_API_KEY;
 const API_URL = 'https://api.football-data.org/v4/matches/';
 
 export const useMatchData = (matchId: number) => {
@@ -21,9 +20,10 @@ export const useMatchData = (matchId: number) => {
       setError(null);
 
       try {
+        const apiKey = getRandomApiKey();
         const response = await fetch(`https://corsproxy.io/?${API_URL}${matchId}`, {
           headers: {
-            'X-Auth-Token': API_KEY,
+            'X-Auth-Token': apiKey,
           },
         });
 
