@@ -10,27 +10,21 @@ export default function Balance({ address }: BalanceProps) {
   })
 
   if (isLoading) {
-    return <span className="font-sans text-sm font-medium text-slate-500">...</span>
+    return <div className="h-9 w-24 bg-slate-200 rounded animate-pulse" />
   }
 
   if (error) {
-    return <span className="font-sans text-sm font-medium text-[#DC2626]">Error</span>
+    return <span className="font-sans text-lg font-bold text-[#DC2626]">Error</span>
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <span className="font-sans text-sm font-semibold text-[#1E293B]">
-        {parseFloat(balance?.formatted || '0').toFixed(2)}
-        {' '}
-        <span className="text-slate-400">PAS</span>
+    <div className="flex items-baseline gap-2">
+      <span className="font-jakarta font-bold text-2xl text-[#1E293B]">
+        {parseFloat(balance?.formatted || '0').toFixed(3)}
       </span>
-      <a
-        href="https://faucet.polkadot.io/?parachain=1111"
-        target="_blank"
-        rel="noreferrer"
-        className="icon-[mdi--faucet] w-4 h-4 text-slate-400 transition-colors hover:text-[#0A84FF]"
-        title="Get more PAS from faucet"
-      />
+      <span className="font-sans font-semibold text-slate-500">
+        PAS
+      </span>
     </div>
   )
 }
