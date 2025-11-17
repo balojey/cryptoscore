@@ -283,7 +283,7 @@ export function MarketDetail() {
     }
 
     if (isMatchStarted) {
-      if (userAddress === creator) return <button className={primaryButton} onClick={handleResolveMarket}>Resolve Market</button>
+      if (isUserParticipant && (matchData as any)?.status === 'FINISHED') return <button className={primaryButton} onClick={handleResolveMarket}>Resolve Market</button>
       return <button className={disabledButton} disabled>Market Closed</button>
     }
 
