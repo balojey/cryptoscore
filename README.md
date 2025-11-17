@@ -1,4 +1,4 @@
-# **[CryptoScore — Decentralized Sports Predictive Markets** ⚽📈](https://cryptoscore.vercel.app/)
+# [CryptoScore — Decentralized Sports Predictive Markets ⚽📈](https://cryptoscore.vercel.app/)
 
 A Polkadot-powered onchain predictive sports market platform
 
