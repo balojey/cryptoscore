@@ -35,6 +35,7 @@ export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: 
       }
       // Refetch markets to update the parent state
       refetchMarkets()
+      setIsCreating(false)
     }
   }, [isTxSuccess, receipt, refetchMarkets, match.id, userAddress])
 
@@ -122,81 +123,65 @@ export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: 
 
       {/* Actions & Form */}
       <div className="min-h-[140px] flex flex-col justify-center">
-        {hasMarket
+        {hasMarket && (
+          <div className="text-center mb-4">
+            <p className="font-sans text-sm text-slate-600">You already have similar market(s).</p>
+            <Link to="/my-markets" className="text-sm text-[#0A84FF] hover:underline">
+              View your markets
+            </Link>
+          </div>
+        )}
+
+        {!isCreating
           ? (
-              <div className="text-center space-y-3">
-                <p className="font-sans text-sm text-slate-600">You have a market for this match.</p>
-                {effectiveMarketAddress
-                  ? (
-                    <Link
-                      to={`/market/${effectiveMarketAddress}`}
-                      className="inline-flex items-center justify-center gap-2 h-10 px-6 bg-transparent text-[#0A84FF] rounded-[12px] font-sans text-sm font-bold uppercase tracking-wider transition-all border-2 border-[#0A84FF] hover:bg-[#0A84FF]/10 active:bg-[#0A84FF]/20"
-                    >
-                      View Market
-                    </Link>
-                    )
-                  : (
-                    <div className="flex items-center justify-center gap-2 h-10 text-slate-500">
-                      <span className="icon-[mdi--loading] animate-spin" />
-                      <span>Loading Market...</span>
-                    </div>
-                    )}
-              </div>
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={() => setIsCreating(true)}
+                className="inline-flex items-center justify-center gap-2 h-10 px-6 bg-[#0A84FF] text-white rounded-[12px] font-sans text-sm font-bold uppercase tracking-wider transition-all hover:bg-blue-600 active:bg-blue-700 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30"
+              >
+                {hasMarket ? 'Create Another' : 'Create Market'}
+              </button>
+            </div>
             )
           : (
-              <>
-                {!isCreating
-                  ? (
-                      <div className="text-center">
-                        <button
-                          type="button"
-                          onClick={() => setIsCreating(true)}
-                          className="inline-flex items-center justify-center gap-2 h-10 px-6 bg-[#0A84FF] text-white rounded-[12px] font-sans text-sm font-bold uppercase tracking-wider transition-all hover:bg-blue-600 active:bg-blue-700 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30"
-                        >
-                          Create Market
-                        </button>
-                      </div>
-                    )
-                  : (
-                      <div className="space-y-4 animate-fade-in">
-                        {/* Entry Fee */}
-                        <div>
-                          <label htmlFor={`entryFee-${match.id}`} className="font-sans text-xs font-medium text-slate-600">Entry Fee (PAS)</label>
-                          <input
-                            id={`entryFee-${match.id}`}
-                            type="number"
-                            value={entryFee}
-                            onChange={e => setEntryFee(e.target.value)}
-                            placeholder="e.g., 100"
-                            className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-[12px] text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:border-[#0A84FF] focus:ring-1 focus:ring-[#0A84FF]"
-                          />
-                        </div>
-                        {/* Public Toggle */}
-                        <div className="flex items-center gap-2">
-                          <input
-                            id={`isPublic-${match.id}`}
-                            type="checkbox"
-                            checked={isPublic}
-                            onChange={e => setIsPublic(e.target.checked)}
-                            className="h-4 w-4 rounded border-gray-300 text-[#0A84FF] focus:ring-[#0A84FF]"
-                          />
-                          <label htmlFor={`isPublic-${match.id}`} className="font-sans text-sm text-slate-700">Public Market</label>
-                        </div>
-                        {/* Actions */}
-                        <div className="flex items-center gap-2">
-                          <button onClick={handleCreateMarket} disabled={isLoading} className="flex-1 inline-flex items-center justify-center gap-2 h-10 px-4 bg-[#0BC95A] text-white rounded-[12px] font-sans text-sm font-bold uppercase tracking-wider transition-all hover:bg-green-600 disabled:bg-slate-300">
-                            {isLoading && <span className="icon-[mdi--loading] animate-spin" />}
-                            <span>{isLoading ? 'Creating...' : 'Confirm'}</span>
-                          </button>
-                          <button onClick={() => setIsCreating(false)} className="h-10 px-4 rounded-[12px] font-sans text-sm font-medium text-slate-600 hover:bg-slate-100">
-                            Cancel
-                          </button>
-                        </div>
-                        {error && <p className="text-xs text-center text-[#DC2626]">{error}</p>}
-                        {writeContractError && <p className="text-xs text-center text-[#DC2626]">{(writeContractError as any).shortMessage || 'Transaction failed.'}</p>}
-                      </div>
-                    )}
-              </>
+            <div className="space-y-4 animate-fade-in">
+              {/* Entry Fee */}
+              <div>
+                <label htmlFor={`entryFee-${match.id}`} className="font-sans text-xs font-medium text-slate-600">Entry Fee (PAS)</label>
+                <input
+                  id={`entryFee-${match.id}`}
+                  type="number"
+                  value={entryFee}
+                  onChange={e => setEntryFee(e.target.value)}
+                  placeholder="e.g., 100"
+                  className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-[12px] text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:border-[#0A84FF] focus:ring-1 focus:ring-[#0A84FF]"
+                />
+              </div>
+              {/* Public Toggle */}
+              <div className="flex items-center gap-2">
+                <input
+                  id={`isPublic-${match.id}`}
+                  type="checkbox"
+                  checked={isPublic}
+                  onChange={e => setIsPublic(e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300 text-[#0A84FF] focus:ring-[#0A84FF]"
+                />
+                <label htmlFor={`isPublic-${match.id}`} className="font-sans text-sm text-slate-700">Public Market</label>
+              </div>
+              {/* Actions */}
+              <div className="flex items-center gap-2">
+                <button onClick={handleCreateMarket} disabled={isLoading} className="flex-1 inline-flex items-center justify-center gap-2 h-10 px-4 bg-[#0BC95A] text-white rounded-[12px] font-sans text-sm font-bold uppercase tracking-wider transition-all hover:bg-green-600 disabled:bg-slate-300">
+                  {isLoading && <span className="icon-[mdi--loading] animate-spin" />}
+                  <span>{isLoading ? 'Creating...' : 'Confirm'}</span>
+                </button>
+                <button onClick={() => setIsCreating(false)} className="h-10 px-4 rounded-[12px] font-sans text-sm font-medium text-slate-600 hover:bg-slate-100">
+                  Cancel
+                </button>
+              </div>
+              {error && <p className="text-xs text-center text-[#DC2626]">{error}</p>}
+              {writeContractError && <p className="text-xs text-center text-[#DC2626]">{(writeContractError as any).shortMessage || 'Transaction failed.'}</p>}
+            </div>
             )}
       </div>
     </div>
