@@ -1,167 +1,241 @@
-# Solidity Hardhat + Wagmi Template
+# **CryptoScore — Decentralized Sports Predictive Markets** ⚽📈
 
-A comprehensive full-stack Web3 development template featuring Hardhat for smart contract development and modern frontend applications with Wagmi integration.
+A Polkadot-powered onchain predictive sports market platform
 
-## Features
+CryptoScore is a fully on-chain predictive markets dApp where users create, join, and resolve football-based prediction markets backed by live match data. Built on Polkadot and powered by a modular smart contract architecture, CryptoScore delivers an intuitive, fast, trustless way for communities to speculate on match outcomes.
 
-- **Smart Contract Development**: Hardhat with TypeScript and Polkadot integration
-- **Dual Frontend Options**: React and Vue.js applications with Web3 connectivity
-- **Modern Web3 Stack**: Wagmi, Viem, and TanStack Query for optimal DX
-- **UI Components**: DaisyUI + Tailwind CSS for beautiful, responsive interfaces
-- **Type Safety**: Full TypeScript support across all components
-- **Development Tools**: ESLint configuration and automated contract verification
+This repository contains **two major codebases**:
 
-## Project Structure
+* **`hardhat/`** → Smart contracts
+* **`dapp-react/`** → Frontend dApp written in React + Wagmi + Vite
+
+---
+
+## 🚀 Features
+
+### **For Users**
+
+* Create **public or private** prediction markets
+* Join open markets before match kickoff
+* Automatic match data enrichment using Football-Data.org API
+* Participate, resolve, and withdraw rewards transparently
+* Track personal activity: created markets, joined markets, resolved markets
+
+### **For Community**
+
+* View paginated public markets created across the ecosystem
+* Lightweight UI with smooth UX and clear data presentation
+* Zero-trust architecture: all rules and payouts handled on-chain
+
+### **Developer Highlights**
+
+* Multi-contract architecture (Factory → Dashboard → Market Contracts)
+* Fully typed ABIs
+* Custom hooks for match-data fetching
+* Clean file structure for scaling
+
+---
+
+## 🏗️ Repository Structure
 
 ```
-├── hardhat/              # Smart contract development environment
-│   ├── contracts/        # Solidity smart contracts
-│   ├── scripts/          # Deployment and interaction scripts
-│   └── ignition/         # Hardhat Ignition deployment modules
-├── dapp-react/           # React frontend application
-│   └── src/
-│       ├── components/   # React components
-│       └── config/       # Contract configurations
-└── dapp-vue/             # Vue.js frontend application
-    └── src/
-        ├── components/   # Vue components
-        └── config/       # Contract configurations
+.
+├── dapp-react               # Frontend dApp
+│   ├── abi                  # Contract ABIs
+│   ├── components           # Reusable UI components
+│   ├── config               # Wagmi + contract configs
+│   ├── hooks                # React hooks (match data, etc.)
+│   ├── pages                # App routes (MyMarkets, MarketDetail)
+│   ├── utils                # Helpers (chain config, formatters, etc.)
+│   └── ...
+│
+├── hardhat                  # Smart contracts suite
+│   ├── contracts            # Core contracts
+│   ├── ignition             # Deployment modules
+│   ├── scripts              # Interaction utilities
+│   └── ...
+│
+├── HOWTO.md                 # Developer instructions & examples
+├── README.md                # Root documentation (you are reading this)
+└── ...
 ```
 
-## Smart Contract
+---
 
-The template includes a **MessageBoard** contract that demonstrates:
-- Message posting with sender tracking
-- Circular buffer storage (last 8 messages)
-- Message retrieval by sender or index
-- Event emission for frontend integration
-- Input validation and gas optimization
+## 🧠 Architecture Overview
 
-## Getting Started
+CryptoScore uses a **factory-driven contract model**:
 
-### Prerequisites
+### **1. CryptoScoreFactory.sol**
 
-- Node.js 18+ 
-- npm, yarn, or bun package manager
+* Creates new market contracts
+* Tracks all markets system-wide
+* Emits indexed events for dashboard indexing
 
-### Installation
+### **2. CryptoScoreMarket.sol**
 
-This project uses monorepo structure with workspaces. Install all dependencies from the root directory:
+A self-contained prediction market contract:
+
+* Stores creator, participants, entry fee, metadata, match ID
+* Tracks state (open, closed, resolved)
+* Distributes rewards on resolution
+
+### **3. CryptoScoreDashboard.sol**
+
+* Aggregates market information across contracts
+* Exposes public + private markets
+* Provides user-centric data queries (created & joined markets)
+
+---
+
+## 🖥️ Frontend Overview (`dapp-react/`)
+
+### **Frameworks & Core Tools**
+
+* React + TypeScript
+* Wagmi (Polkadot connector)
+* Vite
+* TailwindCSS
+* Custom Match Data Hook (`useMatchData.ts`)
+
+### **Key UI Concepts**
+
+* **Markets Modal** for creating markets
+* **PublicMarketCard** and **MarketInfoCard** for clean market display
+* **Content** page as the entrypoint for browsing active markets
+* **MyMarkets** route for user-specific market activity
+* **MarketDetail** page with dynamic actions:
+
+  * Join Market
+  * Resolve Market
+  * Withdraw
+  * Closed/Disabled states
+
+---
+
+## 🔧 Local Development
+
+### **Prerequisites**
+
+Ensure you have:
+
+* Node.js ≥ 18
+* Yarn or npm
+* Polkadot.js browser extension
+* Football-Data.org API key (free tier works)
+
+---
+
+### **1. Install Dependencies**
+
+Root packages:
 
 ```bash
-# Install all workspace dependencies
 npm install
 ```
 
-### 1. Smart Contract Development
+Frontend:
 
 ```bash
-# Deploy to Polkadot Asset Hub testnet
-npm run deploy -w hardhat
-
-# Interact with deployed contract
-npm run interact -w hardhat
-
-# Verify contract
-npm run verify -w hardhat
+cd dapp-react
+npm install
 ```
 
-Or navigate to the hardhat directory:
+Hardhat:
 
 ```bash
 cd hardhat
-npm run deploy
-npm run interact
-npm run verify
+npm install
 ```
 
-### 2. Frontend Development
+---
 
-Run the frontend application (React or Vue based on your selection):
+### **2. Compile Contracts**
 
 ```bash
-# From root directory
-npm run dev -w dapp-react
-# or
-npm run dev -w dapp-vue
+cd hardhat
+npm run compile
 ```
 
-Or navigate to the frontend directory:
+---
+
+### **3. Deploy Contracts Using Ignition**
 
 ```bash
-cd dapp-react  # or dapp-vue
+npx run deploy
+```
+
+Deployment addresses will appear in console output.
+
+---
+
+See [HOWTO.md](./HOWTO.md) for more setup guide
+
+### **4. Start the dApp**
+
+```bash
+cd dapp-react
 npm run dev
 ```
 
-## Environment Setup
+Visit:
+`http://localhost:5173/`
 
-Create a `.env` file in the `hardhat` directory:
+---
 
-```env
-PRIVATE_KEY=your_private_key_here
+## 🔑 Environment Variables
+
+Create a `.env` in `dapp-react/` with:
+
+```
+VITE_FOOTBALL_DATA_API_KEY_1=your_football_data_org_api_key
+VITE_FOOTBALL_DATA_API_KEY_2=your_football_data_org_api_key
+VITE_FOOTBALL_DATA_API_KEY_3=your_football_data_org_api_key
+VITE_FOOTBALL_DATA_API_KEY_4=your_football_data_org_api_key
+VITE_FOOTBALL_DATA_API_KEY_5=your_football_data_org_api_key
 ```
 
-## Network Configuration
+---
 
-The template is pre-configured for:
-- **Local Development**: Hardhat network with PolkaVM
-- **Testnet**: Polkadot Asset Hub testnet
+## 🧪 Hardhat Scripts
 
-## Frontend Features
+### Show accounts:
 
-Both React and Vue applications include:
+```bash
+npm run accounts
+```
 
-- **Wallet Connection**: Connect/disconnect Web3 wallets
-- **Account Balance**: Display native token balance
-- **Message Posting**: Submit messages to the smart contract
-- **Message Display**: View recent messages with sender information
-- **Responsive Design**: Mobile-friendly interface with DaisyUI components
+### Interact with CryptoScore:
 
-## Available Scripts
+```bash
+npm run interact
+```
 
-You can run scripts from the root directory using the `-w` flag or navigate to the specific workspace.
+---
 
-### Hardhat
-- `npm run deploy -w hardhat` - Deploy contracts to testnet
-- `npm run interact -w hardhat` - Run interaction scripts
-- `npm run verify -w hardhat` - Verify deployed contracts
-- `npm run accounts -w hardhat` - Show account information
-- `npm run lint -w hardhat` - Run ESLint
+## 🎨 UI/UX Design System
 
-### Frontend (React/Vue)
-- `npm run dev -w dapp-react` - Start React dev server
-- `npm run dev -w dapp-vue` - Start Vue dev server
-- `npm run build -w dapp-react` - Build React for production
-- `npm run build -w dapp-vue` - Build Vue for production
-- `npm run preview -w dapp-react` - Preview React production build
-- `npm run preview -w dapp-vue` - Preview Vue production build
-- `npm run lint -w dapp-react` - Run ESLint for React
-- `npm run lint -w dapp-vue` - Run ESLint for Vue
+CryptoScore uses a custom AI-ready design language built around:
 
-## Technology Stack
+* CryptoScore Blue & Pitch Green
+* Inter typography
+* Rounded, soft, high-contrast components
+* Market state correctness rules
+* Professional, finance-grade visual cues
 
-### Smart Contracts
-- **Hardhat**: Development environment and testing framework
-- **Solidity**: Smart contract programming language
-- **Polkadot**: Target blockchain platform
-- **TypeScript**: Type-safe development
+(See the system prompt in your design folder for full DLS specs.)
 
-### Frontend
-- **React 19** / **Vue 3**: Modern frontend frameworks
-- **Wagmi**: React/Vue hooks for Ethereum
-- **Viem**: TypeScript interface for Ethereum
-- **TanStack Query**: Data fetching and caching
-- **Tailwind CSS**: Utility-first CSS framework
-- **DaisyUI**: Component library for Tailwind CSS
+---
 
-## Contributing
+## 🤝 Contribution
 
-1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Open a Pull Request
+PRs, issues, and forks are welcome.
+The goal is a universal, open-source sports prediction protocol.
 
-## License
+---
 
-This project is licensed under the MIT License.
+## 🛡️ License
+
+MIT License.
+
+CryptoScore is open, transparent, verifiable, and community-centric.
