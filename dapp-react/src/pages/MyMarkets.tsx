@@ -6,6 +6,8 @@ import EnhancedMarketCard, { EnhancedMarketCardSkeleton } from '../components/En
 import PortfolioSummary from '../components/PortfolioSummary'
 import RecentActivity from '../components/RecentActivity'
 import PerformanceChart from '../components/PerformanceChart'
+import PredictionDistributionChart from '../components/charts/PredictionDistributionChart'
+import PoolTrendChart from '../components/charts/PoolTrendChart'
 import { CRYPTO_SCORE_DASHBOARD_ADDRESS, CryptoScoreDashboardABI } from '../config/contracts'
 
 const MarketList = ({ markets, isLoading, emptyMessage, emptyIcon }: { 
@@ -223,6 +225,12 @@ export function MyMarkets() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           <RecentActivity markets={allInvolvedMarkets} limit={5} />
           <PerformanceChart markets={allInvolvedMarkets} />
+        </div>
+
+        {/* Advanced Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          <PredictionDistributionChart markets={allInvolvedMarkets} />
+          <PoolTrendChart markets={allInvolvedMarkets} />
         </div>
 
         {/* Tabs */}

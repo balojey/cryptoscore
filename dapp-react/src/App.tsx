@@ -5,6 +5,7 @@ import Header from './components/Header'
 import ToastProvider from './components/ToastProvider'
 import { MarketDetail } from './pages/MarketDetail'
 import { MyMarkets } from './pages/MyMarkets'
+import { Leaderboard } from './pages/Leaderboard'
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
             <Route path="/" element={<Content />} />
             <Route path="/my-markets" element={<MyMarkets />} />
             <Route path="/market/:marketAddress" element={<MarketDetail />} />
+            <Route path="/leaderboard" element={<Leaderboard />} />
           </Routes>
         </main>
         <Footer />

@@ -111,6 +111,27 @@ export default function Header() {
               <span>My Markets</span>
             </Link>
 
+            {/* Leaderboard Link */}
+            <Link
+              to="/leaderboard"
+              className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
+              style={{ 
+                color: 'var(--text-secondary)',
+                border: '1px solid var(--border-default)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = 'var(--accent-amber)'
+                e.currentTarget.style.color = 'var(--accent-amber)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = 'var(--border-default)'
+                e.currentTarget.style.color = 'var(--text-secondary)'
+              }}
+            >
+              <span className="icon-[mdi--trophy] w-4 h-4" />
+              <span>Leaderboard</span>
+            </Link>
+
             {/* Wallet Connect */}
             <Connect />
           </div>

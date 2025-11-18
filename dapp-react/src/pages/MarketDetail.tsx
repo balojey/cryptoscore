@@ -7,6 +7,10 @@ import { CRYPTO_SCORE_FACTORY_ADDRESS, CryptoScoreFactoryABI, CryptoScoreMarketA
 import { shortenAddress } from '../utils/formatters'
 import { useMatchData } from '../hooks/useMatchData'
 import type { Match } from '../types'
+import MarketComments from '../components/MarketComments'
+import SharePrediction from '../components/SharePrediction'
+import PredictionDistributionChart from '../components/charts/PredictionDistributionChart'
+import PoolTrendChart from '../components/charts/PoolTrendChart'
 
 // --- SUB-COMPONENTS ---
 
@@ -441,6 +445,49 @@ export function MarketDetail() {
               setSelectedTeam={setSelectedTeam}
               renderButtons={renderButtons}
             />
+            
+            {/* Data Visualizations */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <PredictionDistributionChart markets={[{
+                marketAddress: marketAddress!,
+                matchId: BigInt((marketInfo as any)[1]),
+                creator: (marketInfo as any)[2],
+                entryFee: (marketInfo as any)[3],
+                isPublic: (marketInfo as any)[4],
+                startTime: (marketInfo as any)[5],
+                resolved: Boolean(marketStatus),
+                participantsCount: participantsCount ? BigInt(participantsCount.toString()) : 0n,
+              }]} />
+              <PoolTrendChart markets={[{
+                marketAddress: marketAddress!,
+                matchId: BigInt((marketInfo as any)[1]),
+                creator: (marketInfo as any)[2],
+                entryFee: (marketInfo as any)[3],
+                isPublic: (marketInfo as any)[4],
+                startTime: (marketInfo as any)[5],
+                resolved: Boolean(marketStatus),
+                participantsCount: participantsCount ? BigInt(participantsCount.toString()) : 0n,
+              }]} />
+            </div>
+
+            {/* Social Features */}
+            <div className="flex items-center gap-4">
+              <SharePrediction 
+                marketAddress={marketAddress!}
+                matchInfo={{
+                  homeTeam: matchData.homeTeam.name,
+                  awayTeam: matchData.awayTeam.name,
+                  competition: matchData.competition.name,
+                }}
+                prediction={
+                  isUserParticipant && selectedTeam 
+                    ? (selectedTeam === 1 ? 'HOME' : selectedTeam === 2 ? 'AWAY' : 'DRAW')
+                    : undefined
+                }
+              />
+            </div>
+            
+            <MarketComments marketAddress={marketAddress!} />
           </div>
           <div className="lg:col-span-1">
             <MarketStats
