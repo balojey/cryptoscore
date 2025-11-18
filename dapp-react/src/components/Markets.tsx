@@ -22,35 +22,46 @@ const FilterButton = ({ text, isActive, onClick }: { text: string, isActive: boo
   <button
     type="button"
     onClick={onClick}
-    className={`px-4 py-2 rounded-[12px] font-sans text-sm font-semibold transition-colors
-      ${isActive
-        ? 'bg-[#0A84FF] text-white shadow'
-        : 'bg-transparent text-slate-600 hover:bg-slate-200'
-      }`}
+    className="px-4 py-2 rounded-lg font-sans text-sm font-semibold transition-all"
+    style={{
+      background: isActive ? 'var(--accent-cyan)' : 'transparent',
+      color: isActive ? 'var(--text-inverse)' : 'var(--text-secondary)',
+      border: `1px solid ${isActive ? 'var(--accent-cyan)' : 'transparent'}`,
+    }}
+    onMouseEnter={(e) => {
+      if (!isActive) {
+        e.currentTarget.style.background = 'var(--bg-hover)'
+      }
+    }}
+    onMouseLeave={(e) => {
+      if (!isActive) {
+        e.currentTarget.style.background = 'transparent'
+      }
+    }}
   >
     {text}
   </button>
 )
 
 const MarketSkeleton = () => (
-  <div className="bg-white rounded-[16px] shadow-md p-5 border border-slate-100 animate-pulse">
+  <div className="card animate-pulse">
     <div className="flex items-start justify-between gap-2">
       <div className="flex flex-col items-center gap-2 w-2/5">
-        <div className="w-12 h-12 bg-slate-200 rounded-full" />
-        <div className="h-4 w-20 bg-slate-200 rounded" />
+        <div className="w-12 h-12 skeleton rounded-full" />
+        <div className="h-4 w-20 skeleton rounded" />
       </div>
       <div className="flex flex-col items-center pt-4">
-        <div className="h-3 w-8 bg-slate-200 rounded" />
-        <div className="h-3 w-16 bg-slate-200 rounded mt-2" />
+        <div className="h-3 w-8 skeleton rounded" />
+        <div className="h-3 w-16 skeleton rounded mt-2" />
       </div>
       <div className="flex flex-col items-center gap-2 w-2/5">
-        <div className="w-12 h-12 bg-slate-200 rounded-full" />
-        <div className="h-4 w-20 bg-slate-200 rounded" />
+        <div className="w-12 h-12 skeleton rounded-full" />
+        <div className="h-4 w-20 skeleton rounded" />
       </div>
     </div>
-    <hr className="my-4 border-slate-100" />
+    <hr className="my-4" style={{ borderColor: 'var(--border-default)' }} />
     <div className="min-h-[140px] flex flex-col justify-center items-center">
-      <div className="h-10 w-36 bg-slate-200 rounded-[12px]" />
+      <div className="h-10 w-36 skeleton rounded-lg" />
     </div>
   </div>
 )
@@ -142,26 +153,36 @@ export function Markets() {
   return (
     <div className="space-y-8">
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="flex items-center p-1 bg-slate-100 rounded-[14px] self-start">
-          {COMPETITIONS.map(comp => (
-            <FilterButton
-              key={comp.code}
-              text={comp.name}
-              isActive={competition === comp.code}
-              onClick={() => setCompetition(comp.code)}
-            />
-          ))}
+      <div className="space-y-4">
+        <div>
+          <label className="text-xs font-medium mb-2 block" style={{ color: 'var(--text-tertiary)' }}>
+            Competition
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {COMPETITIONS.map(comp => (
+              <FilterButton
+                key={comp.code}
+                text={comp.name}
+                isActive={competition === comp.code}
+                onClick={() => setCompetition(comp.code)}
+              />
+            ))}
+          </div>
         </div>
-        <div className="flex items-center p-1 bg-slate-100 rounded-[14px] self-start">
-          {DATE_FILTERS.map(filter => (
-            <FilterButton
-              key={filter.id}
-              text={filter.name}
-              isActive={dateFilter === filter.id}
-              onClick={() => setDateFilter(filter.id)}
-            />
-          ))}
+        <div>
+          <label className="text-xs font-medium mb-2 block" style={{ color: 'var(--text-tertiary)' }}>
+            Time Range
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {DATE_FILTERS.map(filter => (
+              <FilterButton
+                key={filter.id}
+                text={filter.name}
+                isActive={dateFilter === filter.id}
+                onClick={() => setDateFilter(filter.id)}
+              />
+            ))}
+          </div>
         </div>
       </div>
 
@@ -173,16 +194,31 @@ export function Markets() {
           </div>
         )}
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-[16px] text-center" role="alert">
-            <strong className="font-bold">Error: </strong>
-            <span className="block sm:inline">{error}</span>
+          <div 
+            className="px-4 py-3 rounded-xl text-center" 
+            style={{ 
+              background: 'var(--error-bg)', 
+              border: '1px solid var(--error-border)',
+              color: 'var(--error)'
+            }}
+            role="alert"
+          >
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <span className="icon-[mdi--alert-circle-outline] w-5 h-5" />
+              <strong className="font-bold">Error</strong>
+            </div>
+            <span className="block text-sm">{error}</span>
           </div>
         )}
         {!loading && !error && matches.length === 0 && (
           <div className="text-center py-16">
-            <span className="icon-[mdi--calendar-remove-outline] w-16 h-16 text-slate-300 mx-auto" />
-            <p className="mt-4 font-sans text-lg text-slate-600">No scheduled matches found.</p>
-            <p className="font-sans text-sm text-slate-400">Please adjust the filters or check back later.</p>
+            <span className="icon-[mdi--calendar-remove-outline] w-16 h-16 mx-auto mb-4" style={{ color: 'var(--text-tertiary)' }} />
+            <p className="mt-4 font-sans text-lg" style={{ color: 'var(--text-secondary)' }}>
+              No scheduled matches found.
+            </p>
+            <p className="font-sans text-sm" style={{ color: 'var(--text-tertiary)' }}>
+              Please adjust the filters or check back later.
+            </p>
           </div>
         )}
         {!loading && !error && matches.length > 0 && (

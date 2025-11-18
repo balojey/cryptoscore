@@ -2,8 +2,10 @@ import type { MarketDashboardInfo } from '../types'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAccount, useReadContract } from 'wagmi'
-import { formatEther } from 'viem'
 import EnhancedMarketCard, { EnhancedMarketCardSkeleton } from '../components/EnhancedMarketCard'
+import PortfolioSummary from '../components/PortfolioSummary'
+import RecentActivity from '../components/RecentActivity'
+import PerformanceChart from '../components/PerformanceChart'
 import { CRYPTO_SCORE_DASHBOARD_ADDRESS, CryptoScoreDashboardABI } from '../config/contracts'
 
 const MarketList = ({ markets, isLoading, emptyMessage, emptyIcon }: { 
@@ -108,26 +110,7 @@ export function MyMarkets() {
     return { createdMarkets: created, joinedMarkets: joined }
   }, [allInvolvedMarkets, address])
 
-  // Calculate portfolio stats
-  const portfolioStats = useMemo(() => {
-    if (!allInvolvedMarkets.length) {
-      return {
-        totalMarkets: 0,
-        activeMarkets: 0,
-        totalValue: 0,
-        resolvedMarkets: 0,
-      }
-    }
 
-    const totalMarkets = allInvolvedMarkets.length
-    const activeMarkets = allInvolvedMarkets.filter(m => !m.resolved).length
-    const resolvedMarkets = allInvolvedMarkets.filter(m => m.resolved).length
-    const totalValue = allInvolvedMarkets.reduce((sum, m) => {
-      return sum + (Number(formatEther(m.entryFee)) * Number(m.participantsCount))
-    }, 0)
-
-    return { totalMarkets, activeMarkets, totalValue, resolvedMarkets }
-  }, [allInvolvedMarkets])
 
   if (!address) {
     return (
@@ -231,44 +214,15 @@ export function MyMarkets() {
           </div>
         </div>
 
-        {/* Portfolio Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div className="stat-card">
-            <div className="flex items-center justify-between mb-2">
-              <span className="stat-label">Total Markets</span>
-              <span className="icon-[mdi--chart-box-outline] w-5 h-5" style={{ color: 'var(--accent-cyan)' }} />
-            </div>
-            <div className="stat-value">{portfolioStats.totalMarkets}</div>
-          </div>
+        {/* Portfolio Summary */}
+        <div className="mb-8">
+          <PortfolioSummary markets={allInvolvedMarkets} userAddress={address} />
+        </div>
 
-          <div className="stat-card">
-            <div className="flex items-center justify-between mb-2">
-              <span className="stat-label">Active</span>
-              <span className="icon-[mdi--lightning-bolt] w-5 h-5" style={{ color: 'var(--accent-amber)' }} />
-            </div>
-            <div className="stat-value">{portfolioStats.activeMarkets}</div>
-          </div>
-
-          <div className="stat-card">
-            <div className="flex items-center justify-between mb-2">
-              <span className="stat-label">Resolved</span>
-              <span className="icon-[mdi--check-circle-outline] w-5 h-5" style={{ color: 'var(--accent-green)' }} />
-            </div>
-            <div className="stat-value">{portfolioStats.resolvedMarkets}</div>
-          </div>
-
-          <div className="stat-card">
-            <div className="flex items-center justify-between mb-2">
-              <span className="stat-label">Total Volume</span>
-              <span className="icon-[mdi--database-outline] w-5 h-5" style={{ color: 'var(--accent-purple)' }} />
-            </div>
-            <div className="stat-value">
-              {portfolioStats.totalValue.toFixed(2)}
-              <span className="text-sm font-normal ml-1" style={{ color: 'var(--text-tertiary)' }}>
-                PAS
-              </span>
-            </div>
-          </div>
+        {/* Recent Activity & Performance */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          <RecentActivity markets={allInvolvedMarkets} limit={5} />
+          <PerformanceChart markets={allInvolvedMarkets} />
         </div>
 
         {/* Tabs */}

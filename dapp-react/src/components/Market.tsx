@@ -97,36 +97,56 @@ export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: 
 
   const TeamDisplay = ({ team }: { team: { name: string, crest: string } }) => (
     <div className="flex flex-col items-center gap-2 w-2/5 text-center">
-      <img src={'https://corsproxy.io/?' + team.crest} alt={team.name} className="w-12 h-12 object-contain" onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/50' }} />
-      <MarqueeText text={team.name} threshold={10} className="font-sans font-bold text-base text-[#1E293B]" />
+      <div 
+        className="w-12 h-12 rounded-lg flex items-center justify-center p-2"
+        style={{ background: 'var(--bg-secondary)' }}
+      >
+        <img 
+          src={'https://corsproxy.io/?' + team.crest} 
+          alt={team.name} 
+          className="w-full h-full object-contain" 
+          onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/50' }} 
+        />
+      </div>
+      <div style={{ color: 'var(--text-primary)' }}>
+        <MarqueeText text={team.name} threshold={10} className="font-sans font-bold text-sm" />
+      </div>
     </div>
   )
 
   return (
-    <div className="bg-white rounded-[16px] shadow-md hover:shadow-lg transition-shadow duration-200 flex flex-col p-5 border border-slate-100">
+    <div className="card flex flex-col">
       {/* Match Info */}
       <div className="flex-grow">
         <div className="flex items-start justify-between gap-2">
           <TeamDisplay team={match.homeTeam} />
           <div className="flex flex-col items-center pt-4">
-            <span className="font-sans text-xs font-bold text-slate-400">VS</span>
-            <span className="font-sans text-xs text-slate-400 mt-2">{new Date(match.utcDate).toLocaleDateString()}</span>
-            <span className="font-sans text-xs text-slate-400">{new Date(match.utcDate).toLocaleTimeString()}</span>
+            <span className="font-sans text-xs font-bold" style={{ color: 'var(--text-tertiary)' }}>VS</span>
+            <span className="font-sans text-xs mt-2" style={{ color: 'var(--text-tertiary)' }}>
+              {new Date(match.utcDate).toLocaleDateString()}
+            </span>
+            <span className="font-sans text-xs" style={{ color: 'var(--text-tertiary)' }}>
+              {new Date(match.utcDate).toLocaleTimeString()}
+            </span>
           </div>
           <TeamDisplay team={match.awayTeam} />
         </div>
-        <p className="text-center font-sans text-xs text-slate-400 mt-2 truncate">{match.competition.name}</p>
+        <p className="text-center font-sans text-xs mt-2 truncate" style={{ color: 'var(--text-tertiary)' }}>
+          {match.competition.name}
+        </p>
       </div>
 
       {/* Divider */}
-      <hr className="my-4 border-slate-100" />
+      <hr className="my-4" style={{ borderColor: 'var(--border-default)' }} />
 
       {/* Actions & Form */}
       <div className="min-h-[140px] flex flex-col justify-center">
         {hasMarket && (
           <div className="text-center mb-4">
-            <p className="font-sans text-sm text-slate-600">You already have similar market(s).</p>
-            <Link to="/my-markets" className="text-sm text-[#0A84FF] hover:underline">
+            <p className="font-sans text-sm" style={{ color: 'var(--text-secondary)' }}>
+              You already have a market for this match.
+            </p>
+            <Link to="/my-markets" className="text-sm hover:underline" style={{ color: 'var(--accent-cyan)' }}>
               View your markets
             </Link>
           </div>
@@ -138,8 +158,9 @@ export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: 
               <button
                 type="button"
                 onClick={() => setIsCreating(true)}
-                className="inline-flex items-center justify-center gap-2 h-10 px-6 bg-[#0A84FF] text-white rounded-[12px] font-sans text-sm font-bold uppercase tracking-wider transition-all hover:bg-blue-600 active:bg-blue-700 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30"
+                className="btn-primary"
               >
+                <span className="icon-[mdi--plus-circle-outline] w-4 h-4" />
                 {hasMarket ? 'Create Another' : 'Create Market'}
               </button>
             </div>
@@ -148,14 +169,21 @@ export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: 
             <div className="space-y-4 animate-fade-in">
               {/* Entry Fee */}
               <div>
-                <label htmlFor={`entryFee-${match.id}`} className="font-sans text-xs font-medium text-slate-600">Entry Fee (PAS)</label>
+                <label htmlFor={`entryFee-${match.id}`} className="font-sans text-xs font-medium mb-2 block" style={{ color: 'var(--text-tertiary)' }}>
+                  Entry Fee (PAS)
+                </label>
                 <input
                   id={`entryFee-${match.id}`}
                   type="number"
                   value={entryFee}
                   onChange={e => setEntryFee(e.target.value)}
                   placeholder="e.g., 100"
-                  className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-[12px] text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:border-[#0A84FF] focus:ring-1 focus:ring-[#0A84FF]"
+                  className="block w-full px-3 py-2 rounded-lg text-sm"
+                  style={{
+                    background: 'var(--bg-secondary)',
+                    border: '1px solid var(--border-default)',
+                    color: 'var(--text-primary)',
+                  }}
                 />
               </div>
               {/* Public Toggle */}
@@ -165,22 +193,40 @@ export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: 
                   type="checkbox"
                   checked={isPublic}
                   onChange={e => setIsPublic(e.target.checked)}
-                  className="h-4 w-4 rounded border-gray-300 text-[#0A84FF] focus:ring-[#0A84FF]"
+                  className="h-4 w-4 rounded"
+                  style={{ accentColor: 'var(--accent-cyan)' }}
                 />
-                <label htmlFor={`isPublic-${match.id}`} className="font-sans text-sm text-slate-700">Public Market</label>
+                <label htmlFor={`isPublic-${match.id}`} className="font-sans text-sm" style={{ color: 'var(--text-secondary)' }}>
+                  Public Market
+                </label>
               </div>
               {/* Actions */}
               <div className="flex items-center gap-2">
-                <button onClick={handleCreateMarket} disabled={isLoading} className="flex-1 inline-flex items-center justify-center gap-2 h-10 px-4 bg-[#0BC95A] text-white rounded-[12px] font-sans text-sm font-bold uppercase tracking-wider transition-all hover:bg-green-600 disabled:bg-slate-300">
+                <button 
+                  onClick={handleCreateMarket} 
+                  disabled={isLoading} 
+                  className="flex-1 btn-success"
+                >
                   {isLoading && <span className="icon-[mdi--loading] animate-spin" />}
                   <span>{isLoading ? 'Creating...' : 'Confirm'}</span>
                 </button>
-                <button onClick={() => setIsCreating(false)} className="h-10 px-4 rounded-[12px] font-sans text-sm font-medium text-slate-600 hover:bg-slate-100">
+                <button 
+                  onClick={() => setIsCreating(false)} 
+                  className="btn-secondary"
+                >
                   Cancel
                 </button>
               </div>
-              {error && <p className="text-xs text-center text-[#DC2626]">{error}</p>}
-              {writeContractError && <p className="text-xs text-center text-[#DC2626]">{(writeContractError as any).shortMessage || 'Transaction failed.'}</p>}
+              {error && (
+                <p className="text-xs text-center" style={{ color: 'var(--error)' }}>
+                  {error}
+                </p>
+              )}
+              {writeContractError && (
+                <p className="text-xs text-center" style={{ color: 'var(--error)' }}>
+                  {(writeContractError as any).shortMessage || 'Transaction failed.'}
+                </p>
+              )}
             </div>
             )}
       </div>

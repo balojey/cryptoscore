@@ -3,11 +3,9 @@ import { Link } from 'react-router-dom'
 import { Markets } from './Markets'
 import PublicMarkets from './PublicMarkets'
 import { UserMarkets } from './UserMarkets'
-import QuickFilters from './QuickFilters'
 
 export default function Content() {
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [activeFilter, setActiveFilter] = useState('all')
 
   function openModal() {
     setIsModalOpen(true)
@@ -57,14 +55,11 @@ export default function Content() {
 
         {/* Public Markets Section */}
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-            <div className="flex items-center gap-3">
-              <span className="icon-[mdi--stadium-outline] w-8 h-8" style={{ color: 'var(--accent-green)' }} />
-              <h2 className="font-jakarta text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
-                Open Markets
-              </h2>
-            </div>
-            <QuickFilters activeFilter={activeFilter} onFilterChange={setActiveFilter} />
+          <div className="flex items-center gap-3 mb-8">
+            <span className="icon-[mdi--stadium-outline] w-8 h-8" style={{ color: 'var(--accent-green)' }} />
+            <h2 className="font-jakarta text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
+              Open Markets
+            </h2>
           </div>
           <PublicMarkets />
         </div>

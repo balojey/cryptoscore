@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react'
 import { useAccount, useReadContract } from 'wagmi'
 import { CRYPTO_SCORE_DASHBOARD_ADDRESS, CryptoScoreDashboardABI } from '../config/contracts'
 import EnhancedMarketCard, { EnhancedMarketCardSkeleton } from './EnhancedMarketCard'
+import MarketFilters, { type FilterOptions } from './MarketFilters'
+import { useFilteredMarkets } from '../hooks/useFilteredMarkets'
+import { useRealtimeMarkets } from '../hooks/useRealtimeMarkets'
 import { Market } from '../types'
 
 const PAGE_SIZE = 6
@@ -11,6 +14,10 @@ export default function PublicMarkets() {
   const [offset, setOffset] = useState(0)
   const [markets, setMarkets] = useState<Market[]>([])
   const [hasMore, setHasMore] = useState(true)
+  const [filters, setFilters] = useState<FilterOptions>({
+    status: 'all',
+    sortBy: 'newest',
+  })
 
   const { data, isLoading, isError, error, refetch } = useReadContract({
     address: CRYPTO_SCORE_DASHBOARD_ADDRESS,
@@ -37,6 +44,15 @@ export default function PublicMarkets() {
     refetch()
   }, [offset, refetch])
 
+  // Enable real-time updates
+  useRealtimeMarkets({
+    enabled: true,
+    interval: 10000, // Poll every 10 seconds
+    onUpdate: () => {
+      refetch()
+    },
+  })
+
   const handleNextPage = () => {
     if (hasMore) {
       setOffset(prev => prev + PAGE_SIZE)
@@ -46,6 +62,9 @@ export default function PublicMarkets() {
   const handlePrevPage = () => {
     setOffset(prev => Math.max(0, prev - PAGE_SIZE))
   }
+
+  // Apply filters and sorting - MUST be called before any conditional returns
+  const filteredMarkets = useFilteredMarkets(markets, filters)
 
   const PaginationButton = ({ onClick, disabled, children }: { onClick: () => void, disabled: boolean, children: React.ReactNode }) => (
     <button
@@ -101,9 +120,20 @@ export default function PublicMarkets() {
   }
 
   return (
-    <div>
+    <div className="space-y-6">
+      {/* Filters */}
+      <MarketFilters filters={filters} onFilterChange={setFilters} />
+
+      {/* Results Count */}
+      {filteredMarkets.length > 0 && (
+        <div className="text-sm" style={{ color: 'var(--text-tertiary)' }}>
+          Showing {filteredMarkets.length} {filteredMarkets.length === 1 ? 'market' : 'markets'}
+        </div>
+      )}
+
+      {/* Market Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {markets.map((m, i) => (
+        {filteredMarkets.map((m, i) => (
           <EnhancedMarketCard
             key={`${m.marketAddress}-${i}`}
             market={m}
@@ -111,16 +141,39 @@ export default function PublicMarkets() {
         ))}
       </div>
 
-      <div className="flex justify-center items-center gap-4 mt-12">
-        <PaginationButton onClick={handlePrevPage} disabled={offset === 0 || isLoading}>
-          <span className="icon-[mdi--arrow-left] w-5 h-5" />
-          <span>Previous</span>
-        </PaginationButton>
-        <PaginationButton onClick={handleNextPage} disabled={!hasMore || isLoading}>
-          <span>Next</span>
-          <span className="icon-[mdi--arrow-right] w-5 h-5" />
-        </PaginationButton>
-      </div>
+      {/* No Results */}
+      {filteredMarkets.length === 0 && !isLoading && (
+        <div 
+          className="text-center py-16 border-2 border-dashed rounded-xl"
+          style={{ borderColor: 'var(--border-default)' }}
+        >
+          <span className="icon-[mdi--filter-off-outline] w-16 h-16 mx-auto mb-4" style={{ color: 'var(--text-tertiary)' }} />
+          <p className="font-sans text-lg mb-2" style={{ color: 'var(--text-secondary)' }}>
+            No markets match your filters
+          </p>
+          <button
+            type="button"
+            onClick={() => setFilters({ status: 'all', sortBy: 'newest' })}
+            className="btn-secondary btn-sm mt-4"
+          >
+            Clear Filters
+          </button>
+        </div>
+      )}
+
+      {/* Pagination */}
+      {filteredMarkets.length > 0 && (
+        <div className="flex justify-center items-center gap-4 mt-12">
+          <PaginationButton onClick={handlePrevPage} disabled={offset === 0 || isLoading}>
+            <span className="icon-[mdi--arrow-left] w-5 h-5" />
+            <span>Previous</span>
+          </PaginationButton>
+          <PaginationButton onClick={handleNextPage} disabled={!hasMore || isLoading}>
+            <span>Next</span>
+            <span className="icon-[mdi--arrow-right] w-5 h-5" />
+          </PaginationButton>
+        </div>
+      )}
     </div>
   )
 }
