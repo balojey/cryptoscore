@@ -20,7 +20,7 @@ export default function Content() {
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 space-y-24">
         {/* Hero Section */}
         <div className="text-center max-w-3xl mx-auto">
-          <h1 
+          <h1
             className="font-jakarta text-4xl sm:text-5xl font-bold mb-4 tracking-tight"
             style={{ color: 'var(--text-primary)' }}
           >
@@ -79,7 +79,7 @@ export default function Content() {
             onClick={e => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div 
+            <div
               className="flex items-center justify-between p-6"
               style={{ borderBottom: '1px solid var(--border-default)' }}
             >
@@ -90,8 +90,8 @@ export default function Content() {
                 type="button"
                 className="h-10 w-10 flex items-center justify-center rounded-full transition-colors"
                 style={{ color: 'var(--text-secondary)' }}
-                onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-hover)'}
-                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                 onClick={closeModal}
               >
                 <span className="icon-[mdi--close] w-6 h-6" />

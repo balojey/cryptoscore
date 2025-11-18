@@ -1,5 +1,5 @@
-import { useMemo } from 'react'
 import type { Market } from '../types'
+import { useMemo } from 'react'
 
 interface PerformanceChartProps {
   markets: Market[]
@@ -8,16 +8,16 @@ interface PerformanceChartProps {
 export default function PerformanceChart({ markets }: PerformanceChartProps) {
   const chartData = useMemo(() => {
     const resolvedMarkets = markets.filter(m => m.resolved)
-    
+
     // For now, we'll create a simple visualization
     // In a real implementation, you'd fetch actual win/loss data
     const totalResolved = resolvedMarkets.length
     const estimatedWins = Math.floor(totalResolved * 0.6) // Placeholder
     const estimatedLosses = totalResolved - estimatedWins
-    
+
     const winPercentage = totalResolved > 0 ? (estimatedWins / totalResolved) * 100 : 0
     const lossPercentage = totalResolved > 0 ? (estimatedLosses / totalResolved) * 100 : 0
-    
+
     return {
       wins: estimatedWins,
       losses: estimatedLosses,
@@ -42,7 +42,7 @@ export default function PerformanceChart({ markets }: PerformanceChartProps) {
   return (
     <div className="card">
       <h3 className="card-title mb-6">Performance Overview</h3>
-      
+
       {/* Win/Loss Bar */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-2">
@@ -50,25 +50,26 @@ export default function PerformanceChart({ markets }: PerformanceChartProps) {
             Win Rate
           </span>
           <span className="text-sm font-bold" style={{ color: 'var(--accent-green)' }}>
-            {chartData.winPercentage.toFixed(1)}%
+            {chartData.winPercentage.toFixed(1)}
+            %
           </span>
         </div>
         <div className="h-8 rounded-full overflow-hidden flex" style={{ background: 'var(--bg-secondary)' }}>
           {chartData.winPercentage > 0 && (
-            <div 
+            <div
               className="h-full transition-all duration-500"
-              style={{ 
+              style={{
                 width: `${chartData.winPercentage}%`,
-                background: 'linear-gradient(90deg, var(--accent-green) 0%, var(--accent-cyan) 100%)'
+                background: 'linear-gradient(90deg, var(--accent-green) 0%, var(--accent-cyan) 100%)',
               }}
             />
           )}
           {chartData.lossPercentage > 0 && (
-            <div 
+            <div
               className="h-full transition-all duration-500"
-              style={{ 
+              style={{
                 width: `${chartData.lossPercentage}%`,
-                background: 'var(--accent-red)'
+                background: 'var(--accent-red)',
               }}
             />
           )}
@@ -85,7 +86,7 @@ export default function PerformanceChart({ markets }: PerformanceChartProps) {
             Wins
           </div>
         </div>
-        
+
         <div className="text-center p-4 rounded-lg" style={{ background: 'var(--bg-secondary)' }}>
           <div className="text-2xl font-bold mb-1" style={{ color: 'var(--accent-red)' }}>
             {chartData.losses}
@@ -94,7 +95,7 @@ export default function PerformanceChart({ markets }: PerformanceChartProps) {
             Losses
           </div>
         </div>
-        
+
         <div className="text-center p-4 rounded-lg" style={{ background: 'var(--bg-secondary)' }}>
           <div className="text-2xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
             {chartData.total}
@@ -106,17 +107,24 @@ export default function PerformanceChart({ markets }: PerformanceChartProps) {
       </div>
 
       {/* Performance Indicator */}
-      <div className="mt-6 p-4 rounded-lg" style={{ 
-        background: chartData.winPercentage >= 50 ? 'var(--success-bg)' : 'var(--error-bg)',
-        border: `1px solid ${chartData.winPercentage >= 50 ? 'var(--success-border)' : 'var(--error-border)'}`
-      }}>
+      <div
+        className="mt-6 p-4 rounded-lg"
+        style={{
+          background: chartData.winPercentage >= 50 ? 'var(--success-bg)' : 'var(--error-bg)',
+          border: `1px solid ${chartData.winPercentage >= 50 ? 'var(--success-border)' : 'var(--error-border)'}`,
+        }}
+      >
         <div className="flex items-center gap-2">
-          <span className={`icon-[mdi--${chartData.winPercentage >= 50 ? 'trending-up' : 'trending-down'}] w-5 h-5`} 
-            style={{ color: chartData.winPercentage >= 50 ? 'var(--accent-green)' : 'var(--accent-red)' }} 
+          <span
+            className={`icon-[mdi--${chartData.winPercentage >= 50 ? 'trending-up' : 'trending-down'}] w-5 h-5`}
+            style={{ color: chartData.winPercentage >= 50 ? 'var(--accent-green)' : 'var(--accent-red)' }}
           />
-          <span className="text-sm font-medium" style={{ 
-            color: chartData.winPercentage >= 50 ? 'var(--accent-green)' : 'var(--accent-red)' 
-          }}>
+          <span
+            className="text-sm font-medium"
+            style={{
+              color: chartData.winPercentage >= 50 ? 'var(--accent-green)' : 'var(--accent-red)',
+            }}
+          >
             {chartData.winPercentage >= 50 ? 'Profitable' : 'Needs Improvement'}
           </span>
         </div>

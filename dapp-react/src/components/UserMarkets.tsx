@@ -1,9 +1,9 @@
+import type { Market } from '../types'
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useAccount, useReadContract } from 'wagmi'
 import { CRYPTO_SCORE_DASHBOARD_ADDRESS, CryptoScoreDashboardABI } from '../config/contracts'
 import EnhancedMarketCard, { EnhancedMarketCardSkeleton } from './EnhancedMarketCard'
-import { Market } from '../types'
 
 export function UserMarkets() {
   const { address, isConnected } = useAccount()
@@ -25,7 +25,8 @@ export function UserMarkets() {
   }) as { data: Market[] | undefined, isLoading: boolean }
 
   const userMarkets = useMemo(() => {
-    if (!userCreatedMarkets && !userJoinedMarkets) return []
+    if (!userCreatedMarkets && !userJoinedMarkets)
+      return []
 
     const combinedMarkets = [
       ...(userCreatedMarkets || []),
@@ -34,7 +35,7 @@ export function UserMarkets() {
 
     // Remove duplicates based on marketAddress
     const uniqueMarketsMap = new Map<string, Market>()
-    combinedMarkets.forEach(market => {
+    combinedMarkets.forEach((market) => {
       uniqueMarketsMap.set(market.marketAddress, market)
     })
 
@@ -61,7 +62,7 @@ export function UserMarkets() {
           </h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {[...Array(3)].map((_, i) => <EnhancedMarketCardSkeleton key={i} />)}
+          {[...Array.from({ length: 3 })].map((_, i) => <EnhancedMarketCardSkeleton key={i} />)}
         </div>
       </div>
     )
@@ -76,7 +77,7 @@ export function UserMarkets() {
             My Active Markets
           </h2>
         </div>
-        <div 
+        <div
           className="text-center py-12 border-2 border-dashed rounded-[16px]"
           style={{ borderColor: 'var(--border-default)' }}
         >

@@ -1,6 +1,6 @@
+import type { Market } from '../types'
 import { useMemo } from 'react'
 import { formatEther } from 'viem'
-import type { Market } from '../types'
 
 interface PortfolioSummaryProps {
   markets: Market[]
@@ -23,7 +23,7 @@ export default function PortfolioSummary({ markets, userAddress }: PortfolioSumm
 
     const activePositions = markets.filter(m => !m.resolved).length
     const resolvedPositions = markets.filter(m => m.resolved).length
-    
+
     // Calculate total value (sum of entry fees paid)
     const totalValue = markets.reduce((sum, m) => {
       return sum + Number(formatEther(m.entryFee))
@@ -39,7 +39,7 @@ export default function PortfolioSummary({ markets, userAddress }: PortfolioSumm
     const avgPoolSize = markets.reduce((sum, m) => {
       return sum + (Number(formatEther(m.entryFee)) * Number(m.participantsCount))
     }, 0) / markets.length || 0
-    
+
     const estimatedWinnings = totalWins * (avgPoolSize * 0.95) // 95% after fees
     const totalSpent = totalValue
     const totalPnL = estimatedWinnings - totalSpent
@@ -55,14 +55,14 @@ export default function PortfolioSummary({ markets, userAddress }: PortfolioSumm
     }
   }, [markets, userAddress])
 
-  const StatCard = ({ 
-    label, 
-    value, 
-    icon, 
+  const StatCard = ({
+    label,
+    value,
+    icon,
     color,
     subtitle,
-    trend 
-  }: { 
+    trend,
+  }: {
     label: string
     value: string | number
     icon: string
@@ -79,12 +79,14 @@ export default function PortfolioSummary({ markets, userAddress }: PortfolioSumm
       {subtitle && (
         <div className="flex items-center gap-2">
           {trend && (
-            <span 
+            <span
               className={`icon-[mdi--${trend === 'up' ? 'trending-up' : trend === 'down' ? 'trending-down' : 'minus'}] w-4 h-4`}
-              style={{ 
-                color: trend === 'up' ? 'var(--accent-green)' : 
-                       trend === 'down' ? 'var(--accent-red)' : 
-                       'var(--text-tertiary)' 
+              style={{
+                color: trend === 'up'
+                  ? 'var(--accent-green)'
+                  : trend === 'down'
+                    ? 'var(--accent-red)'
+                    : 'var(--text-tertiary)',
               }}
             />
           )}

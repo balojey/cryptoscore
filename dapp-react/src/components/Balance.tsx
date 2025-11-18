@@ -20,7 +20,7 @@ export default function Balance({ address }: BalanceProps) {
   return (
     <div className="flex items-baseline gap-2">
       <span className="font-jakarta font-bold text-2xl text-[#1E293B]">
-        {parseFloat(balance?.formatted || '0').toFixed(3)}
+        {Number.parseFloat(balance?.formatted || '0').toFixed(3)}
       </span>
       <span className="font-sans font-semibold text-slate-500">
         PAS

@@ -16,14 +16,14 @@ export default function SearchBar({ onSearch, placeholder = 'Search markets...' 
   return (
     <div className="relative w-full max-w-md">
       <div className="relative">
-        <span 
+        <span
           className="icon-[mdi--magnify] w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
           style={{ color: 'var(--text-tertiary)' }}
         />
         <input
           type="text"
           value={query}
-          onChange={(e) => handleSearch(e.target.value)}
+          onChange={e => handleSearch(e.target.value)}
           placeholder={placeholder}
           className="w-full h-10 pl-10 pr-4 rounded-lg text-sm transition-all outline-none"
           style={{

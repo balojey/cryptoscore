@@ -1,5 +1,5 @@
+import { useEffect, useRef, useState } from 'react'
 import { useDisconnect } from 'wagmi'
-import { useState, useRef, useEffect } from 'react'
 import { shortenAddress } from '../utils/formatters'
 import Balance from './Balance'
 

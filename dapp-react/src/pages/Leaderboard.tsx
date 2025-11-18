@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useReadContract } from 'wagmi'
 import { formatEther } from 'viem'
+import { useReadContract } from 'wagmi'
+import AnimatedNumber from '../components/AnimatedNumber'
 import { CRYPTO_SCORE_DASHBOARD_ADDRESS, CryptoScoreDashboardABI } from '../config/contracts'
 import { shortenAddress } from '../utils/formatters'
-import AnimatedNumber from '../components/AnimatedNumber'
 
 type LeaderboardTab = 'winRate' | 'earnings' | 'active' | 'streak'
 
@@ -20,7 +20,8 @@ export function Leaderboard() {
   })
 
   const leaderboardData = useMemo(() => {
-    if (!allMarkets || !Array.isArray(allMarkets)) return []
+    if (!allMarkets || !Array.isArray(allMarkets))
+      return []
 
     // Aggregate data by creator
     const traderStats = new Map<string, {
@@ -44,10 +45,10 @@ export function Leaderboard() {
       }
 
       const poolSize = Number(formatEther(market.entryFee)) * Number(market.participantsCount)
-      
+
       existing.totalMarkets++
       existing.totalVolume += poolSize
-      
+
       if (market.resolved) {
         existing.resolvedMarkets++
         // Estimate wins (placeholder - 60% win rate)
@@ -88,11 +89,11 @@ export function Leaderboard() {
     }
   }, [leaderboardData, activeTab])
 
-  const TabButton = ({ 
-    tab, 
-    label, 
-    icon 
-  }: { 
+  const TabButton = ({
+    tab,
+    label,
+    icon,
+  }: {
     tab: LeaderboardTab
     label: string
     icon: string
@@ -116,16 +117,22 @@ export function Leaderboard() {
   }
 
   const getRankIcon = (rank: number) => {
-    if (rank === 1) return '🥇'
-    if (rank === 2) return '🥈'
-    if (rank === 3) return '🥉'
+    if (rank === 1)
+      return '🥇'
+    if (rank === 2)
+      return '🥈'
+    if (rank === 3)
+      return '🥉'
     return `#${rank}`
   }
 
   const getRankColor = (rank: number) => {
-    if (rank === 1) return 'var(--accent-amber)'
-    if (rank === 2) return 'var(--text-tertiary)'
-    if (rank === 3) return 'var(--accent-red)'
+    if (rank === 1)
+      return 'var(--accent-amber)'
+    if (rank === 2)
+      return 'var(--text-tertiary)'
+    if (rank === 3)
+      return 'var(--accent-red)'
     return 'var(--text-secondary)'
   }
 
@@ -134,12 +141,12 @@ export function Leaderboard() {
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="mb-8">
-          <Link 
-            to="/" 
+          <Link
+            to="/"
             className="text-sm font-medium flex items-center gap-2 mb-3 hover:underline"
             style={{ color: 'var(--text-tertiary)' }}
-            onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-cyan)'}
-            onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-tertiary)'}
+            onMouseEnter={e => e.currentTarget.style.color = 'var(--accent-cyan)'}
+            onMouseLeave={e => e.currentTarget.style.color = 'var(--text-tertiary)'}
           >
             <span className="icon-[mdi--arrow-left]" />
             Back to Markets
@@ -167,7 +174,7 @@ export function Leaderboard() {
         <div className="card">
           {isLoading ? (
             <div className="space-y-4">
-              {[...Array(10)].map((_, i) => (
+              {[...Array.from({ length: 10 })].map((_, i) => (
                 <div key={i} className="flex items-center gap-4 p-4 animate-pulse">
                   <div className="w-12 h-12 skeleton rounded-full" />
                   <div className="flex-1">
@@ -187,24 +194,24 @@ export function Leaderboard() {
             <div className="space-y-2">
               {sortedData.slice(0, 50).map((trader, index) => {
                 const rank = index + 1
-                const winRate = trader.resolvedMarkets > 0 
-                  ? (trader.estimatedWins / trader.resolvedMarkets) * 100 
+                const winRate = trader.resolvedMarkets > 0
+                  ? (trader.estimatedWins / trader.resolvedMarkets) * 100
                   : 0
 
                 return (
-                  <div 
+                  <div
                     key={trader.address}
                     className="flex items-center gap-4 p-4 rounded-lg transition-all"
                     style={{ background: 'var(--bg-secondary)' }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-hover)'}
-                    onMouseLeave={(e) => e.currentTarget.style.background = 'var(--bg-secondary)'}
+                    onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-secondary)'}
                   >
                     {/* Rank */}
-                    <div 
+                    <div
                       className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg"
-                      style={{ 
+                      style={{
                         background: rank <= 3 ? `${getRankColor(rank)}20` : 'var(--bg-primary)',
-                        color: getRankColor(rank)
+                        color: getRankColor(rank),
                       }}
                     >
                       {getRankIcon(rank)}
@@ -216,7 +223,12 @@ export function Leaderboard() {
                         {shortenAddress(trader.address as `0x${string}`)}
                       </div>
                       <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                        {trader.totalMarkets} markets • {trader.resolvedMarkets} resolved
+                        {trader.totalMarkets}
+                        {' '}
+                        markets •
+                        {trader.resolvedMarkets}
+                        {' '}
+                        resolved
                       </div>
                     </div>
 
@@ -228,7 +240,10 @@ export function Leaderboard() {
                             <AnimatedNumber value={winRate} decimals={1} suffix="%" />
                           </div>
                           <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                            {trader.estimatedWins}W / {trader.resolvedMarkets - trader.estimatedWins}L
+                            {trader.estimatedWins}
+                            W /
+                            {trader.resolvedMarkets - trader.estimatedWins}
+                            L
                           </div>
                         </div>
                       )}
@@ -238,7 +253,9 @@ export function Leaderboard() {
                             <AnimatedNumber value={trader.estimatedEarnings} decimals={2} suffix=" PAS" />
                           </div>
                           <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                            {trader.totalVolume.toFixed(2)} PAS volume
+                            {trader.totalVolume.toFixed(2)}
+                            {' '}
+                            PAS volume
                           </div>
                         </div>
                       )}

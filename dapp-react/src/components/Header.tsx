@@ -8,12 +8,12 @@ export default function Header() {
   const location = useLocation()
   const isHomePage = location.pathname === '/'
   return (
-    <header 
+    <header
       className="sticky top-0 z-50 w-full backdrop-blur-sm"
-      style={{ 
+      style={{
         background: 'rgba(11, 14, 17, 0.9)',
         borderBottom: '1px solid var(--border-default)',
-        boxShadow: 'var(--shadow-lg)'
+        boxShadow: 'var(--shadow-lg)',
       }}
     >
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -58,7 +58,7 @@ export default function Header() {
                   strokeLinejoin="round"
                 />
               </svg>
-              <span 
+              <span
                 className="font-['Plus_Jakarta_Sans'] text-2xl font-bold tracking-tighter transition-colors hidden sm:block"
                 style={{ color: 'var(--text-primary)' }}
               >
@@ -83,8 +83,8 @@ export default function Header() {
                 onClick={() => setShowSearch(!showSearch)}
                 className="md:hidden p-2 rounded-lg transition-colors"
                 style={{ color: 'var(--text-secondary)' }}
-                onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-cyan)'}
-                onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}
+                onMouseEnter={e => e.currentTarget.style.color = 'var(--accent-cyan)'}
+                onMouseLeave={e => e.currentTarget.style.color = 'var(--text-secondary)'}
               >
                 <span className="icon-[mdi--magnify] w-5 h-5" />
               </button>
@@ -94,9 +94,9 @@ export default function Header() {
             <Link
               to="/my-markets"
               className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
-              style={{ 
+              style={{
                 color: 'var(--text-secondary)',
-                border: '1px solid var(--border-default)'
+                border: '1px solid var(--border-default)',
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.borderColor = 'var(--accent-cyan)'
@@ -115,9 +115,9 @@ export default function Header() {
             <Link
               to="/leaderboard"
               className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
-              style={{ 
+              style={{
                 color: 'var(--text-secondary)',
-                border: '1px solid var(--border-default)'
+                border: '1px solid var(--border-default)',
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.borderColor = 'var(--accent-amber)'

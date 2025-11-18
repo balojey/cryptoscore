@@ -231,7 +231,7 @@ Phase 3 adds advanced data visualizations, leaderboard functionality, and enhanc
 COLORS = ['#00D4FF', '#FFB800', '#FF3366'] // Cyan, Amber, Red
 
 // Pool Trends
-avgPool: '#00D4FF'  // Cyan
+avgPool: '#00D4FF' // Cyan
 totalPool: '#00FF88' // Green
 grid: 'var(--border-default)'
 text: 'var(--text-tertiary)'
@@ -261,10 +261,13 @@ sortedData.sort((a, b) => ...)
 
 **Ranking Display:**
 ```typescript
-const getRankIcon = (rank: number) => {
-  if (rank === 1) return '🥇'
-  if (rank === 2) return '🥈'
-  if (rank === 3) return '🥉'
+function getRankIcon(rank: number) {
+  if (rank === 1)
+    return '🥇'
+  if (rank === 2)
+    return '🥈'
+  if (rank === 3)
+    return '🥉'
   return `#${rank}`
 }
 ```
@@ -486,8 +489,8 @@ Phase 3 successfully adds **advanced features** to CryptoScore:
 
 ---
 
-**Status**: ✅ Phase 3 Complete  
-**Build**: ✅ No errors  
-**Bundle**: 898 kB (267 kB gzipped)  
-**Ready for**: User testing & Phase 4 implementation  
+**Status**: ✅ Phase 3 Complete
+**Build**: ✅ No errors
+**Bundle**: 898 kB (267 kB gzipped)
+**Ready for**: User testing & Phase 4 implementation
 **Next**: Performance optimization, full social features, PWA support

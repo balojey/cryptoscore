@@ -1,71 +1,73 @@
 import type { Address } from 'viem'
+import type { Match } from '../types'
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { formatEther } from 'viem'
 import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi'
-import { CRYPTO_SCORE_FACTORY_ADDRESS, CryptoScoreFactoryABI, CryptoScoreMarketABI } from '../config/contracts'
-import { shortenAddress } from '../utils/formatters'
-import { useMatchData } from '../hooks/useMatchData'
-import type { Match } from '../types'
+import PoolTrendChart from '../components/charts/PoolTrendChart'
+import PredictionDistributionChart from '../components/charts/PredictionDistributionChart'
 import MarketComments from '../components/MarketComments'
 import SharePrediction from '../components/SharePrediction'
-import PredictionDistributionChart from '../components/charts/PredictionDistributionChart'
-import PoolTrendChart from '../components/charts/PoolTrendChart'
+import { CRYPTO_SCORE_FACTORY_ADDRESS, CryptoScoreFactoryABI, CryptoScoreMarketABI } from '../config/contracts'
+import { useMatchData } from '../hooks/useMatchData'
+import { shortenAddress } from '../utils/formatters'
 
 // --- SUB-COMPONENTS ---
 
-const MatchHeader = ({ matchData }: { matchData: Match }) => (
-  <div className="card">
-    <div className="text-center mb-6">
-      <div className="flex items-center justify-center gap-2 mb-2">
-        <span className="icon-[mdi--trophy-outline] w-5 h-5" style={{ color: 'var(--accent-amber)' }} />
-        <p className="font-sans text-base font-medium" style={{ color: 'var(--text-secondary)' }}>
-          {matchData.competition.name}
+function MatchHeader({ matchData }: { matchData: Match }) {
+  return (
+    <div className="card">
+      <div className="text-center mb-6">
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <span className="icon-[mdi--trophy-outline] w-5 h-5" style={{ color: 'var(--accent-amber)' }} />
+          <p className="font-sans text-base font-medium" style={{ color: 'var(--text-secondary)' }}>
+            {matchData.competition.name}
+          </p>
+        </div>
+        <p className="font-sans text-sm" style={{ color: 'var(--text-tertiary)' }}>
+          {new Date(matchData.utcDate).toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'short' })}
         </p>
       </div>
-      <p className="font-sans text-sm" style={{ color: 'var(--text-tertiary)' }}>
-        {new Date(matchData.utcDate).toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'short' })}
-      </p>
-    </div>
-    <div className="flex items-center justify-around">
-      <div className="flex flex-col items-center gap-4 w-1/3 text-center">
-        <div 
-          className="w-28 h-28 rounded-xl flex items-center justify-center p-4"
-          style={{ background: 'var(--bg-secondary)' }}
-        >
-          <img 
-            src={'https://corsproxy.io/?' + matchData.homeTeam.crest} 
-            alt={matchData.homeTeam.name} 
-            className="w-full h-full object-contain" 
-          />
+      <div className="flex items-center justify-around">
+        <div className="flex flex-col items-center gap-4 w-1/3 text-center">
+          <div
+            className="w-28 h-28 rounded-xl flex items-center justify-center p-4"
+            style={{ background: 'var(--bg-secondary)' }}
+          >
+            <img
+              src={`https://corsproxy.io/?${matchData.homeTeam.crest}`}
+              alt={matchData.homeTeam.name}
+              className="w-full h-full object-contain"
+            />
+          </div>
+          <h2 className="font-jakarta font-bold text-3xl" style={{ color: 'var(--text-primary)' }}>
+            {matchData.homeTeam.name}
+          </h2>
         </div>
-        <h2 className="font-jakarta font-bold text-3xl" style={{ color: 'var(--text-primary)' }}>
-          {matchData.homeTeam.name}
-        </h2>
-      </div>
-      <div className="font-jakarta text-5xl font-bold pt-6" style={{ color: 'var(--text-tertiary)' }}>
-        VS
-      </div>
-      <div className="flex flex-col items-center gap-4 w-1/3 text-center">
-        <div 
-          className="w-28 h-28 rounded-xl flex items-center justify-center p-4"
-          style={{ background: 'var(--bg-secondary)' }}
-        >
-          <img 
-            src={'https://corsproxy.io/?' + matchData.awayTeam.crest} 
-            alt={matchData.awayTeam.name} 
-            className="w-full h-full object-contain" 
-          />
+        <div className="font-jakarta text-5xl font-bold pt-6" style={{ color: 'var(--text-tertiary)' }}>
+          VS
         </div>
-        <h2 className="font-jakarta font-bold text-3xl" style={{ color: 'var(--text-primary)' }}>
-          {matchData.awayTeam.name}
-        </h2>
+        <div className="flex flex-col items-center gap-4 w-1/3 text-center">
+          <div
+            className="w-28 h-28 rounded-xl flex items-center justify-center p-4"
+            style={{ background: 'var(--bg-secondary)' }}
+          >
+            <img
+              src={`https://corsproxy.io/?${matchData.awayTeam.crest}`}
+              alt={matchData.awayTeam.name}
+              className="w-full h-full object-contain"
+            />
+          </div>
+          <h2 className="font-jakarta font-bold text-3xl" style={{ color: 'var(--text-primary)' }}>
+            {matchData.awayTeam.name}
+          </h2>
+        </div>
       </div>
     </div>
-  </div>
-)
+  )
+}
 
-const MarketStats = ({ marketInfo, poolSize, participantsCount, marketStatus, isMatchStarted, winningTeamName }: any) => {
+function MarketStats({ marketInfo, poolSize, participantsCount, marketStatus, isMatchStarted, winningTeamName }: any) {
   const InfoRow = ({ label, value, valueClass, icon }: { label: string, value: React.ReactNode, valueClass?: string, icon: string }) => (
     <div className="info-row">
       <div className="info-label">
@@ -77,8 +79,10 @@ const MarketStats = ({ marketInfo, poolSize, participantsCount, marketStatus, is
   )
 
   const getStatusBadge = () => {
-    if (marketStatus) return <span className="badge badge-success">Resolved</span>
-    if (isMatchStarted) return <span className="badge badge-warning">Live</span>
+    if (marketStatus)
+      return <span className="badge badge-success">Resolved</span>
+    if (isMatchStarted)
+      return <span className="badge badge-warning">Live</span>
     return <span className="badge badge-info">Open</span>
   }
 
@@ -87,50 +91,50 @@ const MarketStats = ({ marketInfo, poolSize, participantsCount, marketStatus, is
       <h3 className="card-title mb-4">Market Stats</h3>
       <div className="space-y-2">
         <InfoRow label="Status" value={getStatusBadge()} icon="mdi--check-circle-outline" />
-        <InfoRow 
-          label="Pool Size" 
-          value={
+        <InfoRow
+          label="Pool Size"
+          value={(
             <>
               <span className="font-mono">{poolSize.toFixed(2)}</span>
               {' '}
               <span style={{ color: 'var(--text-tertiary)' }}>PAS</span>
             </>
-          } 
-          icon="mdi--database-outline" 
+          )}
+          icon="mdi--database-outline"
         />
-        <InfoRow 
-          label="Entry Fee" 
-          value={
+        <InfoRow
+          label="Entry Fee"
+          value={(
             <>
               <span className="font-mono">{formatEther(marketInfo[3])}</span>
               {' '}
               <span style={{ color: 'var(--text-tertiary)' }}>PAS</span>
             </>
-          } 
-          icon="mdi--login" 
+          )}
+          icon="mdi--login"
         />
         <InfoRow label="Participants" value={participantsCount?.toString() ?? '0'} icon="mdi--account-group-outline" />
-        <InfoRow 
-          label="Creator" 
-          value={
-            <a 
-              href={`https://blockscout-passet-hub.parity-testnet.parity.io/address/${marketInfo[2]}`} 
-              target="_blank" 
-              rel="noopener noreferrer" 
+        <InfoRow
+          label="Creator"
+          value={(
+            <a
+              href={`https://blockscout-passet-hub.parity-testnet.parity.io/address/${marketInfo[2]}`}
+              target="_blank"
+              rel="noopener noreferrer"
               className="font-mono hover:underline"
               style={{ color: 'var(--accent-cyan)' }}
             >
               {shortenAddress(marketInfo[2])}
             </a>
-          } 
-          icon="mdi--account-edit-outline" 
+          )}
+          icon="mdi--account-edit-outline"
         />
         {marketStatus && (
-          <InfoRow 
-            label="Winning Outcome" 
-            value={winningTeamName} 
-            valueClass="stat-value-success" 
-            icon="mdi--trophy-outline" 
+          <InfoRow
+            label="Winning Outcome"
+            value={winningTeamName}
+            valueClass="stat-value-success"
+            icon="mdi--trophy-outline"
           />
         )}
       </div>
@@ -138,7 +142,7 @@ const MarketStats = ({ marketInfo, poolSize, participantsCount, marketStatus, is
   )
 }
 
-const ActionPanel = ({ matchData, marketStatus, isMatchStarted, isUserParticipant, selectedTeam, setSelectedTeam, renderButtons }: any) => {
+function ActionPanel({ matchData, marketStatus, isMatchStarted, isUserParticipant, selectedTeam, setSelectedTeam, renderButtons }: any) {
   if (marketStatus || isMatchStarted) {
     return (
       <div className="card text-center">
@@ -161,20 +165,22 @@ const ActionPanel = ({ matchData, marketStatus, isMatchStarted, isUserParticipan
         background: selected ? 'rgba(0, 212, 255, 0.1)' : 'var(--bg-secondary)',
       }}
       onMouseEnter={(e) => {
-        if (!selected) e.currentTarget.style.borderColor = 'var(--border-hover)'
+        if (!selected)
+          e.currentTarget.style.borderColor = 'var(--border-hover)'
       }}
       onMouseLeave={(e) => {
-        if (!selected) e.currentTarget.style.borderColor = 'var(--border-default)'
+        if (!selected)
+          e.currentTarget.style.borderColor = 'var(--border-default)'
       }}
     >
-      <div 
+      <div
         className="w-16 h-16 rounded-lg flex items-center justify-center mx-auto mb-3 p-2"
         style={{ background: 'var(--bg-primary)' }}
       >
-        <img 
-          src={'https://corsproxy.io/?' + team?.crest} 
-          alt={team?.name} 
-          className="w-full h-full object-contain" 
+        <img
+          src={`https://corsproxy.io/?${team?.crest}`}
+          alt={team?.name}
+          className="w-full h-full object-contain"
         />
       </div>
       <p className="font-sans font-semibold text-xs mb-1" style={{ color: 'var(--text-tertiary)' }}>
@@ -209,20 +215,22 @@ const ActionPanel = ({ matchData, marketStatus, isMatchStarted, isUserParticipan
   )
 }
 
-const PageSkeleton = () => (
-  <div className="container mx-auto px-4 py-8 animate-pulse">
-    <div className="w-1/4 h-6 skeleton rounded mb-12" />
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <div className="lg:col-span-2 space-y-8">
-        <div className="card h-64"><div className="w-full h-full skeleton rounded-lg" /></div>
-        <div className="card h-80"><div className="w-full h-full skeleton rounded-lg" /></div>
-      </div>
-      <div className="lg:col-span-1">
-        <div className="card h-96"><div className="w-full h-full skeleton rounded-lg" /></div>
+function PageSkeleton() {
+  return (
+    <div className="container mx-auto px-4 py-8 animate-pulse">
+      <div className="w-1/4 h-6 skeleton rounded mb-12" />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-8">
+          <div className="card h-64"><div className="w-full h-full skeleton rounded-lg" /></div>
+          <div className="card h-80"><div className="w-full h-full skeleton rounded-lg" /></div>
+        </div>
+        <div className="lg:col-span-1">
+          <div className="card h-96"><div className="w-full h-full skeleton rounded-lg" /></div>
+        </div>
       </div>
     </div>
-  </div>
-)
+  )
+}
 
 // --- MAIN COMPONENT ---
 
@@ -286,9 +294,12 @@ export function MarketDetail() {
   const { isLoading: isTxConfirming, isSuccess: isTxConfirmed } = useWaitForTransactionReceipt({ hash })
 
   useEffect(() => {
-    if (isTxConfirmed) setActionStatus({ type: 'success', message: 'Transaction successful!' })
-    if (isWritePending) setActionStatus({ type: 'info', message: 'Waiting for wallet confirmation...' })
-    if (isTxConfirming) setActionStatus({ type: 'info', message: 'Confirming transaction...' })
+    if (isTxConfirmed)
+      setActionStatus({ type: 'success', message: 'Transaction successful!' })
+    if (isWritePending)
+      setActionStatus({ type: 'info', message: 'Waiting for wallet confirmation...' })
+    if (isTxConfirming)
+      setActionStatus({ type: 'info', message: 'Confirming transaction...' })
   }, [isTxConfirmed, isWritePending, isTxConfirming])
 
   const handleAction = async (action: () => Promise<any>, errorMsg: string) => {
@@ -323,10 +334,12 @@ export function MarketDetail() {
     }
     const winnerTag = (matchData as any)?.score?.winner
     let outcome: number
-    if (winnerTag === 'HOME_TEAM') outcome = 1
-    else if (winnerTag === 'AWAY_TEAM') outcome = 2
+    if (winnerTag === 'HOME_TEAM')
+      outcome = 1
+    else if (winnerTag === 'AWAY_TEAM')
+      outcome = 2
     else outcome = 3
-    
+
     await writeContractAsync({
       abi: CryptoScoreMarketABI,
       address: marketAddress!,
@@ -346,17 +359,18 @@ export function MarketDetail() {
   const isLoading = isLoadingInfo || isLoadingMatch || isLoadingStatus || isLoadingParticipants
   const isError = infoError || matchError
 
-  if (isLoading) return <PageSkeleton />
+  if (isLoading)
+    return <PageSkeleton />
 
   if (isError || !marketInfo || (marketInfo as any)[0] === '0x0000000000000000000000000000000000000000' || !matchData) {
     return (
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8" style={{ background: 'var(--bg-primary)', minHeight: '100vh' }}>
-        <div 
-          className="px-4 py-3 rounded-[16px] text-center" 
-          style={{ 
-            background: 'var(--error-bg)', 
+        <div
+          className="px-4 py-3 rounded-[16px] text-center"
+          style={{
+            background: 'var(--error-bg)',
             border: '1px solid var(--error-border)',
-            color: 'var(--error)'
+            color: 'var(--error)',
           }}
           role="alert"
         >
@@ -372,9 +386,12 @@ export function MarketDetail() {
   const poolSize = entryFeeValue && participantsCount ? Number(participantsCount) * Number(formatEther(entryFeeValue as bigint)) : 0
 
   const getTeamName = (index: number) => {
-    if (!matchData) return 'N/A'
-    if (index === 1) return matchData.homeTeam.name
-    if (index === 2) return matchData.awayTeam.name
+    if (!matchData)
+      return 'N/A'
+    if (index === 1)
+      return matchData.homeTeam.name
+    if (index === 2)
+      return matchData.awayTeam.name
     return 'Draw'
   }
 
@@ -406,9 +423,9 @@ export function MarketDetail() {
     }
 
     return (
-      <button 
-        className="btn-primary btn-lg" 
-        onClick={handleJoinMarket} 
+      <button
+        className="btn-primary btn-lg"
+        onClick={handleJoinMarket}
         disabled={selectedTeam === null || isUserParticipant}
       >
         <span className="icon-[mdi--login] w-5 h-5" />
@@ -421,12 +438,12 @@ export function MarketDetail() {
     <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <Link 
-            to="/" 
+          <Link
+            to="/"
             className="text-sm font-medium flex items-center gap-2 hover:underline"
             style={{ color: 'var(--text-secondary)' }}
-            onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-cyan)'}
-            onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}
+            onMouseEnter={e => e.currentTarget.style.color = 'var(--accent-cyan)'}
+            onMouseLeave={e => e.currentTarget.style.color = 'var(--text-secondary)'}
           >
             <span className="icon-[mdi--arrow-left]" />
             Back to All Markets
@@ -445,7 +462,7 @@ export function MarketDetail() {
               setSelectedTeam={setSelectedTeam}
               renderButtons={renderButtons}
             />
-            
+
             {/* Data Visualizations */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <PredictionDistributionChart markets={[{
@@ -457,7 +474,8 @@ export function MarketDetail() {
                 startTime: (marketInfo as any)[5],
                 resolved: Boolean(marketStatus),
                 participantsCount: participantsCount ? BigInt(participantsCount.toString()) : 0n,
-              }]} />
+              }]}
+              />
               <PoolTrendChart markets={[{
                 marketAddress: marketAddress!,
                 matchId: BigInt((marketInfo as any)[1]),
@@ -467,12 +485,13 @@ export function MarketDetail() {
                 startTime: (marketInfo as any)[5],
                 resolved: Boolean(marketStatus),
                 participantsCount: participantsCount ? BigInt(participantsCount.toString()) : 0n,
-              }]} />
+              }]}
+              />
             </div>
 
             {/* Social Features */}
             <div className="flex items-center gap-4">
-              <SharePrediction 
+              <SharePrediction
                 marketAddress={marketAddress!}
                 matchInfo={{
                   homeTeam: matchData.homeTeam.name,
@@ -480,13 +499,13 @@ export function MarketDetail() {
                   competition: matchData.competition.name,
                 }}
                 prediction={
-                  isUserParticipant && selectedTeam 
+                  isUserParticipant && selectedTeam
                     ? (selectedTeam === 1 ? 'HOME' : selectedTeam === 2 ? 'AWAY' : 'DRAW')
                     : undefined
                 }
               />
             </div>
-            
+
             <MarketComments marketAddress={marketAddress!} />
           </div>
           <div className="lg:col-span-1">
@@ -499,18 +518,24 @@ export function MarketDetail() {
               winningTeamName={getTeamName(Number(winningTeam))}
             />
             {actionStatus && (
-              <div 
+              <div
                 className="mt-6 p-4 rounded-xl text-sm font-medium flex items-start gap-3"
                 style={{
-                  background: actionStatus.type === 'info' ? 'var(--info-bg)' : 
-                             actionStatus.type === 'success' ? 'var(--success-bg)' : 
-                             'var(--error-bg)',
-                  border: `1px solid ${actionStatus.type === 'info' ? 'var(--info-border)' : 
-                                      actionStatus.type === 'success' ? 'var(--success-border)' : 
-                                      'var(--error-border)'}`,
-                  color: actionStatus.type === 'info' ? 'var(--info)' : 
-                        actionStatus.type === 'success' ? 'var(--success)' : 
-                        'var(--error)'
+                  background: actionStatus.type === 'info'
+                    ? 'var(--info-bg)'
+                    : actionStatus.type === 'success'
+                      ? 'var(--success-bg)'
+                      : 'var(--error-bg)',
+                  border: `1px solid ${actionStatus.type === 'info'
+                    ? 'var(--info-border)'
+                    : actionStatus.type === 'success'
+                      ? 'var(--success-border)'
+                      : 'var(--error-border)'}`,
+                  color: actionStatus.type === 'info'
+                    ? 'var(--info)'
+                    : actionStatus.type === 'success'
+                      ? 'var(--success)'
+                      : 'var(--error)',
                 }}
               >
                 {actionStatus.type === 'info' && <span className="icon-[mdi--information-outline] w-5 h-5 mt-0.5" />}

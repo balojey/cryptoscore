@@ -1,21 +1,22 @@
-import { useMemo } from 'react'
-import type { Market } from '../types'
 import type { FilterOptions } from '../components/MarketFilters'
+import type { Market } from '../types'
+import { useMemo } from 'react'
 
 export function useFilteredMarkets(markets: Market[], filters: FilterOptions) {
   return useMemo(() => {
-    if (!markets || markets.length === 0) return []
+    if (!markets || markets.length === 0)
+      return []
 
     let filtered = [...markets]
 
     // Filter by status
     if (filters.status !== 'all') {
       const now = new Date()
-      
+
       filtered = filtered.filter((market) => {
         const startTime = new Date(Number(market.startTime) * 1000)
         const isLive = now > startTime && !market.resolved
-        
+
         switch (filters.status) {
           case 'open':
             return !market.resolved && now <= startTime
@@ -38,11 +39,11 @@ export function useFilteredMarkets(markets: Market[], filters: FilterOptions) {
     if (filters.timeRange && filters.timeRange !== 'all') {
       const now = Date.now() / 1000
       const dayInSeconds = 86400
-      
+
       filtered = filtered.filter((market) => {
         const marketTime = Number(market.startTime)
         const timeUntilStart = marketTime - now
-        
+
         // Only show markets that haven't started yet or started recently
         switch (filters.timeRange) {
           case 'today':
@@ -81,30 +82,32 @@ export function useFilteredMarkets(markets: Market[], filters: FilterOptions) {
       switch (filters.sortBy) {
         case 'newest':
           return Number(b.startTime) - Number(a.startTime)
-        
+
         case 'ending-soon': {
           const now = Date.now() / 1000
           const aTimeLeft = Number(a.startTime) - now
           const bTimeLeft = Number(b.startTime) - now
-          
+
           // Only consider markets that haven't started yet
           if (aTimeLeft > 0 && bTimeLeft > 0) {
             return aTimeLeft - bTimeLeft
           }
-          if (aTimeLeft > 0) return -1
-          if (bTimeLeft > 0) return 1
+          if (aTimeLeft > 0)
+            return -1
+          if (bTimeLeft > 0)
+            return 1
           return 0
         }
-        
+
         case 'highest-pool': {
           const aPool = Number(a.entryFee) * Number(a.participantsCount)
           const bPool = Number(b.entryFee) * Number(b.participantsCount)
           return bPool - aPool
         }
-        
+
         case 'most-participants':
           return Number(b.participantsCount) - Number(a.participantsCount)
-        
+
         default:
           return 0
       }

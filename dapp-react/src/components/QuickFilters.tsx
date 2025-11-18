@@ -13,7 +13,7 @@ const filters = [
 export default function QuickFilters({ activeFilter = 'all', onFilterChange }: QuickFiltersProps) {
   return (
     <div className="flex items-center gap-2 overflow-x-auto pb-2">
-      {filters.map((filter) => (
+      {filters.map(filter => (
         <button
           key={filter.id}
           type="button"

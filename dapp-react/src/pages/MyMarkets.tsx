@@ -2,31 +2,31 @@ import type { MarketDashboardInfo } from '../types'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAccount, useReadContract } from 'wagmi'
+import PoolTrendChart from '../components/charts/PoolTrendChart'
+import PredictionDistributionChart from '../components/charts/PredictionDistributionChart'
 import EnhancedMarketCard, { EnhancedMarketCardSkeleton } from '../components/EnhancedMarketCard'
+import PerformanceChart from '../components/PerformanceChart'
 import PortfolioSummary from '../components/PortfolioSummary'
 import RecentActivity from '../components/RecentActivity'
-import PerformanceChart from '../components/PerformanceChart'
-import PredictionDistributionChart from '../components/charts/PredictionDistributionChart'
-import PoolTrendChart from '../components/charts/PoolTrendChart'
 import { CRYPTO_SCORE_DASHBOARD_ADDRESS, CryptoScoreDashboardABI } from '../config/contracts'
 
-const MarketList = ({ markets, isLoading, emptyMessage, emptyIcon }: { 
+function MarketList({ markets, isLoading, emptyMessage, emptyIcon }: {
   markets: MarketDashboardInfo[]
   isLoading: boolean
   emptyMessage: string
   emptyIcon: string
-}) => {
+}) {
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {[...Array(6)].map((_, i) => <EnhancedMarketCardSkeleton key={i} />)}
+        {[...Array.from({ length: 6 })].map((_, i) => <EnhancedMarketCardSkeleton key={i} />)}
       </div>
     )
   }
 
   if (markets.length === 0) {
     return (
-      <div 
+      <div
         className="text-center py-16 border-2 border-dashed rounded-xl"
         style={{ borderColor: 'var(--border-default)' }}
       >
@@ -34,8 +34,8 @@ const MarketList = ({ markets, isLoading, emptyMessage, emptyIcon }: {
         <p className="font-sans text-lg" style={{ color: 'var(--text-secondary)' }}>
           {emptyMessage}
         </p>
-        <Link 
-          to="/" 
+        <Link
+          to="/"
           className="inline-flex items-center gap-2 mt-6 btn-primary"
         >
           <span className="icon-[mdi--magnify] w-5 h-5" />
@@ -75,25 +75,26 @@ export function MyMarkets() {
   }) as { data: MarketDashboardInfo[] | undefined, isLoading: boolean }
 
   const allInvolvedMarkets = useMemo(() => {
-      if (!allInvolvedCreatedMarkets && !allInvolvedJoinedMarkets) return []
-  
-      const combinedMarkets = [
-        ...(allInvolvedCreatedMarkets || []),
-        ...(allInvolvedJoinedMarkets || []),
-      ]
-  
-      // Remove duplicates based on marketAddress
-      const uniqueMarketsMap = new Map<string, MarketDashboardInfo>()
-      combinedMarkets.forEach(market => {
-        uniqueMarketsMap.set(market.marketAddress, market)
-      })
-  
-      // Convert back to array and sort by starting date
-      const uniqueMarkets = Array.from(uniqueMarketsMap.values())
-      uniqueMarkets.sort((a, b) => Number(b.startTime) - Number(a.startTime))
-  
-      return uniqueMarkets
-    }, [allInvolvedCreatedMarkets, allInvolvedJoinedMarkets])
+    if (!allInvolvedCreatedMarkets && !allInvolvedJoinedMarkets)
+      return []
+
+    const combinedMarkets = [
+      ...(allInvolvedCreatedMarkets || []),
+      ...(allInvolvedJoinedMarkets || []),
+    ]
+
+    // Remove duplicates based on marketAddress
+    const uniqueMarketsMap = new Map<string, MarketDashboardInfo>()
+    combinedMarkets.forEach((market) => {
+      uniqueMarketsMap.set(market.marketAddress, market)
+    })
+
+    // Convert back to array and sort by starting date
+    const uniqueMarkets = Array.from(uniqueMarketsMap.values())
+    uniqueMarkets.sort((a, b) => Number(b.startTime) - Number(a.startTime))
+
+    return uniqueMarkets
+  }, [allInvolvedCreatedMarkets, allInvolvedJoinedMarkets])
 
   const { createdMarkets, joinedMarkets } = useMemo(() => {
     const created: MarketDashboardInfo[] = []
@@ -112,16 +113,14 @@ export function MyMarkets() {
     return { createdMarkets: created, joinedMarkets: joined }
   }, [allInvolvedMarkets, address])
 
-
-
   if (!address) {
     return (
-      <div 
+      <div
         className="min-h-screen flex items-center justify-center"
         style={{ background: 'var(--bg-primary)' }}
       >
         <div className="text-center max-w-md mx-auto px-4">
-          <div 
+          <div
             className="w-24 h-24 rounded-full mx-auto mb-6 flex items-center justify-center"
             style={{ background: 'var(--bg-secondary)' }}
           >
@@ -142,14 +141,14 @@ export function MyMarkets() {
     )
   }
 
-  const TabButton = ({ 
-    label, 
-    value, 
-    activeValue, 
+  const TabButton = ({
+    label,
+    value,
+    activeValue,
     setActive,
     count,
-    icon
-  }: { 
+    icon,
+  }: {
     label: string
     value: typeof activeTab
     activeValue: typeof activeTab
@@ -181,7 +180,7 @@ export function MyMarkets() {
       >
         <span className={`icon-[${icon}] w-5 h-5`} />
         <span>{label}</span>
-        <span 
+        <span
           className="px-2 py-0.5 rounded-full text-xs font-bold"
           style={{
             background: isActive ? 'rgba(0, 0, 0, 0.2)' : 'var(--bg-primary)',
@@ -200,12 +199,12 @@ export function MyMarkets() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-8">
           <div>
-            <Link 
-              to="/" 
+            <Link
+              to="/"
               className="text-sm font-medium flex items-center gap-2 mb-3 hover:underline"
               style={{ color: 'var(--text-tertiary)' }}
-              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-cyan)'}
-              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-tertiary)'}
+              onMouseEnter={e => e.currentTarget.style.color = 'var(--accent-cyan)'}
+              onMouseLeave={e => e.currentTarget.style.color = 'var(--text-tertiary)'}
             >
               <span className="icon-[mdi--arrow-left]" />
               Back to Markets
@@ -235,18 +234,18 @@ export function MyMarkets() {
 
         {/* Tabs */}
         <div className="flex flex-wrap gap-3 mb-8">
-          <TabButton 
-            label="Created" 
-            value="created" 
-            activeValue={activeTab} 
+          <TabButton
+            label="Created"
+            value="created"
+            activeValue={activeTab}
             setActive={setActiveTab}
             count={createdMarkets.length}
             icon="mdi--account-edit-outline"
           />
-          <TabButton 
-            label="Joined" 
-            value="joined" 
-            activeValue={activeTab} 
+          <TabButton
+            label="Joined"
+            value="joined"
+            activeValue={activeTab}
             setActive={setActiveTab}
             count={joinedMarkets.length}
             icon="mdi--account-group-outline"

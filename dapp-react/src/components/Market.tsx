@@ -1,10 +1,10 @@
+import type { MarketProps } from '../types'
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { parseEther, parseEventLogs } from 'viem'
 import { useAccount, useReadContract, useTransactionReceipt, useWriteContract } from 'wagmi'
-import { Link } from 'react-router-dom'
 import { CRYPTO_SCORE_FACTORY_ADDRESS, CryptoScoreFactoryABI } from '../config/contracts'
 import { MarqueeText } from './MarqueeText'
-import { MarketProps } from '../types'
 
 export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: MarketProps) {
   const { address: userAddress } = useAccount()
@@ -97,15 +97,15 @@ export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: 
 
   const TeamDisplay = ({ team }: { team: { name: string, crest: string } }) => (
     <div className="flex flex-col items-center gap-2 w-2/5 text-center">
-      <div 
+      <div
         className="w-12 h-12 rounded-lg flex items-center justify-center p-2"
         style={{ background: 'var(--bg-secondary)' }}
       >
-        <img 
-          src={'https://corsproxy.io/?' + team.crest} 
-          alt={team.name} 
-          className="w-full h-full object-contain" 
-          onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/50' }} 
+        <img
+          src={`https://corsproxy.io/?${team.crest}`}
+          alt={team.name}
+          className="w-full h-full object-contain"
+          onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/50' }}
         />
       </div>
       <div style={{ color: 'var(--text-primary)' }}>
@@ -154,80 +154,80 @@ export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: 
 
         {!isCreating
           ? (
-            <div className="text-center">
-              <button
-                type="button"
-                onClick={() => setIsCreating(true)}
-                className="btn-primary"
-              >
-                <span className="icon-[mdi--plus-circle-outline] w-4 h-4" />
-                {hasMarket ? 'Create Another' : 'Create Market'}
-              </button>
-            </div>
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => setIsCreating(true)}
+                  className="btn-primary"
+                >
+                  <span className="icon-[mdi--plus-circle-outline] w-4 h-4" />
+                  {hasMarket ? 'Create Another' : 'Create Market'}
+                </button>
+              </div>
             )
           : (
-            <div className="space-y-4 animate-fade-in">
-              {/* Entry Fee */}
-              <div>
-                <label htmlFor={`entryFee-${match.id}`} className="font-sans text-xs font-medium mb-2 block" style={{ color: 'var(--text-tertiary)' }}>
-                  Entry Fee (PAS)
-                </label>
-                <input
-                  id={`entryFee-${match.id}`}
-                  type="number"
-                  value={entryFee}
-                  onChange={e => setEntryFee(e.target.value)}
-                  placeholder="e.g., 100"
-                  className="block w-full px-3 py-2 rounded-lg text-sm"
-                  style={{
-                    background: 'var(--bg-secondary)',
-                    border: '1px solid var(--border-default)',
-                    color: 'var(--text-primary)',
-                  }}
-                />
+              <div className="space-y-4 animate-fade-in">
+                {/* Entry Fee */}
+                <div>
+                  <label htmlFor={`entryFee-${match.id}`} className="font-sans text-xs font-medium mb-2 block" style={{ color: 'var(--text-tertiary)' }}>
+                    Entry Fee (PAS)
+                  </label>
+                  <input
+                    id={`entryFee-${match.id}`}
+                    type="number"
+                    value={entryFee}
+                    onChange={e => setEntryFee(e.target.value)}
+                    placeholder="e.g., 100"
+                    className="block w-full px-3 py-2 rounded-lg text-sm"
+                    style={{
+                      background: 'var(--bg-secondary)',
+                      border: '1px solid var(--border-default)',
+                      color: 'var(--text-primary)',
+                    }}
+                  />
+                </div>
+                {/* Public Toggle */}
+                <div className="flex items-center gap-2">
+                  <input
+                    id={`isPublic-${match.id}`}
+                    type="checkbox"
+                    checked={isPublic}
+                    onChange={e => setIsPublic(e.target.checked)}
+                    className="h-4 w-4 rounded"
+                    style={{ accentColor: 'var(--accent-cyan)' }}
+                  />
+                  <label htmlFor={`isPublic-${match.id}`} className="font-sans text-sm" style={{ color: 'var(--text-secondary)' }}>
+                    Public Market
+                  </label>
+                </div>
+                {/* Actions */}
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleCreateMarket}
+                    disabled={isLoading}
+                    className="flex-1 btn-success"
+                  >
+                    {isLoading && <span className="icon-[mdi--loading] animate-spin" />}
+                    <span>{isLoading ? 'Creating...' : 'Confirm'}</span>
+                  </button>
+                  <button
+                    onClick={() => setIsCreating(false)}
+                    className="btn-secondary"
+                  >
+                    Cancel
+                  </button>
+                </div>
+                {error && (
+                  <p className="text-xs text-center" style={{ color: 'var(--error)' }}>
+                    {error}
+                  </p>
+                )}
+                {writeContractError && (
+                  <p className="text-xs text-center" style={{ color: 'var(--error)' }}>
+                    {(writeContractError as any).shortMessage || 'Transaction failed.'}
+                  </p>
+                )}
               </div>
-              {/* Public Toggle */}
-              <div className="flex items-center gap-2">
-                <input
-                  id={`isPublic-${match.id}`}
-                  type="checkbox"
-                  checked={isPublic}
-                  onChange={e => setIsPublic(e.target.checked)}
-                  className="h-4 w-4 rounded"
-                  style={{ accentColor: 'var(--accent-cyan)' }}
-                />
-                <label htmlFor={`isPublic-${match.id}`} className="font-sans text-sm" style={{ color: 'var(--text-secondary)' }}>
-                  Public Market
-                </label>
-              </div>
-              {/* Actions */}
-              <div className="flex items-center gap-2">
-                <button 
-                  onClick={handleCreateMarket} 
-                  disabled={isLoading} 
-                  className="flex-1 btn-success"
-                >
-                  {isLoading && <span className="icon-[mdi--loading] animate-spin" />}
-                  <span>{isLoading ? 'Creating...' : 'Confirm'}</span>
-                </button>
-                <button 
-                  onClick={() => setIsCreating(false)} 
-                  className="btn-secondary"
-                >
-                  Cancel
-                </button>
-              </div>
-              {error && (
-                <p className="text-xs text-center" style={{ color: 'var(--error)' }}>
-                  {error}
-                </p>
-              )}
-              {writeContractError && (
-                <p className="text-xs text-center" style={{ color: 'var(--error)' }}>
-                  {(writeContractError as any).shortMessage || 'Transaction failed.'}
-                </p>
-              )}
-            </div>
             )}
       </div>
     </div>

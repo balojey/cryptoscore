@@ -82,9 +82,9 @@ marketToast.error('Transaction failed')
 
 **Usage:**
 ```tsx
-<AnimatedNumber 
-  value={125.5} 
-  decimals={2} 
+<AnimatedNumber
+  value={125.5}
+  decimals={2}
   suffix=" PAS"
   duration={500}
 />
@@ -197,7 +197,7 @@ useEffect(() => {
     queryClient.invalidateQueries({ queryKey: ['readContract'] })
     onUpdate?.()
   }, 10000)
-  
+
   return () => clearInterval(intervalId)
 }, [])
 ```
@@ -206,22 +206,22 @@ useEffect(() => {
 ```typescript
 // Time range filtering
 if (filters.timeRange === 'today') {
-  filtered = filtered.filter(m => 
+  filtered = filtered.filter(m =>
     (now - Number(m.startTime)) <= 86400
   )
 }
 
 // Pool size filtering
 if (filters.minPoolSize) {
-  filtered = filtered.filter(m => 
-    (Number(m.entryFee) * Number(m.participantsCount)) >= 
-    filters.minPoolSize * 1e18
+  filtered = filtered.filter(m =>
+    (Number(m.entryFee) * Number(m.participantsCount))
+    >= filters.minPoolSize * 1e18
   )
 }
 
 // Entry fee filtering
 if (filters.minEntryFee) {
-  filtered = filtered.filter(m => 
+  filtered = filtered.filter(m =>
     (Number(m.entryFee) / 1e18) >= filters.minEntryFee
   )
 }
@@ -230,7 +230,7 @@ if (filters.minEntryFee) {
 ### Animated Transitions
 ```typescript
 // Smooth number animation with easing
-const easeOut = 1 - Math.pow(1 - progress, 3)
+const easeOut = 1 - (1 - progress) ** 3
 const currentValue = startValue + (endValue - startValue) * easeOut
 setDisplayValue(currentValue)
 ```
@@ -457,8 +457,8 @@ Phase 2 is now **100% complete** with all planned features:
 
 ---
 
-**Status**: ✅ Phase 2 100% Complete  
-**Build**: ✅ No errors  
-**Bundle**: 539 kB (160 kB gzipped)  
-**Ready for**: User testing & Phase 3 implementation  
+**Status**: ✅ Phase 2 100% Complete
+**Build**: ✅ No errors
+**Bundle**: 539 kB (160 kB gzipped)
+**Ready for**: User testing & Phase 3 implementation
 **Next**: WebSocket, advanced charts, social features

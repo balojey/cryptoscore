@@ -1,11 +1,12 @@
+import type { Market } from '../types'
+import type { FilterOptions } from './MarketFilters'
 import { useEffect, useState } from 'react'
 import { useAccount, useReadContract } from 'wagmi'
 import { CRYPTO_SCORE_DASHBOARD_ADDRESS, CryptoScoreDashboardABI } from '../config/contracts'
-import EnhancedMarketCard, { EnhancedMarketCardSkeleton } from './EnhancedMarketCard'
-import MarketFilters, { type FilterOptions } from './MarketFilters'
 import { useFilteredMarkets } from '../hooks/useFilteredMarkets'
 import { useRealtimeMarkets } from '../hooks/useRealtimeMarkets'
-import { Market } from '../types'
+import EnhancedMarketCard, { EnhancedMarketCardSkeleton } from './EnhancedMarketCard'
+import MarketFilters from './MarketFilters'
 
 const PAGE_SIZE = 6
 
@@ -80,19 +81,19 @@ export default function PublicMarkets() {
   if (isLoading && markets.length === 0) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {[...Array(PAGE_SIZE)].map((_, i) => <EnhancedMarketCardSkeleton key={i} />)}
+        {[...Array.from({ length: PAGE_SIZE })].map((_, i) => <EnhancedMarketCardSkeleton key={i} />)}
       </div>
     )
   }
 
   if (isError) {
     return (
-      <div 
-        className="px-6 py-4 rounded-[16px] text-center" 
-        style={{ 
-          background: 'var(--error-bg)', 
+      <div
+        className="px-6 py-4 rounded-[16px] text-center"
+        style={{
+          background: 'var(--error-bg)',
           border: '1px solid var(--error-border)',
-          color: 'var(--error)'
+          color: 'var(--error)',
         }}
         role="alert"
       >
@@ -104,7 +105,7 @@ export default function PublicMarkets() {
 
   if (!isLoading && markets.length === 0 && offset === 0) {
     return (
-      <div 
+      <div
         className="text-center py-16 border-2 border-dashed rounded-[16px]"
         style={{ borderColor: 'var(--border-default)' }}
       >
@@ -127,7 +128,11 @@ export default function PublicMarkets() {
       {/* Results Count */}
       {filteredMarkets.length > 0 && (
         <div className="text-sm" style={{ color: 'var(--text-tertiary)' }}>
-          Showing {filteredMarkets.length} {filteredMarkets.length === 1 ? 'market' : 'markets'}
+          Showing
+          {' '}
+          {filteredMarkets.length}
+          {' '}
+          {filteredMarkets.length === 1 ? 'market' : 'markets'}
         </div>
       )}
 
@@ -143,7 +148,7 @@ export default function PublicMarkets() {
 
       {/* No Results */}
       {filteredMarkets.length === 0 && !isLoading && (
-        <div 
+        <div
           className="text-center py-16 border-2 border-dashed rounded-xl"
           style={{ borderColor: 'var(--border-default)' }}
         >

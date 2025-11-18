@@ -256,7 +256,7 @@ Active filters: [Live] [Highest Pool] [Clear all]
 <Link
   to={`/market/${address}`}
   className="block p-4 rounded-lg"
-  style={{ 
+  style={{
     background: 'var(--bg-secondary)',
     border: '1px solid var(--border-default)'
   }}
@@ -490,8 +490,8 @@ Phase 2 successfully transforms CryptoScore into a **data-driven trading platfor
 
 ---
 
-**Status**: ✅ Phase 2 Complete  
-**Build**: ✅ No errors  
-**Bundle**: +14 kB (~4 kB gzipped)  
-**Ready for**: User testing & Phase 3 implementation  
+**Status**: ✅ Phase 2 Complete
+**Build**: ✅ No errors
+**Bundle**: +14 kB (~4 kB gzipped)
+**Ready for**: User testing & Phase 3 implementation
 **Next**: Real-time updates, charts, and advanced analytics

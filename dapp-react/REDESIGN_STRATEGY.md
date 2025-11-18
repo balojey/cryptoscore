@@ -11,7 +11,7 @@ CryptoScore is transitioning from a general sports prediction platform to a **We
 ### Primary Persona: "The DeFi Degen"
 - **Age**: 22-35
 - **Experience**: 2+ years in crypto, active on DEXs
-- **Behavior**: 
+- **Behavior**:
   - Trades multiple markets simultaneously
   - Makes quick decisions based on data
   - Values transparency and on-chain verification
@@ -314,6 +314,6 @@ CryptoScore is transitioning from a general sports prediction platform to a **We
 
 ---
 
-**Document Version**: 1.0  
-**Last Updated**: November 18, 2025  
+**Document Version**: 1.0
+**Last Updated**: November 18, 2025
 **Owner**: CryptoScore Team

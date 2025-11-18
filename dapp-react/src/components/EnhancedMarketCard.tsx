@@ -1,10 +1,10 @@
+import type { Market } from '../types'
 import { Link } from 'react-router-dom'
 import { formatEther } from 'viem'
 import { useAccount, useReadContract } from 'wagmi'
 import { CryptoScoreMarketABI } from '../config/contracts'
-import { shortenAddress } from '../utils/formatters'
 import { useMatchData } from '../hooks/useMatchData'
-import type { Market } from '../types'
+import { shortenAddress } from '../utils/formatters'
 
 interface EnhancedMarketCardProps {
   market: Market
@@ -19,36 +19,38 @@ interface PredictionDistribution {
 }
 
 // Skeleton for loading state
-export const EnhancedMarketCardSkeleton = () => (
-  <div className="card animate-pulse">
-    <div className="flex items-center justify-between mb-4">
-      <div className="h-4 w-32 skeleton" />
-      <div className="flex gap-2">
-        <div className="h-5 w-16 skeleton rounded-full" />
-        <div className="h-5 w-16 skeleton rounded-full" />
+export function EnhancedMarketCardSkeleton() {
+  return (
+    <div className="card animate-pulse">
+      <div className="flex items-center justify-between mb-4">
+        <div className="h-4 w-32 skeleton" />
+        <div className="flex gap-2">
+          <div className="h-5 w-16 skeleton rounded-full" />
+          <div className="h-5 w-16 skeleton rounded-full" />
+        </div>
+      </div>
+      <div className="flex items-center justify-between mb-6">
+        <div className="team-display">
+          <div className="w-16 h-16 skeleton rounded-lg" />
+          <div className="h-5 w-24 skeleton" />
+        </div>
+        <div className="h-6 w-12 skeleton" />
+        <div className="team-display">
+          <div className="w-16 h-16 skeleton rounded-lg" />
+          <div className="h-5 w-24 skeleton" />
+        </div>
+      </div>
+      <div className="h-3 w-full skeleton rounded-full mb-4" />
+      <div className="space-y-3">
+        <div className="h-4 w-full skeleton" />
+        <div className="h-4 w-full skeleton" />
       </div>
     </div>
-    <div className="flex items-center justify-between mb-6">
-      <div className="team-display">
-        <div className="w-16 h-16 skeleton rounded-lg" />
-        <div className="h-5 w-24 skeleton" />
-      </div>
-      <div className="h-6 w-12 skeleton" />
-      <div className="team-display">
-        <div className="w-16 h-16 skeleton rounded-lg" />
-        <div className="h-5 w-24 skeleton" />
-      </div>
-    </div>
-    <div className="h-3 w-full skeleton rounded-full mb-4" />
-    <div className="space-y-3">
-      <div className="h-4 w-full skeleton" />
-      <div className="h-4 w-full skeleton" />
-    </div>
-  </div>
-)
+  )
+}
 
 // Calculate prediction distribution from participants
-const usePredictionDistribution = (marketAddress: string): PredictionDistribution => {
+function usePredictionDistribution(marketAddress: string): PredictionDistribution {
   const { data: homeCount = 0n } = useReadContract({
     abi: CryptoScoreMarketABI,
     address: marketAddress as `0x${string}`,
@@ -79,7 +81,7 @@ const usePredictionDistribution = (marketAddress: string): PredictionDistributio
 }
 
 // Status badge component
-const StatusBadge = ({ market, matchDate }: { market: Market, matchDate: Date }) => {
+function StatusBadge({ market, matchDate }: { market: Market, matchDate: Date }) {
   if (market.resolved) {
     return <span className="badge badge-success">Resolved</span>
   }
@@ -100,15 +102,15 @@ const StatusBadge = ({ market, matchDate }: { market: Market, matchDate: Date })
 }
 
 // Prediction distribution bar
-const PredictionBar = ({ 
-  distribution, 
-  homeTeam, 
-  awayTeam 
-}: { 
+function PredictionBar({
+  distribution,
+  homeTeam,
+  awayTeam,
+}: {
   distribution: PredictionDistribution
   homeTeam: string
   awayTeam: string
-}) => {
+}) {
   if (distribution.total === 0) {
     return (
       <div className="text-center py-4">
@@ -128,22 +130,22 @@ const PredictionBar = ({
       {/* Visual Bar */}
       <div className="prediction-bar">
         {homePercent > 0 && (
-          <div 
-            className="prediction-segment prediction-segment-home" 
+          <div
+            className="prediction-segment prediction-segment-home"
             style={{ width: `${homePercent}%` }}
             title={`${homeTeam}: ${homePercent.toFixed(1)}%`}
           />
         )}
         {drawPercent > 0 && (
-          <div 
-            className="prediction-segment prediction-segment-draw" 
+          <div
+            className="prediction-segment prediction-segment-draw"
             style={{ width: `${drawPercent}%` }}
             title={`Draw: ${drawPercent.toFixed(1)}%`}
           />
         )}
         {awayPercent > 0 && (
-          <div 
-            className="prediction-segment prediction-segment-away" 
+          <div
+            className="prediction-segment prediction-segment-away"
             style={{ width: `${awayPercent}%` }}
             title={`${awayTeam}: ${awayPercent.toFixed(1)}%`}
           />
@@ -154,19 +156,22 @@ const PredictionBar = ({
       <div className="grid grid-cols-3 gap-2 text-xs font-mono">
         <div className="text-center">
           <div style={{ color: 'var(--accent-cyan)' }} className="font-bold">
-            {homePercent.toFixed(0)}%
+            {homePercent.toFixed(0)}
+            %
           </div>
           <div style={{ color: 'var(--text-tertiary)' }}>HOME</div>
         </div>
         <div className="text-center">
           <div style={{ color: 'var(--accent-amber)' }} className="font-bold">
-            {drawPercent.toFixed(0)}%
+            {drawPercent.toFixed(0)}
+            %
           </div>
           <div style={{ color: 'var(--text-tertiary)' }}>DRAW</div>
         </div>
         <div className="text-center">
           <div style={{ color: 'var(--accent-red)' }} className="font-bold">
-            {awayPercent.toFixed(0)}%
+            {awayPercent.toFixed(0)}
+            %
           </div>
           <div style={{ color: 'var(--text-tertiary)' }}>AWAY</div>
         </div>
@@ -187,7 +192,7 @@ export default function EnhancedMarketCard({ market }: EnhancedMarketCardProps) 
     args: [userAddress!],
     query: { enabled: !!userAddress },
   })
-  
+
   const hasJoined = Boolean(isParticipant)
 
   if (loading) {
@@ -201,7 +206,9 @@ export default function EnhancedMarketCard({ market }: EnhancedMarketCardProps) 
           <span className="icon-[mdi--alert-circle-outline] w-12 h-12 mx-auto mb-3" style={{ color: 'var(--error)' }} />
           <h3 className="font-bold text-lg mb-2">Match Data Unavailable</h3>
           <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>
-            Match ID: {market.matchId.toString()}
+            Match ID:
+            {' '}
+            {market.matchId.toString()}
           </p>
         </div>
       </div>
@@ -213,7 +220,7 @@ export default function EnhancedMarketCard({ market }: EnhancedMarketCardProps) 
   const isOwner = userAddress?.toLowerCase() === market.creator.toLowerCase()
 
   return (
-    <Link 
+    <Link
       to={`/market/${market.marketAddress}`}
       className="card block"
       style={{ textDecoration: 'none' }}
@@ -228,28 +235,30 @@ export default function EnhancedMarketCard({ market }: EnhancedMarketCardProps) 
             </p>
           </div>
           <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-            {matchDate.toLocaleString('en-US', { 
-              month: 'short', 
+            {matchDate.toLocaleString('en-US', {
+              month: 'short',
               day: 'numeric',
               hour: '2-digit',
-              minute: '2-digit'
+              minute: '2-digit',
             })}
           </p>
         </div>
         <div className="flex gap-2">
           <StatusBadge market={market} matchDate={matchDate} />
-          {market.isPublic ? (
-            <span className="badge badge-info">Public</span>
-          ) : (
-            <span className="badge badge-neutral">Private</span>
-          )}
+          {market.isPublic
+            ? (
+                <span className="badge badge-info">Public</span>
+              )
+            : (
+                <span className="badge badge-neutral">Private</span>
+              )}
         </div>
       </div>
 
       {/* Teams */}
       <div className="flex items-center justify-between mb-6">
         <div className="team-display flex-1">
-          <img 
+          <img
             src={`https://corsproxy.io/?${matchData.homeTeam.crest}`}
             alt={matchData.homeTeam.name}
             className="team-logo"
@@ -257,13 +266,13 @@ export default function EnhancedMarketCard({ market }: EnhancedMarketCardProps) 
           />
           <h3 className="team-name text-base">{matchData.homeTeam.name}</h3>
         </div>
-        
+
         <div className="px-4">
           <span className="text-2xl font-bold" style={{ color: 'var(--text-tertiary)' }}>VS</span>
         </div>
-        
+
         <div className="team-display flex-1">
-          <img 
+          <img
             src={`https://corsproxy.io/?${matchData.awayTeam.crest}`}
             alt={matchData.awayTeam.name}
             className="team-logo"
@@ -275,7 +284,7 @@ export default function EnhancedMarketCard({ market }: EnhancedMarketCardProps) 
 
       {/* Prediction Distribution */}
       <div className="mb-6">
-        <PredictionBar 
+        <PredictionBar
           distribution={distribution}
           homeTeam={matchData.homeTeam.name}
           awayTeam={matchData.awayTeam.name}
@@ -290,10 +299,12 @@ export default function EnhancedMarketCard({ market }: EnhancedMarketCardProps) 
             <span>Pool Size</span>
           </div>
           <div className="info-value font-mono">
-            {poolSize.toFixed(2)} <span style={{ color: 'var(--text-tertiary)' }}>PAS</span>
+            {poolSize.toFixed(2)}
+            {' '}
+            <span style={{ color: 'var(--text-tertiary)' }}>PAS</span>
           </div>
         </div>
-        
+
         <div className="info-row py-2">
           <div className="info-label">
             <span className="icon-[mdi--account-group-outline] w-4 h-4" />
@@ -303,7 +314,10 @@ export default function EnhancedMarketCard({ market }: EnhancedMarketCardProps) 
             {Number(market.participantsCount)}
             {distribution.total > 0 && (
               <span style={{ color: 'var(--text-tertiary)' }} className="ml-2 text-xs">
-                ({distribution.total} predictions)
+                (
+                {distribution.total}
+                {' '}
+                predictions)
               </span>
             )}
           </div>
@@ -315,7 +329,9 @@ export default function EnhancedMarketCard({ market }: EnhancedMarketCardProps) 
             <span>Entry Fee</span>
           </div>
           <div className="info-value font-mono">
-            {formatEther(market.entryFee)} <span style={{ color: 'var(--text-tertiary)' }}>PAS</span>
+            {formatEther(market.entryFee)}
+            {' '}
+            <span style={{ color: 'var(--text-tertiary)' }}>PAS</span>
           </div>
         </div>
       </div>
@@ -331,7 +347,7 @@ export default function EnhancedMarketCard({ market }: EnhancedMarketCardProps) 
             </span>
           )}
         </div>
-        
+
         {hasJoined && (
           <div className="flex items-center gap-1 text-xs font-semibold" style={{ color: 'var(--accent-green)' }}>
             <span className="icon-[mdi--check-circle] w-4 h-4" />

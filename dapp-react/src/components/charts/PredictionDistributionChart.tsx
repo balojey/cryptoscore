@@ -1,6 +1,6 @@
-import { useMemo } from 'react'
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts'
 import type { Market } from '../../types'
+import { useMemo } from 'react'
+import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
 
 interface PredictionDistributionChartProps {
   markets: Market[]
@@ -13,7 +13,7 @@ export default function PredictionDistributionChart({ markets }: PredictionDistr
     let totalDraw = 0
     let totalAway = 0
 
-    markets.forEach(market => {
+    markets.forEach((market) => {
       // This is placeholder - in real implementation, fetch actual prediction counts
       const participants = Number(market.participantsCount)
       if (participants > 0) {
@@ -26,7 +26,8 @@ export default function PredictionDistributionChart({ markets }: PredictionDistr
 
     const total = totalHome + totalDraw + totalAway
 
-    if (total === 0) return []
+    if (total === 0)
+      return []
 
     return [
       { name: 'Home Win', value: totalHome, percentage: ((totalHome / total) * 100).toFixed(1) },
@@ -52,18 +53,22 @@ export default function PredictionDistributionChart({ markets }: PredictionDistr
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div 
+        <div
           className="px-3 py-2 rounded-lg"
-          style={{ 
-            background: 'var(--bg-elevated)', 
-            border: '1px solid var(--border-default)' 
+          style={{
+            background: 'var(--bg-elevated)',
+            border: '1px solid var(--border-default)',
           }}
         >
           <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
             {payload[0].name}
           </p>
           <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-            {payload[0].value} predictions ({payload[0].payload.percentage}%)
+            {payload[0].value}
+            {' '}
+            predictions (
+            {payload[0].payload.percentage}
+            %)
           </p>
         </div>
       )
@@ -91,10 +96,10 @@ export default function PredictionDistributionChart({ markets }: PredictionDistr
             ))}
           </Pie>
           <Tooltip content={<CustomTooltip />} />
-          <Legend 
-            wrapperStyle={{ 
+          <Legend
+            wrapperStyle={{
               color: 'var(--text-secondary)',
-              fontSize: '14px'
+              fontSize: '14px',
             }}
           />
         </PieChart>

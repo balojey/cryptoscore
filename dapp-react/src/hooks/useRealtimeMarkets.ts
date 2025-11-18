@@ -1,5 +1,5 @@
-import { useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
+import { useEffect } from 'react'
 import toast from 'react-hot-toast'
 
 interface RealtimeOptions {
@@ -13,13 +13,14 @@ export function useRealtimeMarkets(options: RealtimeOptions = {}) {
   const queryClient = useQueryClient()
 
   useEffect(() => {
-    if (!enabled) return
+    if (!enabled)
+      return
 
     const intervalId = setInterval(() => {
       // Invalidate all market-related queries to trigger refetch
       queryClient.invalidateQueries({ queryKey: ['markets'] })
       queryClient.invalidateQueries({ queryKey: ['readContract'] })
-      
+
       onUpdate?.()
     }, interval)
 

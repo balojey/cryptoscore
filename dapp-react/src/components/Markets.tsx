@@ -1,9 +1,9 @@
+import type { Match } from '../types'
 import { useEffect, useMemo, useState } from 'react'
 import { useAccount, useContractRead } from 'wagmi'
 import { CRYPTO_SCORE_FACTORY_ADDRESS, CryptoScoreFactoryABI } from '../config/contracts'
-import { Market } from './Market'
-import type { Match } from '../types'
 import { getRandomApiKey } from '../utils/apiKey'
+import { Market } from './Market'
 
 const COMPETITIONS = [
   { code: 'PL', name: 'Premier League' },
@@ -18,53 +18,57 @@ const DATE_FILTERS = [
   { id: 'next7days', name: 'Next 7 Days' },
 ]
 
-const FilterButton = ({ text, isActive, onClick }: { text: string, isActive: boolean, onClick: () => void }) => (
-  <button
-    type="button"
-    onClick={onClick}
-    className="px-4 py-2 rounded-lg font-sans text-sm font-semibold transition-all"
-    style={{
-      background: isActive ? 'var(--accent-cyan)' : 'transparent',
-      color: isActive ? 'var(--text-inverse)' : 'var(--text-secondary)',
-      border: `1px solid ${isActive ? 'var(--accent-cyan)' : 'transparent'}`,
-    }}
-    onMouseEnter={(e) => {
-      if (!isActive) {
-        e.currentTarget.style.background = 'var(--bg-hover)'
-      }
-    }}
-    onMouseLeave={(e) => {
-      if (!isActive) {
-        e.currentTarget.style.background = 'transparent'
-      }
-    }}
-  >
-    {text}
-  </button>
-)
+function FilterButton({ text, isActive, onClick }: { text: string, isActive: boolean, onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="px-4 py-2 rounded-lg font-sans text-sm font-semibold transition-all"
+      style={{
+        background: isActive ? 'var(--accent-cyan)' : 'transparent',
+        color: isActive ? 'var(--text-inverse)' : 'var(--text-secondary)',
+        border: `1px solid ${isActive ? 'var(--accent-cyan)' : 'transparent'}`,
+      }}
+      onMouseEnter={(e) => {
+        if (!isActive) {
+          e.currentTarget.style.background = 'var(--bg-hover)'
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!isActive) {
+          e.currentTarget.style.background = 'transparent'
+        }
+      }}
+    >
+      {text}
+    </button>
+  )
+}
 
-const MarketSkeleton = () => (
-  <div className="card animate-pulse">
-    <div className="flex items-start justify-between gap-2">
-      <div className="flex flex-col items-center gap-2 w-2/5">
-        <div className="w-12 h-12 skeleton rounded-full" />
-        <div className="h-4 w-20 skeleton rounded" />
+function MarketSkeleton() {
+  return (
+    <div className="card animate-pulse">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex flex-col items-center gap-2 w-2/5">
+          <div className="w-12 h-12 skeleton rounded-full" />
+          <div className="h-4 w-20 skeleton rounded" />
+        </div>
+        <div className="flex flex-col items-center pt-4">
+          <div className="h-3 w-8 skeleton rounded" />
+          <div className="h-3 w-16 skeleton rounded mt-2" />
+        </div>
+        <div className="flex flex-col items-center gap-2 w-2/5">
+          <div className="w-12 h-12 skeleton rounded-full" />
+          <div className="h-4 w-20 skeleton rounded" />
+        </div>
       </div>
-      <div className="flex flex-col items-center pt-4">
-        <div className="h-3 w-8 skeleton rounded" />
-        <div className="h-3 w-16 skeleton rounded mt-2" />
-      </div>
-      <div className="flex flex-col items-center gap-2 w-2/5">
-        <div className="w-12 h-12 skeleton rounded-full" />
-        <div className="h-4 w-20 skeleton rounded" />
+      <hr className="my-4" style={{ borderColor: 'var(--border-default)' }} />
+      <div className="min-h-[140px] flex flex-col justify-center items-center">
+        <div className="h-10 w-36 skeleton rounded-lg" />
       </div>
     </div>
-    <hr className="my-4" style={{ borderColor: 'var(--border-default)' }} />
-    <div className="min-h-[140px] flex flex-col justify-center items-center">
-      <div className="h-10 w-36 skeleton rounded-lg" />
-    </div>
-  </div>
-)
+  )
+}
 
 export function Markets() {
   const [matches, setMatches] = useState<Match[]>([])
@@ -123,7 +127,7 @@ export function Markets() {
       }
 
       try {
-        const apiKey = getRandomApiKey();
+        const apiKey = getRandomApiKey()
         const response = await fetch(
           `https://corsproxy.io/?https://api.football-data.org/v4/competitions/${competition}/matches?status=SCHEDULED&dateFrom=${dateFrom}&dateTo=${dateTo}`,
           {
@@ -149,7 +153,7 @@ export function Markets() {
 
     fetchMatches()
   }, [competition, dateFilter])
-  
+
   return (
     <div className="space-y-8">
       {/* Filters */}
@@ -190,16 +194,16 @@ export function Markets() {
       <div>
         {loading && (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {[...Array(6)].map((_, i) => <MarketSkeleton key={i} />)}
+            {[...Array.from({ length: 6 })].map((_, i) => <MarketSkeleton key={i} />)}
           </div>
         )}
         {error && (
-          <div 
-            className="px-4 py-3 rounded-xl text-center" 
-            style={{ 
-              background: 'var(--error-bg)', 
+          <div
+            className="px-4 py-3 rounded-xl text-center"
+            style={{
+              background: 'var(--error-bg)',
               border: '1px solid var(--error-border)',
-              color: 'var(--error)'
+              color: 'var(--error)',
             }}
             role="alert"
           >

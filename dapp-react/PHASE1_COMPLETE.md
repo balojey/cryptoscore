@@ -182,17 +182,18 @@ import EnhancedMarketCard from './components/EnhancedMarketCard'
 
 ### Using Design Tokens
 ```tsx
-<div style={{ 
+<div style={{
   background: 'var(--bg-elevated)',
   border: '1px solid var(--border-default)',
   color: 'var(--text-primary)'
-}}>
+}}
+>
   Custom component
 </div>
 ```
 
 ---
 
-**Status**: ✅ Phase 1 Complete  
-**Build Status**: ✅ No errors  
+**Status**: ✅ Phase 1 Complete
+**Build Status**: ✅ No errors
 **Ready for**: User testing & Phase 2 implementation

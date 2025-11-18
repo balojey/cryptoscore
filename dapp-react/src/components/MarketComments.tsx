@@ -22,7 +22,8 @@ export default function MarketComments({ marketAddress: _marketAddress }: Market
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!newComment.trim() || !address) return
+    if (!newComment.trim() || !address)
+      return
 
     const comment: Comment = {
       id: Date.now().toString(),
@@ -39,33 +40,37 @@ export default function MarketComments({ marketAddress: _marketAddress }: Market
 
   const getTimeAgo = (timestamp: number) => {
     const seconds = Math.floor((Date.now() - timestamp) / 1000)
-    if (seconds < 60) return 'Just now'
+    if (seconds < 60)
+      return 'Just now'
     const minutes = Math.floor(seconds / 60)
-    if (minutes < 60) return `${minutes}m ago`
+    if (minutes < 60)
+      return `${minutes}m ago`
     const hours = Math.floor(minutes / 60)
-    if (hours < 24) return `${hours}h ago`
+    if (hours < 24)
+      return `${hours}h ago`
     const days = Math.floor(hours / 24)
     return `${days}d ago`
   }
 
   const getPredictionBadge = (prediction?: string) => {
-    if (!prediction) return null
-    
+    if (!prediction)
+      return null
+
     const colors = {
       HOME: { bg: 'var(--accent-cyan-glow)', color: 'var(--accent-cyan)', border: 'var(--accent-cyan)' },
       DRAW: { bg: 'var(--accent-amber-glow)', color: 'var(--accent-amber)', border: 'var(--accent-amber)' },
       AWAY: { bg: 'var(--accent-red-glow)', color: 'var(--accent-red)', border: 'var(--accent-red)' },
     }
-    
+
     const style = colors[prediction as keyof typeof colors]
-    
+
     return (
-      <span 
+      <span
         className="badge badge-sm"
         style={{
           background: style.bg,
           color: style.color,
-          border: `1px solid ${style.border}`
+          border: `1px solid ${style.border}`,
         }}
       >
         {prediction}
@@ -83,7 +88,7 @@ export default function MarketComments({ marketAddress: _marketAddress }: Market
           <div className="mb-3">
             <textarea
               value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
+              onChange={e => setNewComment(e.target.value)}
               placeholder="Share your thoughts or prediction..."
               rows={3}
               className="w-full px-3 py-2 rounded-lg text-sm resize-none"
@@ -92,8 +97,8 @@ export default function MarketComments({ marketAddress: _marketAddress }: Market
                 border: '1px solid var(--border-default)',
                 color: 'var(--text-primary)',
               }}
-              onFocus={(e) => e.currentTarget.style.borderColor = 'var(--accent-cyan)'}
-              onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border-default)'}
+              onFocus={e => e.currentTarget.style.borderColor = 'var(--accent-cyan)'}
+              onBlur={e => e.currentTarget.style.borderColor = 'var(--border-default)'}
             />
           </div>
 
@@ -102,7 +107,7 @@ export default function MarketComments({ marketAddress: _marketAddress }: Market
             <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
               Your prediction:
             </span>
-            {(['HOME', 'DRAW', 'AWAY'] as const).map((pred) => (
+            {(['HOME', 'DRAW', 'AWAY'] as const).map(pred => (
               <button
                 key={pred}
                 type="button"
@@ -138,45 +143,47 @@ export default function MarketComments({ marketAddress: _marketAddress }: Market
 
       {/* Comments List */}
       <div className="space-y-3">
-        {comments.length === 0 ? (
-          <div className="text-center py-8">
-            <span className="icon-[mdi--comment-outline] w-12 h-12 mx-auto mb-3" style={{ color: 'var(--text-tertiary)' }} />
-            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-              No comments yet. Be the first to share your thoughts!
-            </p>
-          </div>
-        ) : (
-          comments.map((comment) => (
-            <div 
-              key={comment.id}
-              className="p-4 rounded-lg"
-              style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-default)' }}
-            >
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <div 
-                    className="w-8 h-8 rounded-full flex items-center justify-center"
-                    style={{ background: 'var(--bg-primary)' }}
-                  >
-                    <span className="icon-[mdi--account] w-4 h-4" style={{ color: 'var(--text-tertiary)' }} />
-                  </div>
-                  <div>
-                    <div className="font-mono text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
-                      {shortenAddress(comment.author as `0x${string}`)}
-                    </div>
-                    <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                      {getTimeAgo(comment.timestamp)}
-                    </div>
-                  </div>
-                </div>
-                {getPredictionBadge(comment.prediction)}
+        {comments.length === 0
+          ? (
+              <div className="text-center py-8">
+                <span className="icon-[mdi--comment-outline] w-12 h-12 mx-auto mb-3" style={{ color: 'var(--text-tertiary)' }} />
+                <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                  No comments yet. Be the first to share your thoughts!
+                </p>
               </div>
-              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                {comment.text}
-              </p>
-            </div>
-          ))
-        )}
+            )
+          : (
+              comments.map(comment => (
+                <div
+                  key={comment.id}
+                  className="p-4 rounded-lg"
+                  style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-default)' }}
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center"
+                        style={{ background: 'var(--bg-primary)' }}
+                      >
+                        <span className="icon-[mdi--account] w-4 h-4" style={{ color: 'var(--text-tertiary)' }} />
+                      </div>
+                      <div>
+                        <div className="font-mono text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+                          {shortenAddress(comment.author as `0x${string}`)}
+                        </div>
+                        <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                          {getTimeAgo(comment.timestamp)}
+                        </div>
+                      </div>
+                    </div>
+                    {getPredictionBadge(comment.prediction)}
+                  </div>
+                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                    {comment.text}
+                  </p>
+                </div>
+              ))
+            )}
       </div>
     </div>
   )

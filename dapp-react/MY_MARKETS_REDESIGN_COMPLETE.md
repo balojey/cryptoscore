@@ -83,7 +83,7 @@ const portfolioStats = useMemo(() => {
   const totalValue = allInvolvedMarkets.reduce((sum, m) => {
     return sum + (Number(formatEther(m.entryFee)) * Number(m.participantsCount))
   }, 0)
-  
+
   return { totalMarkets, activeMarkets, totalValue, resolvedMarkets }
 }, [allInvolvedMarkets])
 ```
@@ -286,7 +286,7 @@ const portfolioStats = useMemo(() => {
 
 ### Empty States
 ```tsx
-<div 
+<div
   className="text-center py-16 border-2 border-dashed rounded-xl"
   style={{ borderColor: 'var(--border-default)' }}
 >
@@ -503,7 +503,7 @@ The My Markets page has been transformed from a basic list view into a **compreh
 
 ---
 
-**Status**: ✅ Complete  
-**Build**: ✅ No errors  
-**File**: `src/pages/MyMarkets.tsx`  
+**Status**: ✅ Complete
+**Build**: ✅ No errors
+**File**: `src/pages/MyMarkets.tsx`
 **Ready for**: User testing and feedback

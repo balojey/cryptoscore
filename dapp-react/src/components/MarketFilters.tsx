@@ -33,12 +33,12 @@ export default function MarketFilters({ filters, onFilterChange }: MarketFilters
     { value: 'most-participants', label: 'Most Popular', icon: 'mdi--account-group' },
   ] as const
 
-  const FilterButton = ({ 
-    active, 
-    onClick, 
-    icon, 
-    label 
-  }: { 
+  const FilterButton = ({
+    active,
+    onClick,
+    icon,
+    label,
+  }: {
     active: boolean
     onClick: () => void
     icon: string
@@ -77,7 +77,7 @@ export default function MarketFilters({ filters, onFilterChange }: MarketFilters
           Status:
         </span>
         <div className="flex flex-wrap gap-2">
-          {statusOptions.map((option) => (
+          {statusOptions.map(option => (
             <FilterButton
               key={option.value}
               active={filters.status === option.value}
@@ -96,11 +96,15 @@ export default function MarketFilters({ filters, onFilterChange }: MarketFilters
           onClick={() => setIsExpanded(!isExpanded)}
           className="flex items-center gap-2 text-sm font-medium transition-colors"
           style={{ color: 'var(--text-secondary)' }}
-          onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-cyan)'}
-          onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}
+          onMouseEnter={e => e.currentTarget.style.color = 'var(--accent-cyan)'}
+          onMouseLeave={e => e.currentTarget.style.color = 'var(--text-secondary)'}
         >
           <span className={`icon-[mdi--${isExpanded ? 'chevron-up' : 'chevron-down'}] w-5 h-5`} />
-          <span>{isExpanded ? 'Hide' : 'Show'} Advanced Filters</span>
+          <span>
+            {isExpanded ? 'Hide' : 'Show'}
+            {' '}
+            Advanced Filters
+          </span>
         </button>
       </div>
 
@@ -113,7 +117,7 @@ export default function MarketFilters({ filters, onFilterChange }: MarketFilters
               Sort by:
             </span>
             <div className="flex flex-wrap gap-2">
-              {sortOptions.map((option) => (
+              {sortOptions.map(option => (
                 <FilterButton
                   key={option.value}
                   active={filters.sortBy === option.value}
@@ -136,7 +140,7 @@ export default function MarketFilters({ filters, onFilterChange }: MarketFilters
                 { value: 'today', label: 'Today', icon: 'mdi--calendar-today' },
                 { value: 'week', label: 'This Week', icon: 'mdi--calendar-week' },
                 { value: 'month', label: 'This Month', icon: 'mdi--calendar-month' },
-              ].map((option) => (
+              ].map(option => (
                 <FilterButton
                   key={option.value}
                   active={filters.timeRange === option.value || (!filters.timeRange && option.value === 'all')}
@@ -161,9 +165,9 @@ export default function MarketFilters({ filters, onFilterChange }: MarketFilters
                 step="0.1"
                 placeholder="Any"
                 value={filters.minPoolSize || ''}
-                onChange={(e) => onFilterChange({ 
-                  ...filters, 
-                  minPoolSize: e.target.value ? Number(e.target.value) : undefined 
+                onChange={e => onFilterChange({
+                  ...filters,
+                  minPoolSize: e.target.value ? Number(e.target.value) : undefined,
                 })}
                 className="w-full px-3 py-2 rounded-lg text-sm"
                 style={{
@@ -185,9 +189,9 @@ export default function MarketFilters({ filters, onFilterChange }: MarketFilters
                 step="0.01"
                 placeholder="Any"
                 value={filters.minEntryFee || ''}
-                onChange={(e) => onFilterChange({ 
-                  ...filters, 
-                  minEntryFee: e.target.value ? Number(e.target.value) : undefined 
+                onChange={e => onFilterChange({
+                  ...filters,
+                  minEntryFee: e.target.value ? Number(e.target.value) : undefined,
                 })}
                 className="w-full px-3 py-2 rounded-lg text-sm"
                 style={{
@@ -202,80 +206,89 @@ export default function MarketFilters({ filters, onFilterChange }: MarketFilters
       )}
 
       {/* Active Filters Summary */}
-      {(filters.status !== 'all' || 
-        filters.sortBy !== 'newest' || 
-        filters.timeRange !== 'all' ||
-        filters.minPoolSize !== undefined ||
-        filters.minEntryFee !== undefined) && (
+      {(filters.status !== 'all'
+        || filters.sortBy !== 'newest'
+        || filters.timeRange !== 'all'
+        || filters.minPoolSize !== undefined
+        || filters.minEntryFee !== undefined) && (
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
             Active filters:
           </span>
           {filters.status !== 'all' && (
-            <span 
+            <span
               className="badge badge-sm"
               style={{
                 background: 'var(--accent-cyan-glow)',
                 color: 'var(--accent-cyan)',
-                border: '1px solid var(--accent-cyan)'
+                border: '1px solid var(--accent-cyan)',
               }}
             >
               {statusOptions.find(o => o.value === filters.status)?.label}
             </span>
           )}
           {filters.sortBy !== 'newest' && (
-            <span 
+            <span
               className="badge badge-sm"
               style={{
                 background: 'var(--accent-purple-glow)',
                 color: 'var(--accent-purple)',
-                border: '1px solid var(--accent-purple)'
+                border: '1px solid var(--accent-purple)',
               }}
             >
               {sortOptions.find(o => o.value === filters.sortBy)?.label}
             </span>
           )}
           {filters.timeRange && filters.timeRange !== 'all' && (
-            <span 
+            <span
               className="badge badge-sm"
               style={{
                 background: 'var(--accent-amber-glow)',
                 color: 'var(--accent-amber)',
-                border: '1px solid var(--accent-amber)'
+                border: '1px solid var(--accent-amber)',
               }}
             >
-              {filters.timeRange === 'today' ? 'Today' : 
-               filters.timeRange === 'week' ? 'This Week' : 'This Month'}
+              {filters.timeRange === 'today'
+                ? 'Today'
+                : filters.timeRange === 'week' ? 'This Week' : 'This Month'}
             </span>
           )}
           {filters.minPoolSize !== undefined && (
-            <span 
+            <span
               className="badge badge-sm"
               style={{
                 background: 'var(--accent-green-glow)',
                 color: 'var(--accent-green)',
-                border: '1px solid var(--accent-green)'
+                border: '1px solid var(--accent-green)',
               }}
             >
-              Pool ≥ {filters.minPoolSize} PAS
+              Pool ≥
+              {' '}
+              {filters.minPoolSize}
+              {' '}
+              PAS
             </span>
           )}
           {filters.minEntryFee !== undefined && (
-            <span 
+            <span
               className="badge badge-sm"
               style={{
                 background: 'var(--accent-green-glow)',
                 color: 'var(--accent-green)',
-                border: '1px solid var(--accent-green)'
+                border: '1px solid var(--accent-green)',
               }}
             >
-              Entry ≥ {filters.minEntryFee} PAS
+              Entry ≥
+              {' '}
+              {filters.minEntryFee}
+              {' '}
+              PAS
             </span>
           )}
           <button
             type="button"
-            onClick={() => onFilterChange({ 
-              status: 'all', 
+            onClick={() => onFilterChange({
+              status: 'all',
               sortBy: 'newest',
               timeRange: 'all',
               minPoolSize: undefined,

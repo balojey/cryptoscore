@@ -15,12 +15,12 @@ export default function SharePrediction({ marketAddress, matchInfo, prediction }
   const [isOpen, setIsOpen] = useState(false)
 
   const shareUrl = `${window.location.origin}/market/${marketAddress}`
-  
+
   const getShareText = () => {
-    const predictionText = prediction 
+    const predictionText = prediction
       ? `I'm predicting ${prediction === 'HOME' ? matchInfo.homeTeam : prediction === 'AWAY' ? matchInfo.awayTeam : 'a DRAW'} to win!`
       : `Check out this prediction market!`
-    
+
     return `${predictionText}\n\n${matchInfo.homeTeam} vs ${matchInfo.awayTeam}\n${matchInfo.competition}\n\n`
   }
 
@@ -58,17 +58,17 @@ export default function SharePrediction({ marketAddress, matchInfo, prediction }
       {isOpen && (
         <>
           {/* Backdrop */}
-          <div 
+          <div
             className="fixed inset-0 z-40"
             onClick={() => setIsOpen(false)}
           />
-          
+
           {/* Dropdown */}
-          <div 
+          <div
             className="absolute right-0 mt-2 w-64 rounded-lg shadow-xl z-50 p-2"
-            style={{ 
-              background: 'var(--bg-elevated)', 
-              border: '1px solid var(--border-default)' 
+            style={{
+              background: 'var(--bg-elevated)',
+              border: '1px solid var(--border-default)',
             }}
           >
             <div className="mb-3 px-2 py-1">

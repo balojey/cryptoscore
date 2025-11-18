@@ -1,6 +1,6 @@
 export default function Footer() {
   return (
-    <footer 
+    <footer
       className="w-full"
       style={{ borderTop: '1px solid var(--border-default)' }}
     >
@@ -15,8 +15,8 @@ export default function Footer() {
             rel="noopener noreferrer"
             className="transition-colors"
             style={{ color: 'var(--text-tertiary)' }}
-            onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-cyan)'}
-            onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-tertiary)'}
+            onMouseEnter={e => e.currentTarget.style.color = 'var(--accent-cyan)'}
+            onMouseLeave={e => e.currentTarget.style.color = 'var(--text-tertiary)'}
             aria-label="CryptoScore on X"
           >
             <span className="icon-[mdi--twitter] size-5" />
@@ -27,8 +27,8 @@ export default function Footer() {
             rel="noopener noreferrer"
             className="transition-colors"
             style={{ color: 'var(--text-tertiary)' }}
-            onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-cyan)'}
-            onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-tertiary)'}
+            onMouseEnter={e => e.currentTarget.style.color = 'var(--accent-cyan)'}
+            onMouseLeave={e => e.currentTarget.style.color = 'var(--text-tertiary)'}
             aria-label="CryptoScore on GitHub"
           >
             <span className="icon-[mdi--github] size-5" />

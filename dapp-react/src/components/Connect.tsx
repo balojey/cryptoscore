@@ -84,7 +84,7 @@ export default function Connect() {
         'ledger',
         'argent',
       ]
-      return allowed.some((substr) => id.includes(substr))
+      return allowed.some(substr => id.includes(substr))
     })
   }, [connectors])
 
