@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useAccount, useReadContract } from 'wagmi'
 import { CRYPTO_SCORE_DASHBOARD_ADDRESS, CryptoScoreDashboardABI } from '../config/contracts'
-import MarketCard, { MarketCardSkeleton } from './MarketCard'
+import EnhancedMarketCard, { EnhancedMarketCardSkeleton } from './EnhancedMarketCard'
 import { Market } from '../types'
 
 export function UserMarkets() {
@@ -56,10 +56,12 @@ export function UserMarkets() {
     return (
       <div>
         <div className="flex justify-between items-center mb-4">
-          <h2 className="font-jakarta text-3xl font-bold text-[#1E293B]">My Active Markets</h2>
+          <h2 className="font-jakarta text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
+            My Active Markets
+          </h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {[...Array(3)].map((_, i) => <MarketCardSkeleton key={i} />)}
+          {[...Array(3)].map((_, i) => <EnhancedMarketCardSkeleton key={i} />)}
         </div>
       </div>
     )
@@ -70,12 +72,21 @@ export function UserMarkets() {
     return (
       <div>
         <div className="flex justify-between items-center mb-4">
-          <h2 className="font-jakarta text-3xl font-bold text-[#1E293B]">My Active Markets</h2>
+          <h2 className="font-jakarta text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
+            My Active Markets
+          </h2>
         </div>
-        <div className="text-center py-12 border-2 border-dashed border-slate-200 rounded-[16px]">
-          <span className="icon-[mdi--cards-outline] w-16 h-16 text-slate-300 mx-auto" />
-          <p className="mt-4 font-sans text-lg text-slate-600">You haven't joined or created any markets yet.</p>
-          <p className="font-sans text-sm text-slate-400">Explore the open markets below to get started!</p>
+        <div 
+          className="text-center py-12 border-2 border-dashed rounded-[16px]"
+          style={{ borderColor: 'var(--border-default)' }}
+        >
+          <span className="icon-[mdi--cards-outline] w-16 h-16 mx-auto" style={{ color: 'var(--text-tertiary)' }} />
+          <p className="mt-4 font-sans text-lg" style={{ color: 'var(--text-secondary)' }}>
+            You haven't joined or created any markets yet.
+          </p>
+          <p className="font-sans text-sm" style={{ color: 'var(--text-tertiary)' }}>
+            Explore the open markets below to get started!
+          </p>
         </div>
       </div>
     )
@@ -84,10 +95,13 @@ export function UserMarkets() {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="font-jakarta text-3xl font-bold text-[#1E293B]">My Active Markets</h2>
+        <h2 className="font-jakarta text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
+          My Active Markets
+        </h2>
         <Link
           to="/my-markets"
-          className="flex items-center gap-2 text-sm font-bold text-[#0A84FF] hover:underline"
+          className="flex items-center gap-2 text-sm font-bold hover:underline"
+          style={{ color: 'var(--accent-cyan)' }}
         >
           <span>View All</span>
           <span className="icon-[mdi--arrow-right]" />
@@ -96,7 +110,7 @@ export function UserMarkets() {
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {/* Show the 3 most recent markets */}
         {userMarkets.slice(0, 3).map(market => (
-          <MarketCard market={market} key={market.marketAddress} variant="compact" />
+          <EnhancedMarketCard market={market} key={market.marketAddress} />
         ))}
       </div>
     </div>

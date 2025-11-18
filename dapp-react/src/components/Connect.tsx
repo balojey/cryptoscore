@@ -191,7 +191,7 @@ export default function Connect() {
                   /* No Connectors - Show Popular Wallets */
                   <div className="space-y-4 pt-2">
                     <div className="text-center">
-                      <span className="icon-[mdi--wallet-off-outline] w-12 h-12 mx-auto text-slate-600 mb-2" />
+                      <span className="icon-[mdi--wallet-outline] w-12 h-12 mx-auto text-slate-600 mb-2" />
                       <p className="text-base font-medium text-slate-300">
                         No wallet extensions detected.
                       </p>

@@ -1,23 +1,42 @@
 import type { MarketDashboardInfo } from '../types'
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAccount, useReadContract } from 'wagmi'
-import MarketCard, { MarketCardSkeleton } from '../components/MarketCard'
+import { formatEther } from 'viem'
+import EnhancedMarketCard, { EnhancedMarketCardSkeleton } from '../components/EnhancedMarketCard'
 import { CRYPTO_SCORE_DASHBOARD_ADDRESS, CryptoScoreDashboardABI } from '../config/contracts'
 
-const MarketList = ({ markets, isLoading, emptyMessage }: { markets: MarketDashboardInfo[], isLoading: boolean, emptyMessage: string }) => {
+const MarketList = ({ markets, isLoading, emptyMessage, emptyIcon }: { 
+  markets: MarketDashboardInfo[]
+  isLoading: boolean
+  emptyMessage: string
+  emptyIcon: string
+}) => {
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {[...Array(3)].map((_, i) => <MarketCardSkeleton key={i} />)}
+        {[...Array(6)].map((_, i) => <EnhancedMarketCardSkeleton key={i} />)}
       </div>
     )
   }
 
   if (markets.length === 0) {
     return (
-      <div className="text-center py-16 border-2 border-dashed border-slate-200 rounded-[16px]">
-        <span className="icon-[mdi--database-off-outline] w-16 h-16 text-slate-300 mx-auto" />
-        <p className="mt-4 font-sans text-lg text-slate-600">{emptyMessage}</p>
+      <div 
+        className="text-center py-16 border-2 border-dashed rounded-xl"
+        style={{ borderColor: 'var(--border-default)' }}
+      >
+        <span className={`icon-[${emptyIcon}] w-16 h-16 mx-auto mb-4`} style={{ color: 'var(--text-tertiary)' }} />
+        <p className="font-sans text-lg" style={{ color: 'var(--text-secondary)' }}>
+          {emptyMessage}
+        </p>
+        <Link 
+          to="/" 
+          className="inline-flex items-center gap-2 mt-6 btn-primary"
+        >
+          <span className="icon-[mdi--magnify] w-5 h-5" />
+          <span>Explore Markets</span>
+        </Link>
       </div>
     )
   }
@@ -25,7 +44,7 @@ const MarketList = ({ markets, isLoading, emptyMessage }: { markets: MarketDashb
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
       {markets.map(market => (
-        <MarketCard market={market} key={market.marketAddress} variant="compact" />
+        <EnhancedMarketCard market={market} key={market.marketAddress} />
       ))}
     </div>
   )
@@ -89,47 +108,197 @@ export function MyMarkets() {
     return { createdMarkets: created, joinedMarkets: joined }
   }, [allInvolvedMarkets, address])
 
+  // Calculate portfolio stats
+  const portfolioStats = useMemo(() => {
+    if (!allInvolvedMarkets.length) {
+      return {
+        totalMarkets: 0,
+        activeMarkets: 0,
+        totalValue: 0,
+        resolvedMarkets: 0,
+      }
+    }
+
+    const totalMarkets = allInvolvedMarkets.length
+    const activeMarkets = allInvolvedMarkets.filter(m => !m.resolved).length
+    const resolvedMarkets = allInvolvedMarkets.filter(m => m.resolved).length
+    const totalValue = allInvolvedMarkets.reduce((sum, m) => {
+      return sum + (Number(formatEther(m.entryFee)) * Number(m.participantsCount))
+    }, 0)
+
+    return { totalMarkets, activeMarkets, totalValue, resolvedMarkets }
+  }, [allInvolvedMarkets])
+
   if (!address) {
     return (
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
-        <span className="icon-[mdi--wallet-outline] w-24 h-24 text-slate-300 mx-auto" />
-        <h1 className="font-jakarta text-3xl font-bold text-[#1E293B] mt-4">Connect Your Wallet</h1>
-        <p className="text-lg text-slate-500 mt-2">Please connect your wallet to view your markets.</p>
+      <div 
+        className="min-h-screen flex items-center justify-center"
+        style={{ background: 'var(--bg-primary)' }}
+      >
+        <div className="text-center max-w-md mx-auto px-4">
+          <div 
+            className="w-24 h-24 rounded-full mx-auto mb-6 flex items-center justify-center"
+            style={{ background: 'var(--bg-secondary)' }}
+          >
+            <span className="icon-[mdi--wallet-outline] w-12 h-12" style={{ color: 'var(--text-tertiary)' }} />
+          </div>
+          <h1 className="font-jakarta text-3xl font-bold mb-3" style={{ color: 'var(--text-primary)' }}>
+            Connect Your Wallet
+          </h1>
+          <p className="text-lg mb-6" style={{ color: 'var(--text-secondary)' }}>
+            Please connect your wallet to view your markets and portfolio.
+          </p>
+          <Link to="/" className="btn-primary btn-lg">
+            <span className="icon-[mdi--home] w-5 h-5" />
+            <span>Back to Home</span>
+          </Link>
+        </div>
       </div>
     )
   }
 
-  const TabButton = ({ label, value, activeValue, setActive }: { label: string, value: typeof activeTab, activeValue: typeof activeTab, setActive: (v: typeof activeTab) => void }) => (
-    <button
-      type="button"
-      onClick={() => setActive(value)}
-      className={`px-6 py-3 font-sans font-bold text-base rounded-t-[12px] border-b-4 transition-colors ${
-        activeValue === value
-          ? 'text-[#0A84FF] border-[#0A84FF]'
-          : 'text-slate-500 border-transparent hover:bg-slate-100'
-      }`}
-    >
-      {label}
-    </button>
-  )
+  const TabButton = ({ 
+    label, 
+    value, 
+    activeValue, 
+    setActive,
+    count,
+    icon
+  }: { 
+    label: string
+    value: typeof activeTab
+    activeValue: typeof activeTab
+    setActive: (v: typeof activeTab) => void
+    count: number
+    icon: string
+  }) => {
+    const isActive = activeValue === value
+    return (
+      <button
+        type="button"
+        onClick={() => setActive(value)}
+        className="px-6 py-3 font-sans font-semibold text-base rounded-lg transition-all flex items-center gap-2"
+        style={{
+          background: isActive ? 'var(--accent-cyan)' : 'var(--bg-secondary)',
+          color: isActive ? 'var(--text-inverse)' : 'var(--text-secondary)',
+          border: `1px solid ${isActive ? 'var(--accent-cyan)' : 'var(--border-default)'}`,
+        }}
+        onMouseEnter={(e) => {
+          if (!isActive) {
+            e.currentTarget.style.borderColor = 'var(--border-hover)'
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!isActive) {
+            e.currentTarget.style.borderColor = 'var(--border-default)'
+          }
+        }}
+      >
+        <span className={`icon-[${icon}] w-5 h-5`} />
+        <span>{label}</span>
+        <span 
+          className="px-2 py-0.5 rounded-full text-xs font-bold"
+          style={{
+            background: isActive ? 'rgba(0, 0, 0, 0.2)' : 'var(--bg-primary)',
+            color: isActive ? 'var(--text-inverse)' : 'var(--text-tertiary)',
+          }}
+        >
+          {count}
+        </span>
+      </button>
+    )
+  }
 
   return (
-    <div className="bg-[#F5F7FA] min-h-screen">
+    <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-8">
-          <h1 className="font-jakarta text-4xl font-bold text-[#1E293B]">My Markets</h1>
-          <div className="border-b border-slate-200 flex">
-            <TabButton label="Created" value="created" activeValue={activeTab} setActive={setActiveTab} />
-            <TabButton label="Joined" value="joined" activeValue={activeTab} setActive={setActiveTab} />
+          <div>
+            <Link 
+              to="/" 
+              className="text-sm font-medium flex items-center gap-2 mb-3 hover:underline"
+              style={{ color: 'var(--text-tertiary)' }}
+              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-cyan)'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-tertiary)'}
+            >
+              <span className="icon-[mdi--arrow-left]" />
+              Back to Markets
+            </Link>
+            <h1 className="font-jakarta text-4xl font-bold" style={{ color: 'var(--text-primary)' }}>
+              My Portfolio
+            </h1>
           </div>
         </div>
 
+        {/* Portfolio Stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="stat-card">
+            <div className="flex items-center justify-between mb-2">
+              <span className="stat-label">Total Markets</span>
+              <span className="icon-[mdi--chart-box-outline] w-5 h-5" style={{ color: 'var(--accent-cyan)' }} />
+            </div>
+            <div className="stat-value">{portfolioStats.totalMarkets}</div>
+          </div>
+
+          <div className="stat-card">
+            <div className="flex items-center justify-between mb-2">
+              <span className="stat-label">Active</span>
+              <span className="icon-[mdi--lightning-bolt] w-5 h-5" style={{ color: 'var(--accent-amber)' }} />
+            </div>
+            <div className="stat-value">{portfolioStats.activeMarkets}</div>
+          </div>
+
+          <div className="stat-card">
+            <div className="flex items-center justify-between mb-2">
+              <span className="stat-label">Resolved</span>
+              <span className="icon-[mdi--check-circle-outline] w-5 h-5" style={{ color: 'var(--accent-green)' }} />
+            </div>
+            <div className="stat-value">{portfolioStats.resolvedMarkets}</div>
+          </div>
+
+          <div className="stat-card">
+            <div className="flex items-center justify-between mb-2">
+              <span className="stat-label">Total Volume</span>
+              <span className="icon-[mdi--database-outline] w-5 h-5" style={{ color: 'var(--accent-purple)' }} />
+            </div>
+            <div className="stat-value">
+              {portfolioStats.totalValue.toFixed(2)}
+              <span className="text-sm font-normal ml-1" style={{ color: 'var(--text-tertiary)' }}>
+                PAS
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex flex-wrap gap-3 mb-8">
+          <TabButton 
+            label="Created" 
+            value="created" 
+            activeValue={activeTab} 
+            setActive={setActiveTab}
+            count={createdMarkets.length}
+            icon="mdi--account-edit-outline"
+          />
+          <TabButton 
+            label="Joined" 
+            value="joined" 
+            activeValue={activeTab} 
+            setActive={setActiveTab}
+            count={joinedMarkets.length}
+            icon="mdi--account-group-outline"
+          />
+        </div>
+
+        {/* Market Lists */}
         <div className="space-y-8">
           {activeTab === 'created' && (
             <MarketList
               markets={createdMarkets}
               isLoading={isLoadingCreated || isLoadingJoined}
               emptyMessage="You haven't created any markets yet."
+              emptyIcon="mdi--plus-circle-outline"
             />
           )}
           {activeTab === 'joined' && (
@@ -137,6 +306,7 @@ export function MyMarkets() {
               markets={joinedMarkets}
               isLoading={isLoadingCreated || isLoadingJoined}
               emptyMessage="You haven't joined any markets yet."
+              emptyIcon="mdi--cards-outline"
             />
           )}
         </div>
