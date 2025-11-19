@@ -18,6 +18,9 @@ contract CryptoScoreDashboard {
         uint256 participantsCount;
         bool isPublic;
         uint256 startTime;
+        uint256 homeCount;
+        uint256 awayCount;
+        uint256 drawCount;
     }
 
     constructor(address _factory) {
@@ -84,6 +87,8 @@ contract CryptoScoreDashboard {
             CryptoScoreMarket market = CryptoScoreMarket(marketAddr);
             CryptoScoreFactory.MarketInfo memory info = factory.getMarketInfo(marketAddr);
 
+            (uint256 home, uint256 away, uint256 draw) = market.getPredictionCounts();
+            
             dashboardData[i] = MarketDashboardInfo({
                 marketAddress: marketAddr,
                 matchId: info.matchId,
@@ -93,7 +98,10 @@ contract CryptoScoreDashboard {
                 winner: market.winner(),
                 participantsCount: market.getParticipantsCount(),
                 isPublic: market.isPublic(),
-                startTime: market.startTime()
+                startTime: market.startTime(),
+                homeCount: home,
+                awayCount: away,
+                drawCount: draw
             });
         }
 
@@ -141,6 +149,8 @@ contract CryptoScoreDashboard {
 
             if (!onlyPublic || market.isPublic()) {
                 if (idx >= offset) {
+                    (uint256 home, uint256 away, uint256 draw) = market.getPredictionCounts();
+                    
                     dashboardData[idx - offset] = MarketDashboardInfo({
                         marketAddress: info.marketAddress,
                         matchId: info.matchId,
@@ -150,7 +160,10 @@ contract CryptoScoreDashboard {
                         winner: market.winner(),
                         participantsCount: market.getParticipantsCount(),
                         isPublic: market.isPublic(),
-                        startTime: market.startTime()
+                        startTime: market.startTime(),
+                        homeCount: home,
+                        awayCount: away,
+                        drawCount: draw
                     });
                 }
                 idx++;

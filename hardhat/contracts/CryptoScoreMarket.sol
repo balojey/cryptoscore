@@ -16,6 +16,11 @@ contract CryptoScoreMarket {
     bool public isPublic;        // True if market is public, false if private
     uint256 public startTime;    // UNIX timestamp for match start
 
+    // Prediction tracking
+    uint256 public homeCount;    // Number of HOME predictions
+    uint256 public awayCount;    // Number of AWAY predictions
+    uint256 public drawCount;    // Number of DRAW predictions
+
     mapping(address => Prediction) public predictions;
     mapping(address => uint256) public rewards;
     address[] public participants;
@@ -55,6 +60,15 @@ contract CryptoScoreMarket {
 
         predictions[msg.sender] = _prediction;
         participants.push(msg.sender);
+
+        // Update prediction counts
+        if (_prediction == Prediction.HOME) {
+            homeCount++;
+        } else if (_prediction == Prediction.AWAY) {
+            awayCount++;
+        } else if (_prediction == Prediction.DRAW) {
+            drawCount++;
+        }
 
         emit Joined(msg.sender, _prediction);
     }
@@ -118,5 +132,20 @@ contract CryptoScoreMarket {
 
     function isParticipant(address user) external view returns (bool) {
         return predictions[user] != Prediction.NONE;
+    }
+
+    /// @notice Get user's prediction for this market
+    /// @param user The address to check
+    /// @return The user's prediction (NONE if not participated)
+    function getUserPrediction(address user) external view returns (Prediction) {
+        return predictions[user];
+    }
+
+    /// @notice Get prediction counts for all outcomes
+    /// @return home Number of HOME predictions
+    /// @return away Number of AWAY predictions
+    /// @return draw Number of DRAW predictions
+    function getPredictionCounts() external view returns (uint256 home, uint256 away, uint256 draw) {
+        return (homeCount, awayCount, drawCount);
     }
 }
