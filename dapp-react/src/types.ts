@@ -8,6 +8,9 @@ export interface MarketDashboardInfo {
   participantsCount: bigint
   isPublic: boolean
   startTime: bigint
+  homeCount: bigint
+  awayCount: bigint
+  drawCount: bigint
 }
 
 export interface Match {
@@ -80,6 +83,9 @@ export interface Market {
   resolved: boolean
   isPublic: boolean
   startTime: bigint
+  homeCount?: bigint
+  awayCount?: bigint
+  drawCount?: bigint
 }
 
 export interface MarketCardProps {

@@ -223,7 +223,12 @@ export function MyMarkets() {
 
         {/* Portfolio Summary */}
         <div className="mb-8">
-          <PortfolioSummary markets={allInvolvedMarkets} userAddress={address} />
+          <PortfolioSummary 
+            markets={allInvolvedMarkets} 
+            userAddress={address}
+            createdMarkets={createdMarkets}
+            joinedMarkets={joinedMarkets}
+          />
         </div>
 
         {/* Recent Activity & Performance */}

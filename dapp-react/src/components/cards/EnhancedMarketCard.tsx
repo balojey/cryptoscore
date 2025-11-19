@@ -54,28 +54,25 @@ function usePredictionDistribution(marketAddress: string): PredictionDistributio
   const { data: homeCount = 0n } = useReadContract({
     abi: CryptoScoreMarketABI,
     address: marketAddress as `0x${string}`,
-    functionName: 'predictionCounts',
-    args: [1],
-  })
-
-  const { data: drawCount = 0n } = useReadContract({
-    abi: CryptoScoreMarketABI,
-    address: marketAddress as `0x${string}`,
-    functionName: 'predictionCounts',
-    args: [3],
+    functionName: 'homeCount',
   })
 
   const { data: awayCount = 0n } = useReadContract({
     abi: CryptoScoreMarketABI,
     address: marketAddress as `0x${string}`,
-    functionName: 'predictionCounts',
-    args: [2],
+    functionName: 'awayCount',
+  })
+
+  const { data: drawCount = 0n } = useReadContract({
+    abi: CryptoScoreMarketABI,
+    address: marketAddress as `0x${string}`,
+    functionName: 'drawCount',
   })
 
   const home = Number(homeCount)
-  const draw = Number(drawCount)
   const away = Number(awayCount)
-  const total = home + draw + away
+  const draw = Number(drawCount)
+  const total = home + away + draw
 
   return { home, draw, away, total }
 }

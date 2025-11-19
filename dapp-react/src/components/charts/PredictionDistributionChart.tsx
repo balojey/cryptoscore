@@ -8,20 +8,16 @@ interface PredictionDistributionChartProps {
 
 export default function PredictionDistributionChart({ markets }: PredictionDistributionChartProps) {
   const chartData = useMemo(() => {
-    // Aggregate prediction data across all markets
+    // Aggregate prediction data across all markets using real contract data
     let totalHome = 0
     let totalDraw = 0
     let totalAway = 0
 
     markets.forEach((market) => {
-      // This is placeholder - in real implementation, fetch actual prediction counts
-      const participants = Number(market.participantsCount)
-      if (participants > 0) {
-        // Estimate distribution (placeholder)
-        totalHome += Math.floor(participants * 0.45)
-        totalDraw += Math.floor(participants * 0.25)
-        totalAway += Math.floor(participants * 0.30)
-      }
+      // Use real prediction counts from contract
+      totalHome += Number(market.homeCount || 0)
+      totalAway += Number(market.awayCount || 0)
+      totalDraw += Number(market.drawCount || 0)
     })
 
     const total = totalHome + totalDraw + totalAway

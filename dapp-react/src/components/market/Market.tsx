@@ -146,7 +146,7 @@ export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: 
             <p className="font-sans text-sm" style={{ color: 'var(--text-secondary)' }}>
               You already have a market for this match.
             </p>
-            <Link to="/my-markets" className="text-sm hover:underline" style={{ color: 'var(--accent-cyan)' }}>
+            <Link to="/dashboard" className="text-sm hover:underline" style={{ color: 'var(--accent-cyan)' }}>
               View your markets
             </Link>
           </div>

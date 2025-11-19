@@ -11,6 +11,7 @@ import SharePrediction from '../components/SharePrediction'
 import Confetti from '../components/ui/Confetti'
 import { CRYPTO_SCORE_FACTORY_ADDRESS, CryptoScoreFactoryABI, CryptoScoreMarketABI } from '../config/contracts'
 import { useMatchData } from '../hooks/useMatchData'
+import { useUserPrediction } from '../hooks/useUserPrediction'
 import { shortenAddress } from '../utils/formatters'
 
 // --- SUB-COMPONENTS ---
@@ -68,7 +69,7 @@ function MatchHeader({ matchData }: { matchData: Match }) {
   )
 }
 
-function MarketStats({ marketInfo, poolSize, participantsCount, marketStatus, isMatchStarted, winningTeamName }: any) {
+function MarketStats({ marketInfo, poolSize, participantsCount, marketStatus, isMatchStarted, winningTeamName, homeCount, awayCount, drawCount, userPrediction, userHasJoined }: any) {
   const InfoRow = ({ label, value, valueClass, icon }: { label: string, value: React.ReactNode, valueClass?: string, icon: string }) => (
     <div className="info-row">
       <div className="info-label">
@@ -86,6 +87,12 @@ function MarketStats({ marketInfo, poolSize, participantsCount, marketStatus, is
       return <span className="badge badge-warning">Live</span>
     return <span className="badge badge-info">Open</span>
   }
+
+  // Calculate prediction percentages
+  const totalPredictions = Number(homeCount || 0) + Number(awayCount || 0) + Number(drawCount || 0)
+  const homePercentage = totalPredictions > 0 ? Math.round((Number(homeCount || 0) / totalPredictions) * 100) : 0
+  const awayPercentage = totalPredictions > 0 ? Math.round((Number(awayCount || 0) / totalPredictions) * 100) : 0
+  const drawPercentage = totalPredictions > 0 ? Math.round((Number(drawCount || 0) / totalPredictions) * 100) : 0
 
   return (
     <div className="card">
@@ -139,6 +146,166 @@ function MarketStats({ marketInfo, poolSize, participantsCount, marketStatus, is
           />
         )}
       </div>
+
+      {/* User's Prediction */}
+      {userHasJoined && (
+        <div className="mt-6 pt-6" style={{ borderTop: '1px solid var(--border-default)' }}>
+          <h4 className="font-sans text-sm font-semibold mb-3" style={{ color: 'var(--text-secondary)' }}>
+            Your Prediction
+          </h4>
+          <div 
+            className="p-4 rounded-xl border-2 text-center"
+            style={{
+              borderColor: userPrediction === 'HOME' ? 'var(--accent-green)' : 
+                          userPrediction === 'AWAY' ? 'var(--accent-red)' : 
+                          'var(--accent-amber)',
+              background: userPrediction === 'HOME' ? 'rgba(0, 255, 136, 0.1)' : 
+                         userPrediction === 'AWAY' ? 'rgba(255, 51, 102, 0.1)' : 
+                         'rgba(255, 184, 0, 0.1)',
+            }}
+          >
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <span 
+                className={`icon-[${
+                  userPrediction === 'HOME' ? 'mdi--home' : 
+                  userPrediction === 'AWAY' ? 'mdi--airplane-takeoff' : 
+                  'mdi--equal'
+                }] w-5 h-5`}
+                style={{
+                  color: userPrediction === 'HOME' ? 'var(--accent-green)' : 
+                         userPrediction === 'AWAY' ? 'var(--accent-red)' : 
+                         'var(--accent-amber)',
+                }}
+              />
+              <span 
+                className="font-sans text-lg font-bold"
+                style={{
+                  color: userPrediction === 'HOME' ? 'var(--accent-green)' : 
+                         userPrediction === 'AWAY' ? 'var(--accent-red)' : 
+                         'var(--accent-amber)',
+                }}
+              >
+                {userPrediction}
+              </span>
+            </div>
+            <p className="font-sans text-xs" style={{ color: 'var(--text-secondary)' }}>
+              You predicted this outcome
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Prediction Distribution Visualization */}
+      {totalPredictions > 0 && (
+        <div className="mt-6 pt-6" style={{ borderTop: '1px solid var(--border-default)' }}>
+          <h4 className="font-sans text-sm font-semibold mb-4" style={{ color: 'var(--text-secondary)' }}>
+            Prediction Distribution
+          </h4>
+          <div className="space-y-3">
+            {/* HOME */}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <span className="font-sans text-xs font-medium flex items-center" style={{ color: 'var(--text-secondary)' }}>
+                  <span className="icon-[mdi--home] w-4 h-4 inline-block mr-1" style={{ color: 'var(--accent-green)' }} />
+                  HOME
+                  {userPrediction === 'HOME' && (
+                    <span className="ml-2 px-2 py-0.5 text-xs rounded-full font-bold" style={{ 
+                      background: 'var(--accent-green)', 
+                      color: 'var(--bg-primary)' 
+                    }}>
+                      YOU
+                    </span>
+                  )}
+                </span>
+                <span className="font-mono text-xs font-bold" style={{ color: 'var(--accent-green)' }}>
+                  {homePercentage}%
+                </span>
+              </div>
+              <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--bg-secondary)' }}>
+                <div
+                  className={`h-full transition-all duration-300 ${userPrediction === 'HOME' ? 'animate-pulse' : ''}`}
+                  style={{
+                    width: `${homePercentage}%`,
+                    background: userPrediction === 'HOME' ? 'var(--accent-green)' : 'var(--accent-green)',
+                    boxShadow: userPrediction === 'HOME' ? '0 0 8px var(--accent-green)' : 'none',
+                  }}
+                />
+              </div>
+              <div className="text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>
+                {Number(homeCount || 0)} prediction{Number(homeCount || 0) !== 1 ? 's' : ''}
+              </div>
+            </div>
+
+            {/* AWAY */}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <span className="font-sans text-xs font-medium flex items-center" style={{ color: 'var(--text-secondary)' }}>
+                  <span className="icon-[mdi--airplane-takeoff] w-4 h-4 inline-block mr-1" style={{ color: 'var(--accent-red)' }} />
+                  AWAY
+                  {userPrediction === 'AWAY' && (
+                    <span className="ml-2 px-2 py-0.5 text-xs rounded-full font-bold" style={{ 
+                      background: 'var(--accent-red)', 
+                      color: 'var(--bg-primary)' 
+                    }}>
+                      YOU
+                    </span>
+                  )}
+                </span>
+                <span className="font-mono text-xs font-bold" style={{ color: 'var(--accent-red)' }}>
+                  {awayPercentage}%
+                </span>
+              </div>
+              <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--bg-secondary)' }}>
+                <div
+                  className={`h-full transition-all duration-300 ${userPrediction === 'AWAY' ? 'animate-pulse' : ''}`}
+                  style={{
+                    width: `${awayPercentage}%`,
+                    background: 'var(--accent-red)',
+                    boxShadow: userPrediction === 'AWAY' ? '0 0 8px var(--accent-red)' : 'none',
+                  }}
+                />
+              </div>
+              <div className="text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>
+                {Number(awayCount || 0)} prediction{Number(awayCount || 0) !== 1 ? 's' : ''}
+              </div>
+            </div>
+
+            {/* DRAW */}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <span className="font-sans text-xs font-medium flex items-center" style={{ color: 'var(--text-secondary)' }}>
+                  <span className="icon-[mdi--equal] w-4 h-4 inline-block mr-1" style={{ color: 'var(--accent-amber)' }} />
+                  DRAW
+                  {userPrediction === 'DRAW' && (
+                    <span className="ml-2 px-2 py-0.5 text-xs rounded-full font-bold" style={{ 
+                      background: 'var(--accent-amber)', 
+                      color: 'var(--bg-primary)' 
+                    }}>
+                      YOU
+                    </span>
+                  )}
+                </span>
+                <span className="font-mono text-xs font-bold" style={{ color: 'var(--accent-amber)' }}>
+                  {drawPercentage}%
+                </span>
+              </div>
+              <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--bg-secondary)' }}>
+                <div
+                  className={`h-full transition-all duration-300 ${userPrediction === 'DRAW' ? 'animate-pulse' : ''}`}
+                  style={{
+                    width: `${drawPercentage}%`,
+                    background: 'var(--accent-amber)',
+                    boxShadow: userPrediction === 'DRAW' ? '0 0 8px var(--accent-amber)' : 'none',
+                  }}
+                />
+              </div>
+              <div className="text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>
+                {Number(drawCount || 0)} prediction{Number(drawCount || 0) !== 1 ? 's' : ''}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -292,6 +459,31 @@ export function MarketDetail() {
     functionName: 'entryFee',
     query: { enabled: !!marketAddress },
   })
+
+  // Fetch prediction counts
+  const { data: homeCount } = useReadContract({
+    abi: CryptoScoreMarketABI,
+    address: marketAddress,
+    functionName: 'homeCount',
+    query: { enabled: !!marketAddress },
+  })
+
+  const { data: awayCount } = useReadContract({
+    abi: CryptoScoreMarketABI,
+    address: marketAddress,
+    functionName: 'awayCount',
+    query: { enabled: !!marketAddress },
+  })
+
+  const { data: drawCount } = useReadContract({
+    abi: CryptoScoreMarketABI,
+    address: marketAddress,
+    functionName: 'drawCount',
+    query: { enabled: !!marketAddress },
+  })
+
+  // Get user's prediction
+  const { predictionName, hasJoined, prediction } = useUserPrediction(marketAddress)
 
   const { isLoading: isTxConfirming, isSuccess: isTxConfirmed } = useWaitForTransactionReceipt({ hash })
 
@@ -480,6 +672,9 @@ export function MarketDetail() {
                 startTime: (marketInfo as any)[5],
                 resolved: Boolean(marketStatus),
                 participantsCount: participantsCount ? BigInt(participantsCount.toString()) : 0n,
+                homeCount: homeCount ? BigInt(homeCount.toString()) : 0n,
+                awayCount: awayCount ? BigInt(awayCount.toString()) : 0n,
+                drawCount: drawCount ? BigInt(drawCount.toString()) : 0n,
               }]}
               />
               <PoolTrendChart markets={[{
@@ -491,6 +686,9 @@ export function MarketDetail() {
                 startTime: (marketInfo as any)[5],
                 resolved: Boolean(marketStatus),
                 participantsCount: participantsCount ? BigInt(participantsCount.toString()) : 0n,
+                homeCount: homeCount ? BigInt(homeCount.toString()) : 0n,
+                awayCount: awayCount ? BigInt(awayCount.toString()) : 0n,
+                drawCount: drawCount ? BigInt(drawCount.toString()) : 0n,
               }]}
               />
             </div>
@@ -522,6 +720,11 @@ export function MarketDetail() {
               marketStatus={marketStatus}
               isMatchStarted={isMatchStarted}
               winningTeamName={getTeamName(Number(winningTeam))}
+              homeCount={homeCount}
+              awayCount={awayCount}
+              drawCount={drawCount}
+              userPrediction={predictionName}
+              userHasJoined={hasJoined}
             />
             {actionStatus && (
               <div

@@ -5,11 +5,13 @@ import { formatEther } from 'viem'
 interface PortfolioSummaryProps {
   markets: Market[]
   userAddress?: string
+  createdMarkets?: Market[]
+  joinedMarkets?: Market[]
 }
 
-export default function PortfolioSummary({ markets, userAddress }: PortfolioSummaryProps) {
+export default function PortfolioSummary({ markets, userAddress, createdMarkets = [], joinedMarkets = [] }: PortfolioSummaryProps) {
   const stats = useMemo(() => {
-    if (!markets.length || !userAddress) {
+    if (!userAddress) {
       return {
         totalValue: 0,
         activePositions: 0,
@@ -21,28 +23,39 @@ export default function PortfolioSummary({ markets, userAddress }: PortfolioSumm
       }
     }
 
-    const activePositions = markets.filter(m => !m.resolved).length
-    const resolvedPositions = markets.filter(m => m.resolved).length
+    // Use joinedMarkets for P&L calculation (markets where user placed predictions)
+    // Use all markets for general stats (created + joined)
+    const participatedMarkets = joinedMarkets.length > 0 ? joinedMarkets : 
+      markets.filter(m => m.creator.toLowerCase() !== userAddress.toLowerCase())
 
-    // Calculate total value (sum of entry fees paid)
-    const totalValue = markets.reduce((sum, m) => {
+    const activePositions = participatedMarkets.filter(m => !m.resolved).length
+    const resolvedPositions = participatedMarkets.filter(m => m.resolved).length
+
+    // Calculate total value ONLY from markets where user actually paid entry fees (joined markets)
+    const totalValue = participatedMarkets.reduce((sum, m) => {
       return sum + Number(formatEther(m.entryFee))
     }, 0)
 
-    // For now, we'll estimate wins/losses based on resolved markets
-    // In a real implementation, you'd fetch actual win/loss data from the contract
-    const totalWins = Math.floor(resolvedPositions * 0.6) // Placeholder
+    // TODO: Replace with real win/loss data from smart contract
+    // For now, we'll estimate wins/losses based on resolved participated markets
+    // This should fetch actual rewards and withdrawals from the contract
+    const totalWins = Math.floor(resolvedPositions * 0.6) // Placeholder - should be real data
     const totalLosses = resolvedPositions - totalWins
     const winRate = resolvedPositions > 0 ? (totalWins / resolvedPositions) * 100 : 0
 
-    // Estimate P&L (placeholder calculation)
-    const avgPoolSize = markets.reduce((sum, m) => {
-      return sum + (Number(formatEther(m.entryFee)) * Number(m.participantsCount))
-    }, 0) / markets.length || 0
+    // Calculate P&L ONLY for markets where user participated (not created)
+    // This now correctly excludes markets the user only created
+    let totalPnL = 0
+    if (participatedMarkets.length > 0 && resolvedPositions > 0) {
+      // TODO: This should fetch actual rewards from contract instead of estimating
+      const avgPoolSize = participatedMarkets.reduce((sum, m) => {
+        return sum + (Number(formatEther(m.entryFee)) * Number(m.participantsCount))
+      }, 0) / participatedMarkets.length || 0
 
-    const estimatedWinnings = totalWins * (avgPoolSize * 0.95) // 95% after fees
-    const totalSpent = totalValue
-    const totalPnL = estimatedWinnings - totalSpent
+      const estimatedWinnings = totalWins * (avgPoolSize * 0.95) // 95% after fees
+      const totalSpent = totalValue
+      totalPnL = estimatedWinnings - totalSpent
+    }
 
     return {
       totalValue,
@@ -53,7 +66,7 @@ export default function PortfolioSummary({ markets, userAddress }: PortfolioSumm
       winRate,
       totalPnL,
     }
-  }, [markets, userAddress])
+  }, [markets, userAddress, joinedMarkets])
 
   const StatCard = ({
     label,
