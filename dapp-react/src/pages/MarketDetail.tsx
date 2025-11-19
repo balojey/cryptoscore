@@ -483,7 +483,7 @@ export function MarketDetail() {
   })
 
   // Get user's prediction
-  const { predictionName, hasJoined, prediction } = useUserPrediction(marketAddress)
+  const { predictionName, hasJoined } = useUserPrediction(marketAddress)
 
   const { isLoading: isTxConfirming, isSuccess: isTxConfirmed } = useWaitForTransactionReceipt({ hash })
 

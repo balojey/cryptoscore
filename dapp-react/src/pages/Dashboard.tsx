@@ -110,21 +110,15 @@ export function Dashboard() {
   }, [allInvolvedCreatedMarkets, allInvolvedJoinedMarkets])
 
   const { createdMarkets, joinedMarkets } = useMemo(() => {
-    const created: MarketDashboardInfo[] = []
-    const joined: MarketDashboardInfo[] = []
-
-    if (allInvolvedMarkets && address) {
-      allInvolvedMarkets.forEach((market) => {
-        if (market.creator.toLowerCase() === address.toLowerCase()) {
-          created.push(market)
-        }
-        else {
-          joined.push(market)
-        }
-      })
+    // Use the original API responses directly:
+    // - allInvolvedCreatedMarkets: Markets user created
+    // - allInvolvedJoinedMarkets: Markets user participated in (placed predictions)
+    // Note: A market can appear in both if user created it AND participated in it
+    return { 
+      createdMarkets: allInvolvedCreatedMarkets || [], 
+      joinedMarkets: allInvolvedJoinedMarkets || [] 
     }
-    return { createdMarkets: created, joinedMarkets: joined }
-  }, [allInvolvedMarkets, address])
+  }, [allInvolvedCreatedMarkets, allInvolvedJoinedMarkets])
 
   // Apply filters to markets
   const filteredCreatedMarkets = useFilteredMarkets<MarketDashboardInfo>(createdMarkets, filters)
@@ -234,7 +228,11 @@ export function Dashboard() {
 
         {/* Portfolio Summary */}
         <div className="mb-8">
-          <PortfolioSummary markets={allInvolvedMarkets} userAddress={address} />
+          <PortfolioSummary 
+            markets={allInvolvedMarkets} 
+            userAddress={address}
+            joinedMarkets={joinedMarkets}
+          />
         </div>
 
         {/* Recent Activity & Performance */}

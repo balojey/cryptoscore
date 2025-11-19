@@ -78,7 +78,7 @@ export default function RecentActivity({ markets, limit = 5 }: RecentActivityPro
       <div className="flex items-center justify-between mb-4">
         <h3 className="card-title">Recent Activity</h3>
         <Link
-          to="/my-markets"
+          to="/dashboard"
           className="text-sm font-medium hover:underline"
           style={{ color: 'var(--accent-cyan)' }}
         >
