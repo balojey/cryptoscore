@@ -90,9 +90,9 @@ export default function Header() {
               </button>
             )}
 
-            {/* My Markets Link */}
+            {/* Dashboard Link */}
             <Link
-              to="/my-markets"
+              to="/dashboard"
               className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
               style={{
                 color: 'var(--text-secondary)',
@@ -108,7 +108,7 @@ export default function Header() {
               }}
             >
               <span className="icon-[mdi--view-dashboard-outline] w-4 h-4" />
-              <span>My Markets</span>
+              <span>Dashboard</span>
             </Link>
 
             {/* Leaderboard Link */}

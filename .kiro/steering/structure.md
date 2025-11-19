@@ -41,52 +41,92 @@ hardhat/
 ```
 dapp-react/
 ├── src/
-│   ├── components/       # Reusable UI components
-│   │   ├── Account.tsx           # Wallet account display
-│   │   ├── Balance.tsx           # Token balance display
-│   │   ├── Connect.tsx           # Wallet connection button
-│   │   ├── Content.tsx           # Main content/landing page
-│   │   ├── Header.tsx            # App header
-│   │   ├── Footer.tsx            # App footer
-│   │   ├── Market.tsx            # Market creation modal
-│   │   ├── MarketCard.tsx        # Individual market card
-│   │   ├── Markets.tsx           # Markets container
-│   │   ├── MarqueeText.tsx       # Scrolling text component
-│   │   ├── PublicMarkets.tsx     # Public markets view
-│   │   └── UserMarkets.tsx       # User-specific markets
-│   ├── pages/            # Route components
-│   │   ├── MarketDetail.tsx      # Single market detail page
-│   │   └── MyMarkets.tsx         # User dashboard page
-│   ├── config/           # Configuration files
-│   │   ├── wagmi.ts              # Wagmi/chain config
-│   │   └── contracts.ts          # Contract addresses + ABIs
-│   ├── hooks/            # Custom React hooks
-│   │   └── useMatchData.ts       # Football-Data.org API hook
-│   ├── utils/            # Helper functions
-│   │   ├── apiKey.ts             # API key rotation logic
-│   │   ├── chain.ts              # Chain utilities
-│   │   └── formatters.ts         # Data formatting helpers
-│   ├── types.ts          # TypeScript type definitions
-│   ├── main.tsx          # App entry point
-│   ├── App.tsx           # Root component with routing
-│   └── style.css         # Global styles (Tailwind)
-├── abi/                  # Contract ABIs (JSON)
+│   ├── components/
+│   │   ├── cards/                    # Card components
+│   │   │   ├── EnhancedMarketCard.tsx    # Market card with distribution
+│   │   │   └── PortfolioSummary.tsx      # Portfolio stats card
+│   │   ├── charts/                   # Data visualizations
+│   │   │   ├── PredictionDistributionChart.tsx
+│   │   │   └── PoolTrendChart.tsx
+│   │   ├── layout/                   # Layout components
+│   │   │   ├── Header.tsx                # App header with navigation
+│   │   │   └── Footer.tsx                # App footer
+│   │   ├── market/                   # Market-related components
+│   │   │   ├── Market.tsx                # Market creation modal
+│   │   │   ├── MarketFilters.tsx         # Advanced filtering
+│   │   │   ├── Markets.tsx               # Markets container
+│   │   │   ├── PublicMarkets.tsx         # Public markets view
+│   │   │   └── UserMarkets.tsx           # User-specific markets
+│   │   ├── ui/                       # Reusable UI components
+│   │   │   ├── AnimatedNumber.tsx        # Number transitions
+│   │   │   ├── Confetti.tsx              # Win celebration
+│   │   │   └── ToastProvider.tsx         # Toast notifications
+│   │   ├── VirtualMarketList.tsx     # Virtual scrolling list
+│   │   ├── Account.tsx               # Wallet account display
+│   │   ├── Balance.tsx               # Token balance display
+│   │   ├── Connect.tsx               # Wallet connection button
+│   │   ├── Content.tsx               # Main content/landing page
+│   │   ├── MarketComments.tsx        # Comment section
+│   │   ├── MarqueeText.tsx           # Scrolling text component
+│   │   ├── PerformanceChart.tsx      # Win/loss chart
+│   │   ├── RecentActivity.tsx        # Activity feed
+│   │   ├── SearchBar.tsx             # Global search
+│   │   └── SharePrediction.tsx       # Social sharing
+│   ├── pages/                    # Route components
+│   │   ├── Dashboard.tsx             # User dashboard (unused)
+│   │   ├── Leaderboard.tsx           # Top traders leaderboard
+│   │   ├── MarketDetail.tsx          # Single market detail page
+│   │   └── MyMarkets.tsx             # User portfolio page
+│   ├── config/                   # Configuration files
+│   │   ├── wagmi.ts                  # Wagmi/chain config
+│   │   └── contracts.ts              # Contract addresses + ABIs
+│   ├── hooks/                    # Custom React hooks
+│   │   ├── useMatchData.ts           # Football-Data.org API hook
+│   │   ├── useFilteredMarkets.ts     # Market filtering logic
+│   │   └── useRealtimeMarkets.ts     # Real-time polling
+│   ├── styles/                   # Design system
+│   │   ├── tokens.css                # Design tokens (40+)
+│   │   ├── components.css            # Component classes (30+)
+│   │   └── animations.css            # Animation library
+│   ├── utils/                    # Helper functions
+│   │   ├── accessibility.ts          # A11y utilities
+│   │   ├── apiKey.ts                 # API key rotation logic
+│   │   ├── chain.ts                  # Chain utilities
+│   │   └── formatters.ts             # Data formatting helpers
+│   ├── types.ts                  # TypeScript type definitions
+│   ├── main.tsx                  # App entry point
+│   ├── App.tsx                   # Root component with routing
+│   └── style.css                 # Global styles (Tailwind)
+├── abi/                          # Contract ABIs (JSON)
 │   ├── CryptoScoreDashboard.json
 │   ├── CryptoScoreFactory.json
 │   └── CryptoScoreMarket.json
-├── index.html            # HTML entry point
-├── vite.config.ts        # Vite configuration
-├── tsconfig.json         # TypeScript config
+├── docs/                         # Documentation
+│   ├── IMPLEMENTATION_PLAN.md        # Complete roadmap
+│   ├── REDESIGN_COMPLETE.md          # Feature summary
+│   ├── CLEANUP_SUMMARY.md            # Reorganization log
+│   └── INTEGRATION_COMPLETE.md       # Phase 4 integration
+├── public/                       # Static assets
+│   ├── manifest.json                 # PWA manifest
+│   └── sw.js                         # Service worker
+├── index.html                    # HTML entry point
+├── vite.config.ts                # Vite configuration
+├── tsconfig.json                 # TypeScript config
+├── README.md                     # Project documentation
 └── package.json
 ```
 
 ### Frontend Patterns
 
-- **Component Organization**: Flat structure in components/, pages for routes
+- **Component Organization**: Organized by type (cards/, charts/, layout/, market/, ui/)
 - **Config Centralization**: All contract addresses and ABIs in config/
-- **Custom Hooks**: Domain-specific hooks in hooks/ (e.g., useMatchData)
+- **Custom Hooks**: Domain-specific hooks in hooks/ (useMatchData, useFilteredMarkets, useRealtimeMarkets)
 - **Type Safety**: Shared types in types.ts, strict TypeScript enabled
 - **ABI Management**: JSON ABIs in abi/, imported in config/contracts.ts
+- **Design System**: Centralized tokens, components, and animations in styles/
+- **Code Splitting**: Lazy loading for routes (MarketDetail, MyMarkets, Leaderboard)
+- **Virtual Scrolling**: Auto-activates for >20 markets using @tanstack/react-virtual
+- **Real-Time Updates**: 10-second polling with React Query invalidation
 
 ## Key Conventions
 
