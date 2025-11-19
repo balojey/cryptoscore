@@ -1,8 +1,8 @@
 import type { FilterOptions } from '../components/market/MarketFilters'
-import type { Market } from '../types'
+import type { Market, MarketDashboardInfo } from '../types'
 import { useMemo } from 'react'
 
-export function useFilteredMarkets(markets: Market[], filters: FilterOptions) {
+export function useFilteredMarkets<T extends Market | MarketDashboardInfo>(markets: T[], filters: FilterOptions): T[] {
   return useMemo(() => {
     if (!markets || markets.length === 0)
       return []

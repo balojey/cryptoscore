@@ -152,6 +152,33 @@ export default function MarketFilters({ filters, onFilterChange }: MarketFilters
             </div>
           </div>
 
+          {/* Publicity Filter */}
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
+              Visibility:
+            </span>
+            <div className="flex flex-wrap gap-2">
+              <FilterButton
+                active={filters.isPublic === undefined}
+                onClick={() => onFilterChange({ ...filters, isPublic: undefined })}
+                icon="mdi--eye-outline"
+                label="All Markets"
+              />
+              <FilterButton
+                active={filters.isPublic === true}
+                onClick={() => onFilterChange({ ...filters, isPublic: true })}
+                icon="mdi--earth"
+                label="Public Only"
+              />
+              <FilterButton
+                active={filters.isPublic === false}
+                onClick={() => onFilterChange({ ...filters, isPublic: false })}
+                icon="mdi--lock-outline"
+                label="Private Only"
+              />
+            </div>
+          </div>
+
           {/* Pool Size & Entry Fee Filters */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Min Pool Size */}
@@ -209,6 +236,7 @@ export default function MarketFilters({ filters, onFilterChange }: MarketFilters
       {(filters.status !== 'all'
         || filters.sortBy !== 'newest'
         || filters.timeRange !== 'all'
+        || filters.isPublic !== undefined
         || filters.minPoolSize !== undefined
         || filters.minEntryFee !== undefined) && (
         <div className="flex flex-wrap items-center gap-2">
@@ -251,6 +279,18 @@ export default function MarketFilters({ filters, onFilterChange }: MarketFilters
               {filters.timeRange === 'today'
                 ? 'Today'
                 : filters.timeRange === 'week' ? 'This Week' : 'This Month'}
+            </span>
+          )}
+          {filters.isPublic !== undefined && (
+            <span
+              className="badge badge-sm"
+              style={{
+                background: filters.isPublic ? 'var(--accent-cyan-glow)' : 'var(--accent-purple-glow)',
+                color: filters.isPublic ? 'var(--accent-cyan)' : 'var(--accent-purple)',
+                border: `1px solid ${filters.isPublic ? 'var(--accent-cyan)' : 'var(--accent-purple)'}`,
+              }}
+            >
+              {filters.isPublic ? 'Public' : 'Private'}
             </span>
           )}
           {filters.minPoolSize !== undefined && (

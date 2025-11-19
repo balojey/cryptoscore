@@ -1,4 +1,5 @@
 import type { MarketDashboardInfo } from '../types'
+import type { FilterOptions } from '../components/market/MarketFilters'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAccount, useReadContract } from 'wagmi'
@@ -9,6 +10,8 @@ import PerformanceChart from '../components/PerformanceChart'
 import PortfolioSummary from '../components/cards/PortfolioSummary'
 import RecentActivity from '../components/RecentActivity'
 import VirtualMarketList from '../components/VirtualMarketList'
+import MarketFilters from '../components/market/MarketFilters'
+import { useFilteredMarkets } from '../hooks/useFilteredMarkets'
 import { CRYPTO_SCORE_DASHBOARD_ADDRESS, CryptoScoreDashboardABI } from '../config/contracts'
 
 function MarketList({ markets, isLoading, emptyMessage, emptyIcon }: {
@@ -63,6 +66,10 @@ function MarketList({ markets, isLoading, emptyMessage, emptyIcon }: {
 export function Dashboard() {
   const { address } = useAccount()
   const [activeTab, setActiveTab] = useState<'created' | 'joined'>('created')
+  const [filters, setFilters] = useState<FilterOptions>({
+    status: 'all',
+    sortBy: 'newest',
+  })
 
   const { data: allInvolvedCreatedMarkets, isLoading: isLoadingCreated } = useReadContract({
     abi: CryptoScoreDashboardABI,
@@ -118,6 +125,10 @@ export function Dashboard() {
     }
     return { createdMarkets: created, joinedMarkets: joined }
   }, [allInvolvedMarkets, address])
+
+  // Apply filters to markets
+  const filteredCreatedMarkets = useFilteredMarkets<MarketDashboardInfo>(createdMarkets, filters)
+  const filteredJoinedMarkets = useFilteredMarkets<MarketDashboardInfo>(joinedMarkets, filters)
 
   if (!address) {
     return (
@@ -258,22 +269,58 @@ export function Dashboard() {
           />
         </div>
 
+        {/* Market Filters */}
+        <div className="mb-6">
+          <MarketFilters filters={filters} onFilterChange={setFilters} />
+        </div>
+
+        {/* Results Count */}
+        {(activeTab === 'created' ? filteredCreatedMarkets : filteredJoinedMarkets).length > 0 && (
+          <div className="text-sm mb-4" style={{ color: 'var(--text-tertiary)' }}>
+            Showing
+            {' '}
+            {activeTab === 'created' ? filteredCreatedMarkets.length : filteredJoinedMarkets.length}
+            {' '}
+            of
+            {' '}
+            {activeTab === 'created' ? createdMarkets.length : joinedMarkets.length}
+            {' '}
+            {(activeTab === 'created' ? filteredCreatedMarkets.length : filteredJoinedMarkets.length) === 1 ? 'market' : 'markets'}
+          </div>
+        )}
+
         {/* Market Lists */}
         <div className="space-y-8">
           {activeTab === 'created' && (
             <MarketList
-              markets={createdMarkets}
+              markets={filteredCreatedMarkets}
               isLoading={isLoadingCreated || isLoadingJoined}
-              emptyMessage="You haven't created any markets yet."
-              emptyIcon="mdi--plus-circle-outline"
+              emptyMessage={
+                filters.status !== 'all' || filters.timeRange || filters.minPoolSize || filters.minEntryFee
+                  ? 'No markets match your filters'
+                  : "You haven't created any markets yet."
+              }
+              emptyIcon={
+                filters.status !== 'all' || filters.timeRange || filters.minPoolSize || filters.minEntryFee
+                  ? 'mdi--filter-off-outline'
+                  : 'mdi--plus-circle-outline'
+              }
             />
           )}
           {activeTab === 'joined' && (
             <MarketList
-              markets={joinedMarkets}
+              markets={filteredJoinedMarkets}
               isLoading={isLoadingCreated || isLoadingJoined}
-              emptyMessage="You haven't joined any markets yet."
-              emptyIcon="mdi--cards-outline"
+              emptyMessage={
+                filters.status !== 'all' || filters.timeRange || filters.minPoolSize || filters.minEntryFee
+                  ? 'No markets match your filters'
+                  : "You haven't joined any markets yet."
+              }
+              emptyIcon={
+                filters.status !== 'all' || filters.timeRange || filters.minPoolSize || filters.minEntryFee
+                  ? 'mdi--filter-off-outline'
+                  : 'mdi--cards-outline'
+              }
             />
           )}
         </div>
