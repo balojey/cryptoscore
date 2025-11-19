@@ -1,4 +1,4 @@
-import type { FilterOptions } from '../components/MarketFilters'
+import type { FilterOptions } from '../components/market/MarketFilters'
 import type { Market } from '../types'
 import { useMemo } from 'react'
 

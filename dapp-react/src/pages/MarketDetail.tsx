@@ -8,6 +8,7 @@ import PoolTrendChart from '../components/charts/PoolTrendChart'
 import PredictionDistributionChart from '../components/charts/PredictionDistributionChart'
 import MarketComments from '../components/MarketComments'
 import SharePrediction from '../components/SharePrediction'
+import Confetti from '../components/ui/Confetti'
 import { CRYPTO_SCORE_FACTORY_ADDRESS, CryptoScoreFactoryABI, CryptoScoreMarketABI } from '../config/contracts'
 import { useMatchData } from '../hooks/useMatchData'
 import { shortenAddress } from '../utils/formatters'
@@ -241,6 +242,7 @@ export function MarketDetail() {
 
   const [selectedTeam, setSelectedTeam] = useState<number | null>(null)
   const [actionStatus, setActionStatus] = useState<{ type: 'info' | 'success' | 'error', message: string } | null>(null)
+  const [showConfetti, setShowConfetti] = useState(false)
 
   const { data: marketInfo, isLoading: isLoadingInfo, error: infoError } = useReadContract({
     abi: CryptoScoreFactoryABI,
@@ -354,6 +356,9 @@ export function MarketDetail() {
       address: marketAddress!,
       functionName: 'withdraw',
     })
+    // Trigger confetti on successful withdrawal
+    setShowConfetti(true)
+    setTimeout(() => setShowConfetti(false), 100)
   }, 'Failed to withdraw funds.')
 
   const isLoading = isLoadingInfo || isLoadingMatch || isLoadingStatus || isLoadingParticipants
@@ -436,6 +441,7 @@ export function MarketDetail() {
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
+      <Confetti trigger={showConfetti} />
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <Link

@@ -1,9 +1,9 @@
-import type { Market } from '../types'
+import type { Market } from '../../types'
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useAccount, useReadContract } from 'wagmi'
-import { CRYPTO_SCORE_DASHBOARD_ADDRESS, CryptoScoreDashboardABI } from '../config/contracts'
-import EnhancedMarketCard, { EnhancedMarketCardSkeleton } from './EnhancedMarketCard'
+import { CRYPTO_SCORE_DASHBOARD_ADDRESS, CryptoScoreDashboardABI } from '../../config/contracts'
+import EnhancedMarketCard, { EnhancedMarketCardSkeleton } from '../cards/EnhancedMarketCard'
 
 export function UserMarkets() {
   const { address, isConnected } = useAccount()

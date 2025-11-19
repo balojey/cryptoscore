@@ -1,10 +1,10 @@
-import type { MarketDashboardInfo } from '../types'
+import type { Market, MarketDashboardInfo } from '../types'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { useRef } from 'react'
-import EnhancedMarketCard from './EnhancedMarketCard'
+import EnhancedMarketCard from './cards/EnhancedMarketCard'
 
 interface VirtualMarketListProps {
-  markets: MarketDashboardInfo[]
+  markets: Market[] | MarketDashboardInfo[]
   columns?: 1 | 2 | 3
 }
 
@@ -62,7 +62,7 @@ export default function VirtualMarketList({ markets, columns = 3 }: VirtualMarke
                       : 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3'
                 }`}
               >
-                {rowMarkets.map(market => (
+                {rowMarkets.map((market) => (
                   <EnhancedMarketCard key={market.marketAddress} market={market} />
                 ))}
               </div>

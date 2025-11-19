@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Markets } from './Markets'
-import PublicMarkets from './PublicMarkets'
-import { UserMarkets } from './UserMarkets'
+import { Markets } from './market/Markets'
+import PublicMarkets from './market/PublicMarkets'
+import { UserMarkets } from './market/UserMarkets'
 
 export default function Content() {
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -39,11 +39,11 @@ export default function Content() {
               <span>Create Market</span>
             </button>
             <Link
-              to="/my-markets"
+              to="/dashboard"
               className="btn-secondary btn-lg w-full sm:w-auto"
             >
               <span className="icon-[mdi--view-dashboard-outline] w-5 h-5" />
-              <span>My Markets</span>
+              <span>Dashboard</span>
             </Link>
           </div>
         </div>

@@ -9,8 +9,7 @@ export default function Confetti({ trigger, duration = 3000 }: ConfettiProps) {
   const [particles, setParticles] = useState<Array<{ id: number, left: number, color: string, delay: number }>>([])
 
   useEffect(() => {
-    if (!trigger)
-      return
+    if (!trigger) return
 
     const colors = [
       'var(--accent-cyan)',
@@ -36,12 +35,11 @@ export default function Confetti({ trigger, duration = 3000 }: ConfettiProps) {
     return () => clearTimeout(timer)
   }, [trigger, duration])
 
-  if (particles.length === 0)
-    return null
+  if (particles.length === 0) return null
 
   return (
     <div className="fixed inset-0 pointer-events-none z-[9999]">
-      {particles.map(particle => (
+      {particles.map((particle) => (
         <div
           key={particle.id}
           className="confetti"

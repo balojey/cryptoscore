@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { formatEther } from 'viem'
 import { useReadContract } from 'wagmi'
-import AnimatedNumber from '../components/AnimatedNumber'
+import AnimatedNumber from '../components/ui/AnimatedNumber'
 import { CRYPTO_SCORE_DASHBOARD_ADDRESS, CryptoScoreDashboardABI } from '../config/contracts'
 import { shortenAddress } from '../utils/formatters'
 

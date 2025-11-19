@@ -1,10 +1,10 @@
-import type { MarketProps } from '../types'
+import type { MarketProps } from '../../types'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { parseEther, parseEventLogs } from 'viem'
 import { useAccount, useReadContract, useTransactionReceipt, useWriteContract } from 'wagmi'
-import { CRYPTO_SCORE_FACTORY_ADDRESS, CryptoScoreFactoryABI } from '../config/contracts'
-import { MarqueeText } from './MarqueeText'
+import { CRYPTO_SCORE_FACTORY_ADDRESS, CryptoScoreFactoryABI } from '../../config/contracts'
+import { MarqueeText } from '../MarqueeText'
 
 export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: MarketProps) {
   const { address: userAddress } = useAccount()

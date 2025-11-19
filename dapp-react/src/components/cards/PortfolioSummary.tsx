@@ -1,4 +1,4 @@
-import type { Market } from '../types'
+import type { Market } from '../../types'
 import { useMemo } from 'react'
 import { formatEther } from 'viem'
 

@@ -1,13 +1,13 @@
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import Content from './components/Content'
-import Footer from './components/Footer'
-import Header from './components/Header'
-import ToastProvider from './components/ToastProvider'
+import Footer from './components/layout/Footer'
+import Header from './components/layout/Header'
+import ToastProvider from './components/ui/ToastProvider'
 
 // Lazy load pages for better performance
 const MarketDetail = lazy(() => import('./pages/MarketDetail').then(m => ({ default: m.MarketDetail })))
-const MyMarkets = lazy(() => import('./pages/MyMarkets').then(m => ({ default: m.MyMarkets })))
+const Dashboard = lazy(() => import('./pages/Dashboard').then(m => ({ default: m.Dashboard })))
 const Leaderboard = lazy(() => import('./pages/Leaderboard').then(m => ({ default: m.Leaderboard })))
 
 // Loading fallback component
@@ -45,7 +45,7 @@ function App() {
           <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/" element={<Content />} />
-              <Route path="/my-markets" element={<MyMarkets />} />
+              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/market/:marketAddress" element={<MarketDetail />} />
               <Route path="/leaderboard" element={<Leaderboard />} />
             </Routes>

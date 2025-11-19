@@ -1,10 +1,10 @@
-import type { Market } from '../types'
+import type { Market } from '../../types'
 import { Link } from 'react-router-dom'
 import { formatEther } from 'viem'
 import { useAccount, useReadContract } from 'wagmi'
-import { CryptoScoreMarketABI } from '../config/contracts'
-import { useMatchData } from '../hooks/useMatchData'
-import { shortenAddress } from '../utils/formatters'
+import { CryptoScoreMarketABI } from '../../config/contracts'
+import { useMatchData } from '../../hooks/useMatchData'
+import { shortenAddress } from '../../utils/formatters'
 
 interface EnhancedMarketCardProps {
   market: Market

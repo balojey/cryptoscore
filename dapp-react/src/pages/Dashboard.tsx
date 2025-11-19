@@ -60,7 +60,7 @@ function MarketList({ markets, isLoading, emptyMessage, emptyIcon }: {
   )
 }
 
-export function MyMarkets() {
+export function Dashboard() {
   const { address } = useAccount()
   const [activeTab, setActiveTab] = useState<'created' | 'joined'>('created')
 

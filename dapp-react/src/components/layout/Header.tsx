@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import Connect from './Connect'
-import SearchBar from './SearchBar'
+import Connect from '../Connect'
+import SearchBar from '../SearchBar'
 
 export default function Header() {
   const [showSearch, setShowSearch] = useState(false)

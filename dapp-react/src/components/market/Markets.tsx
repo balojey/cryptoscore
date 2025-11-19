@@ -1,8 +1,8 @@
-import type { Match } from '../types'
+import type { Match } from '../../types'
 import { useEffect, useMemo, useState } from 'react'
 import { useAccount, useContractRead } from 'wagmi'
-import { CRYPTO_SCORE_FACTORY_ADDRESS, CryptoScoreFactoryABI } from '../config/contracts'
-import { getRandomApiKey } from '../utils/apiKey'
+import { CRYPTO_SCORE_FACTORY_ADDRESS, CryptoScoreFactoryABI } from '../../config/contracts'
+import { getRandomApiKey } from '../../utils/apiKey'
 import { Market } from './Market'
 
 const COMPETITIONS = [

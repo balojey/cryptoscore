@@ -1,11 +1,12 @@
-import type { Market } from '../types'
+import type { Market } from '../../types'
 import type { FilterOptions } from './MarketFilters'
 import { useEffect, useState } from 'react'
 import { useAccount, useReadContract } from 'wagmi'
-import { CRYPTO_SCORE_DASHBOARD_ADDRESS, CryptoScoreDashboardABI } from '../config/contracts'
-import { useFilteredMarkets } from '../hooks/useFilteredMarkets'
-import { useRealtimeMarkets } from '../hooks/useRealtimeMarkets'
-import EnhancedMarketCard, { EnhancedMarketCardSkeleton } from './EnhancedMarketCard'
+import { CRYPTO_SCORE_DASHBOARD_ADDRESS, CryptoScoreDashboardABI } from '../../config/contracts'
+import { useFilteredMarkets } from '../../hooks/useFilteredMarkets'
+import { useRealtimeMarkets } from '../../hooks/useRealtimeMarkets'
+import EnhancedMarketCard, { EnhancedMarketCardSkeleton } from '../cards/EnhancedMarketCard'
+import VirtualMarketList from '../VirtualMarketList'
 import MarketFilters from './MarketFilters'
 
 const PAGE_SIZE = 6
@@ -136,15 +137,19 @@ export default function PublicMarkets() {
         </div>
       )}
 
-      {/* Market Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {filteredMarkets.map((m, i) => (
-          <EnhancedMarketCard
-            key={`${m.marketAddress}-${i}`}
-            market={m}
-          />
-        ))}
-      </div>
+      {/* Market Grid - Use virtual scrolling for large lists */}
+      {filteredMarkets.length > 20 ? (
+        <VirtualMarketList markets={filteredMarkets} columns={3} />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {filteredMarkets.map((m, i) => (
+            <EnhancedMarketCard
+              key={`${m.marketAddress}-${i}`}
+              market={m}
+            />
+          ))}
+        </div>
+      )}
 
       {/* No Results */}
       {filteredMarkets.length === 0 && !isLoading && (
