@@ -118,7 +118,19 @@ export default function Connect() {
           ? (
               <button
                 type="button"
-                className="flex items-center gap-2 h-10 px-4 bg-[#0A84FF] text-white rounded-[12px] font-sans text-sm font-bold uppercase tracking-wider transition-all hover:bg-blue-600 active:bg-blue-700 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30"
+                className="flex items-center gap-2 h-10 px-4 rounded-[12px] font-sans text-sm font-bold uppercase tracking-wider transition-all shadow-lg"
+                style={{
+                  background: 'var(--accent-cyan)',
+                  color: 'var(--text-inverse)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'var(--accent-cyan-hover)'
+                  e.currentTarget.style.boxShadow = 'var(--shadow-cyan-glow)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'var(--accent-cyan)'
+                  e.currentTarget.style.boxShadow = 'var(--shadow-lg)'
+                }}
                 onClick={openConnectModal}
               >
                 <span className="icon-[mdi--wallet]" />
@@ -136,20 +148,40 @@ export default function Connect() {
 
       {/* Modal */}
       <dialog ref={connectModalRef} className="modal modal-bottom sm:modal-middle">
-        <div className="modal-box max-w-sm bg-[#1E293B] text-[#F5F7FA] rounded-[16px] shadow-2xl">
+        <div
+          className="modal-box max-w-sm rounded-[16px] shadow-2xl"
+          style={{
+            background: 'var(--bg-elevated)',
+            color: 'var(--text-primary)',
+          }}
+        >
           {/* Header */}
           <div className="flex items-start justify-between mb-6">
             <div>
-              <h2 className="font-header font-bold text-xl text-white">
+              <h2
+                className="font-header font-bold text-xl"
+                style={{ color: 'var(--text-primary)' }}
+              >
                 Connect Wallet
               </h2>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>
                 Network:
                 {' '}
-                <span className="font-semibold text-slate-300">{connectedChain.name}</span>
+                <span className="font-semibold" style={{ color: 'var(--text-secondary)' }}>{connectedChain.name}</span>
               </p>
             </div>
-            <button type="button" className="btn btn-sm btn-circle btn-ghost text-slate-400 hover:bg-slate-700" onClick={closeConnectModal}>
+            <button
+              type="button"
+              className="btn btn-sm btn-circle btn-ghost transition-colors"
+              style={{ color: 'var(--text-tertiary)' }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'var(--bg-hover)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent'
+              }}
+              onClick={closeConnectModal}
+            >
               <span className="icon-[mdi--close] w-5 h-5" />
             </button>
           </div>
@@ -165,7 +197,24 @@ export default function Connect() {
                         key={conn.id}
                         type="button"
                         disabled={status === 'pending'}
-                        className="w-full flex items-center gap-4 p-4 bg-slate-800/50 rounded-[12px] border border-slate-700 transition-all hover:border-[#0A84FF] hover:bg-slate-800 disabled:opacity-50 disabled:cursor-wait"
+                        className="w-full flex items-center gap-4 p-4 rounded-[12px] transition-all disabled:opacity-50 disabled:cursor-wait"
+                        style={{
+                          background: 'var(--bg-secondary)',
+                          border: '1px solid var(--border-default)',
+                          color: 'var(--text-primary)',
+                        }}
+                        onMouseEnter={(e) => {
+                          if (status !== 'pending') {
+                            e.currentTarget.style.borderColor = 'var(--accent-cyan)'
+                            e.currentTarget.style.background = 'var(--bg-hover)'
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (status !== 'pending') {
+                            e.currentTarget.style.borderColor = 'var(--border-default)'
+                            e.currentTarget.style.background = 'var(--bg-secondary)'
+                          }
+                        }}
                         onClick={() => handleConnect(conn)}
                       >
                         {conn.icon
@@ -177,12 +226,12 @@ export default function Connect() {
                               />
                             )
                           : (
-                              <span className="icon-[mdi--wallet-outline] w-8 h-8 text-slate-300" />
+                              <span className="icon-[mdi--wallet-outline] w-8 h-8" style={{ color: 'var(--text-secondary)' }} />
                             )}
-                        <span className="font-sans font-semibold text-base text-white">
+                        <span className="font-sans font-semibold text-base" style={{ color: 'var(--text-primary)' }}>
                           {status === 'pending' ? 'Connecting...' : conn.name}
                         </span>
-                        {status === 'pending' && <span className="icon-[mdi--loading] animate-spin ml-auto" />}
+                        {status === 'pending' && <span className="icon-[mdi--loading] animate-spin ml-auto" style={{ color: 'var(--accent-cyan)' }} />}
                       </button>
                     ))}
                   </div>
@@ -191,11 +240,11 @@ export default function Connect() {
                   /* No Connectors - Show Popular Wallets */
                   <div className="space-y-4 pt-2">
                     <div className="text-center">
-                      <span className="icon-[mdi--wallet-outline] w-12 h-12 mx-auto text-slate-600 mb-2" />
-                      <p className="text-base font-medium text-slate-300">
+                      <span className="icon-[mdi--wallet-outline] w-12 h-12 mx-auto mb-2" style={{ color: 'var(--text-disabled)' }} />
+                      <p className="text-base font-medium" style={{ color: 'var(--text-secondary)' }}>
                         No wallet extensions detected.
                       </p>
-                      <p className="text-sm text-slate-400">
+                      <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>
                         Please install a wallet to continue.
                       </p>
                     </div>
@@ -206,19 +255,32 @@ export default function Connect() {
                           href={wallet.downloadUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="w-full flex items-center gap-4 p-4 bg-slate-800/50 rounded-[12px] border border-slate-700 transition-all hover:border-[#0A84FF] hover:bg-slate-800"
+                          className="w-full flex items-center gap-4 p-4 rounded-[12px] transition-all"
+                          style={{
+                            background: 'var(--bg-secondary)',
+                            border: '1px solid var(--border-default)',
+                            color: 'var(--text-primary)',
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.borderColor = 'var(--accent-cyan)'
+                            e.currentTarget.style.background = 'var(--bg-hover)'
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.borderColor = 'var(--border-default)'
+                            e.currentTarget.style.background = 'var(--bg-secondary)'
+                          }}
                         >
                           <img
                             src={wallet.icon}
                             alt={wallet.name}
                             className="w-8 h-8 rounded-full"
                           />
-                          <span className="font-sans font-semibold text-base text-white">
+                          <span className="font-sans font-semibold text-base" style={{ color: 'var(--text-primary)' }}>
                             Install
                             {' '}
                             {wallet.name}
                           </span>
-                          <span className="icon-[mdi--arrow-top-right-thin-circle-outline] w-5 h-5 text-slate-500 ml-auto" />
+                          <span className="icon-[mdi--arrow-top-right-thin-circle-outline] w-5 h-5 ml-auto" style={{ color: 'var(--text-tertiary)' }} />
                         </a>
                       ))}
                     </div>
@@ -228,7 +290,14 @@ export default function Connect() {
 
           {/* Error Display */}
           {error && (
-            <div className="flex items-center gap-2 mt-6 p-3 rounded-[12px] bg-[#DC2626]/10 border border-[#DC2626]/20 text-sm text-red-400">
+            <div
+              className="flex items-center gap-2 mt-6 p-3 rounded-[12px] text-sm"
+              style={{
+                background: 'var(--error-bg)',
+                border: '1px solid var(--error-border)',
+                color: 'var(--error)',
+              }}
+            >
               <span className="icon-[mdi--alert-circle-outline] w-5 h-5" />
               <span>{error.message}</span>
             </div>

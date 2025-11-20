@@ -43,11 +43,13 @@
 
 ### Styling
 
-- **Tailwind First**: Use utility classes over custom CSS
+- **CSS Variables**: Use CSS variables for all colors to support theming
+- **Tailwind First**: Use utility classes over custom CSS (except for themed colors)
 - **Design Tokens**: Reference tokens from `styles/tokens.css`
 - **Component Classes**: Use predefined classes from `styles/components.css`
 - **Responsive**: Mobile-first approach with breakpoints
-- **Dark Mode**: All components must work with dark theme
+- **Theme Support**: All components must work with all 6 theme presets
+- **No Hardcoded Colors**: Always use CSS variables (e.g., `var(--bg-primary)`) instead of hex/rgb values
 
 ### Accessibility
 
@@ -55,8 +57,9 @@
 - **ARIA Labels**: Add labels for screen readers
 - **Keyboard Navigation**: Support Tab, Enter, Escape keys
 - **Focus Management**: Visible focus indicators
-- **Color Contrast**: Maintain WCAG AA standards (4.5:1 minimum)
+- **Color Contrast**: Maintain WCAG AA standards (4.5:1 minimum) across all themes
 - **Reduced Motion**: Respect `prefers-reduced-motion`
+- **Theme Accessibility**: Test all themes for proper contrast and readability
 
 ### Testing
 

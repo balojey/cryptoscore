@@ -27,6 +27,7 @@ npm run lint            # ESLint with @antfu/eslint-config
   - Viem 2.37 (TypeScript Ethereum interface)
   - TanStack Query 5.90 (data fetching/caching)
 - **Styling**: Tailwind CSS 4.1 + DaisyUI 5.1
+- **Theming**: Custom theme system with 6 presets (CSS variables + React Context)
 - **Routing**: React Router DOM 7.9
 - **Icons**: Iconify with MDI and Token Branded sets
 - **Charts**: Recharts 3.4 (data visualizations)
@@ -34,11 +35,13 @@ npm run lint            # ESLint with @antfu/eslint-config
 - **Virtual Scrolling**: @tanstack/react-virtual 3.13
 
 ### Design System
-- **Theme**: Dark terminal theme with glassmorphism effects
-- **Tokens**: 40+ design tokens (colors, spacing, shadows, typography)
+- **Themes**: 6 professionally designed themes (Dark Terminal, Ocean Blue, Forest Green, Sunset Orange, Purple Haze, Light Mode)
+- **Theme Switching**: Instant switching via UI or keyboard shortcut (Ctrl+Shift+T)
+- **Tokens**: 40+ design tokens (colors, spacing, shadows, typography) - all theme-aware
 - **Components**: 30+ reusable component classes
 - **Animations**: Comprehensive animation library (fade, slide, scale, pulse, shimmer)
 - **Typography**: System fonts with monospace code display
+- **Glassmorphism**: Backdrop blur effects with theme-appropriate overlays
 
 ### Performance Features
 - **Code Splitting**: Lazy loading for routes (MarketDetail, MyMarkets, Leaderboard)

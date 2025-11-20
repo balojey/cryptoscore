@@ -4,7 +4,14 @@ A professional Web3 trading terminal for decentralized sports prediction markets
 
 ## 🎨 Features
 
-- **Dark Terminal Theme** - Professional trader-focused UI
+### Theming & Personalization
+- **6 Theme Presets** - Dark Terminal, Ocean Blue, Forest Green, Sunset Orange, Purple Haze, Light Mode
+- **Instant Theme Switching** - Via UI dropdown or keyboard shortcut (Ctrl+Shift+T)
+- **Persistent Preferences** - Theme saved to localStorage
+- **Adaptive Design** - Theme-specific shadows and colors
+- **WCAG AA Compliant** - All themes maintain accessibility standards
+
+### Core Features
 - **Enhanced Market Cards** - Prediction distribution visualization
 - **Portfolio Dashboard** - Track performance, P&L, and win rates
 - **Advanced Filtering** - Status, time range, pool size, entry fee filters
@@ -92,6 +99,14 @@ The app connects to Polkadot Asset Hub Testnet (Paseo):
 
 ## 📚 Documentation
 
+### User Guides
+- [Theme Quick Start](./THEMES_QUICKSTART.md) - Quick guide to using themes
+- [Theme Preview](./docs/THEME_PREVIEW.md) - Visual guide to all themes
+
+### Developer Documentation
+- [Theme System](./docs/THEME_SYSTEM.md) - Complete theming guide and customization
+- [Theme Implementation](./docs/THEME_IMPLEMENTATION_SUMMARY.md) - Technical implementation details
+- [Theme Audit](./docs/THEME_AUDIT_COMPLETE.md) - Component audit and fixes
 - [Implementation Plan](./docs/IMPLEMENTATION_PLAN.md) - Complete development roadmap
 - [Redesign Summary](./docs/REDESIGN_COMPLETE.md) - Feature overview
 - [Cleanup Summary](./docs/CLEANUP_SUMMARY.md) - Project reorganization details
@@ -158,13 +173,27 @@ Deploy to any static hosting service:
 
 ## 🎨 Design System
 
-### Color Palette
+### Theme System
 
-- Primary: `#00D4FF` (Cyan)
-- Success: `#00FF88` (Green)
-- Danger: `#FF3366` (Red)
-- Warning: `#FFB800` (Amber)
-- Background: `#0B0E11` (Dark)
+6 professionally designed themes with instant switching:
+
+| Theme | Description | Best For |
+|-------|-------------|----------|
+| **Dark Terminal** | Professional trader theme with neon accents | Default, extended trading sessions |
+| **Ocean Blue** | Deep blue oceanic palette | Cool color preference |
+| **Forest Green** | Nature-inspired green theme | Reduced eye strain |
+| **Sunset Orange** | Warm sunset colors | Evening use, warm preference |
+| **Purple Haze** | Vibrant purple and pink | Creative users, unique aesthetic |
+| **Light Mode** | Clean light theme with subtle shadows | Bright environments, daytime |
+
+**Features:**
+- Instant switching via UI or keyboard (Ctrl+Shift+T)
+- localStorage persistence
+- Theme-specific shadows and colors
+- WCAG AA compliant (4.5:1 contrast ratio)
+- Glassmorphism effects with backdrop blur
+
+See [Theme System Documentation](./docs/THEME_SYSTEM.md) for complete details.
 
 ### Typography
 

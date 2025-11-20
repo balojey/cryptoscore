@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import Connect from '../Connect'
 import SearchBar from '../SearchBar'
+import ThemeSwitcher from '../ThemeSwitcher'
 
 export default function Header() {
   const [showSearch, setShowSearch] = useState(false)
@@ -11,7 +12,7 @@ export default function Header() {
     <header
       className="sticky top-0 z-50 w-full backdrop-blur-sm"
       style={{
-        background: 'rgba(11, 14, 17, 0.9)',
+        background: 'var(--bg-overlay)',
         borderBottom: '1px solid var(--border-default)',
         boxShadow: 'var(--shadow-lg)',
       }}
@@ -131,6 +132,9 @@ export default function Header() {
               <span className="icon-[mdi--trophy] w-4 h-4" />
               <span>Leaderboard</span>
             </Link>
+
+            {/* Theme Switcher */}
+            <ThemeSwitcher />
 
             {/* Wallet Connect */}
             <Connect />

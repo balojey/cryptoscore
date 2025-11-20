@@ -2,13 +2,32 @@
 
 This document outlines all implemented features and their locations in the codebase.
 
-## Phase 1: Foundation
+## Phase 0: Theme System (NEW)
 
-### Dark Terminal Theme
+### Multi-Theme Support
+**Location:** `src/contexts/ThemeContext.tsx`, `src/components/ThemeSwitcher.tsx`
+- 6 professionally designed themes with instant switching
+- Theme-aware CSS variables for all colors and shadows
+- localStorage persistence across sessions
+- Keyboard shortcut (Ctrl+Shift+T) for quick cycling
+- WCAG AA compliant color contrast in all themes
+
+**Available Themes:**
+1. **Dark Terminal** (Default) - Professional trader theme with neon accents
+2. **Ocean Blue** - Deep blue oceanic palette
+3. **Forest Green** - Nature-inspired green theme
+4. **Sunset Orange** - Warm sunset colors
+5. **Purple Haze** - Vibrant purple and pink
+6. **Light Mode** - Clean light theme with subtle shadows
+
+### Design System
 **Location:** `src/styles/tokens.css`, `src/styles/components.css`
-- 40+ design tokens for colors, spacing, shadows
-- Professional trader-focused dark theme
+- 40+ design tokens for colors, spacing, shadows, typography
+- All tokens are theme-aware via CSS variables
 - Consistent styling across all components
+- Theme-specific shadow intensities
+
+## Phase 1: Foundation
 
 ### Enhanced Market Cards
 **Component:** `src/components/cards/EnhancedMarketCard.tsx`

@@ -4,6 +4,7 @@ import Content from './components/Content'
 import Footer from './components/layout/Footer'
 import Header from './components/layout/Header'
 import ToastProvider from './components/ui/ToastProvider'
+import { ThemeProvider } from './contexts/ThemeContext'
 
 // Lazy load pages for better performance
 const MarketDetail = lazy(() => import('./pages/MarketDetail').then(m => ({ default: m.MarketDetail })))
@@ -35,26 +36,28 @@ function PageLoader() {
 
 function App() {
   return (
-    <BrowserRouter>
-      <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg-primary)' }}>
-        <a href="#main-content" className="skip-to-main">
-          Skip to main content
-        </a>
-        <Header />
-        <main id="main-content" className="flex-grow" role="main">
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              <Route path="/" element={<Content />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/market/:marketAddress" element={<MarketDetail />} />
-              <Route path="/leaderboard" element={<Leaderboard />} />
-            </Routes>
-          </Suspense>
-        </main>
-        <Footer />
-        <ToastProvider />
-      </div>
-    </BrowserRouter>
+    <ThemeProvider>
+      <BrowserRouter>
+        <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg-primary)' }}>
+          <a href="#main-content" className="skip-to-main">
+            Skip to main content
+          </a>
+          <Header />
+          <main id="main-content" className="flex-grow" role="main">
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                <Route path="/" element={<Content />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/market/:marketAddress" element={<MarketDetail />} />
+                <Route path="/leaderboard" element={<Leaderboard />} />
+              </Routes>
+            </Suspense>
+          </main>
+          <Footer />
+          <ToastProvider />
+        </div>
+      </BrowserRouter>
+    </ThemeProvider>
   )
 }
 
