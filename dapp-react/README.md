@@ -58,16 +58,17 @@ src/
 
 ## 🎯 Key Technologies
 
-- **React 19** - UI framework
-- **TypeScript** - Type safety
-- **Vite 7** - Build tool
-- **Wagmi 2.x** - Ethereum React hooks
-- **Viem 2.x** - Ethereum interface
-- **TanStack Query 5.x** - Data fetching
-- **Tailwind CSS 4** - Styling
-- **DaisyUI 5** - Component library
-- **Recharts** - Data visualization
-- **React Router 7** - Routing
+- **React 19.1** - UI framework with latest features
+- **TypeScript 5.9** - Type safety with strict mode
+- **Vite 7.1** - Lightning-fast build tool
+- **Wagmi 2.17** - Ethereum React hooks
+- **Viem 2.37** - TypeScript Ethereum interface
+- **TanStack Query 5.90** - Data fetching and caching
+- **Tailwind CSS 4.1** - Utility-first styling
+- **DaisyUI 5.1** - Component library
+- **Recharts 3.4** - Data visualization
+- **React Router 7.9** - Client-side routing
+- **@tanstack/react-virtual 3.13** - Virtual scrolling
 
 ## 🔧 Configuration
 
@@ -167,17 +168,17 @@ Deploy to any static hosting service:
 
 ### Typography
 
-- Body: Inter
-- Headings: Plus Jakarta Sans
-- Monospace: JetBrains Mono
+- System fonts for optimal performance
+- Monospace for code and addresses
 
 ## 📊 Performance
 
-- Bundle size: ~510KB (154KB gzipped)
-- Code splitting per route
-- Lazy loading for pages
-- Virtual scrolling for large lists
-- Optimized images and assets
+- Code splitting per route (MarketDetail, MyMarkets, Leaderboard)
+- Lazy loading for pages with Suspense boundaries
+- Virtual scrolling auto-activates for >20 markets
+- Real-time updates with 10-second polling
+- Optimistic UI updates for instant feedback
+- Service worker caching strategies
 
 ## 🤝 Contributing
 

@@ -2,10 +2,10 @@
 
 ## Smart Contracts (hardhat/)
 
-- **Language**: Solidity ^0.8.28
-- **Framework**: Hardhat with @parity/hardhat-polkadot plugin
-- **Compiler**: resolc (Polkadot EVM compiler) with optimizer enabled
-- **Network**: Polkadot Asset Hub Testnet (PolkaVM enabled)
+- **Language**: Solidity 0.8.28
+- **Framework**: Hardhat 2.27 with @parity/hardhat-polkadot 0.1.9
+- **Compiler**: resolc 0.3.0 (Polkadot EVM compiler) with optimizer enabled
+- **Network**: Polkadot Asset Hub Testnet (Paseo) - PolkaVM enabled
 
 ### Common Commands
 
@@ -20,32 +20,32 @@ npm run lint            # ESLint with @antfu/eslint-config
 
 ## Frontend (dapp-react/)
 
-- **Framework**: React 19 with TypeScript
-- **Build Tool**: Vite 7
+- **Framework**: React 19.1 with TypeScript 5.9
+- **Build Tool**: Vite 7.1
 - **Web3 Stack**: 
-  - Wagmi 2.x (React hooks for Ethereum)
-  - Viem 2.x (TypeScript Ethereum interface)
-  - TanStack Query 5.x (data fetching/caching)
-- **Styling**: Tailwind CSS 4 + DaisyUI 5
-- **Routing**: React Router DOM 7
+  - Wagmi 2.17 (React hooks for Ethereum)
+  - Viem 2.37 (TypeScript Ethereum interface)
+  - TanStack Query 5.90 (data fetching/caching)
+- **Styling**: Tailwind CSS 4.1 + DaisyUI 5.1
+- **Routing**: React Router DOM 7.9
 - **Icons**: Iconify with MDI and Token Branded sets
-- **Charts**: Recharts 2.x (data visualizations)
-- **Notifications**: React Hot Toast 2.x
-- **Virtual Scrolling**: @tanstack/react-virtual 3.x
+- **Charts**: Recharts 3.4 (data visualizations)
+- **Notifications**: React Hot Toast 2.6
+- **Virtual Scrolling**: @tanstack/react-virtual 3.13
 
-### Design System v2.0
-- **Theme**: Dark terminal theme
-- **Tokens**: 40+ design tokens (colors, spacing, shadows)
+### Design System
+- **Theme**: Dark terminal theme with glassmorphism effects
+- **Tokens**: 40+ design tokens (colors, spacing, shadows, typography)
 - **Components**: 30+ reusable component classes
-- **Animations**: Comprehensive animation library
-- **Typography**: Inter (body), Plus Jakarta Sans (headings), JetBrains Mono (code)
+- **Animations**: Comprehensive animation library (fade, slide, scale, pulse, shimmer)
+- **Typography**: System fonts with monospace code display
 
 ### Performance Features
-- **Code Splitting**: Lazy loading for routes
-- **Virtual Scrolling**: Renders only visible items (>20 markets)
-- **PWA**: Service worker with cache strategies
-- **Bundle Size**: 524KB (158KB gzipped)
-- **Build Time**: ~14s
+- **Code Splitting**: Lazy loading for routes (MarketDetail, MyMarkets, Leaderboard)
+- **Virtual Scrolling**: Auto-activates for >20 markets, renders only visible items
+- **PWA**: Service worker with network-first API and cache-first asset strategies
+- **Real-Time Updates**: 10-second polling with React Query cache invalidation
+- **Optimistic UI**: Instant feedback with background validation
 
 ### Accessibility
 - **WCAG AA**: Compliant color contrast
@@ -66,10 +66,10 @@ npm run lint            # ESLint with @antfu/eslint-config
 
 ## Code Style
 
-- **Linting**: @antfu/eslint-config (both workspaces)
-- **TypeScript**: Strict mode enabled
-- **React**: JSX transform, no unused locals/parameters
-- **Formatting**: Enforced via ESLint auto-fix
+- **Linting**: @antfu/eslint-config 5.x (both workspaces)
+- **TypeScript**: Strict mode enabled, no unused locals/parameters
+- **React**: JSX transform, React 19 features enabled
+- **Formatting**: Enforced via ESLint auto-fix on save
 
 ## Environment Variables
 

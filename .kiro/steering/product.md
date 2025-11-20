@@ -1,6 +1,6 @@
 # CryptoScore Product Overview
 
-CryptoScore is a fully on-chain decentralized sports predictive markets platform built on Polkadot. A professional Web3 trading terminal for football prediction markets with advanced analytics, real-time updates, and social features.
+CryptoScore is a fully on-chain decentralized sports prediction markets platform built on Polkadot Asset Hub. A professional Web3 trading terminal for football prediction markets with advanced analytics, real-time updates, and social features.
 
 ## Core Features
 
@@ -30,10 +30,11 @@ CryptoScore is a fully on-chain decentralized sports predictive markets platform
 - **Copy Link**: Quick sharing functionality
 
 ### Performance & UX
-- **Virtual Scrolling**: Smooth performance with 1000+ markets
-- **Dark Terminal Theme**: Professional trader-focused design
-- **PWA Support**: Installable app with offline capability
-- **Full Accessibility**: WCAG AA compliant, keyboard navigation
+- **Virtual Scrolling**: Smooth performance with 1000+ markets (auto-activates >20)
+- **Dark Terminal Theme**: Professional trader-focused design with glassmorphism
+- **PWA Support**: Installable progressive web app with offline capability
+- **Full Accessibility**: WCAG AA compliant, keyboard navigation, screen reader support
+- **Responsive Design**: Mobile-first approach with adaptive layouts
 
 ## Architecture
 
