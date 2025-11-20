@@ -22,10 +22,9 @@ export default function PortfolioSummary({ markets, userAddress, joinedMarkets =
       }
     }
 
-    // Calculate stats for all markets (created + joined)
-    const allUserMarkets = markets
-    const activePositions = allUserMarkets.filter(m => !m.resolved).length
-    const resolvedPositions = allUserMarkets.filter(m => m.resolved).length
+    // Active positions = markets user joined that are still open (not resolved)
+    const activePositions = joinedMarkets.filter(m => !m.resolved).length
+    const resolvedPositions = joinedMarkets.filter(m => m.resolved).length
 
     // Total amount invested = Entry fees from markets where user placed predictions
     // joinedMarkets should contain ALL markets where user participated (regardless of who created them)
