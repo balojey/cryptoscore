@@ -10,19 +10,19 @@ export default function Balance({ address }: BalanceProps) {
   })
 
   if (isLoading) {
-    return <div className="h-9 w-24 bg-slate-200 rounded animate-pulse" />
+    return <div className="h-9 w-24 rounded animate-pulse skeleton" />
   }
 
   if (error) {
-    return <span className="font-sans text-lg font-bold text-[#DC2626]">Error</span>
+    return <span className="font-sans text-lg font-bold" style={{ color: 'var(--accent-red)' }}>Error</span>
   }
 
   return (
     <div className="flex items-baseline gap-2">
-      <span className="font-jakarta font-bold text-2xl text-[#1E293B]">
-        {parseFloat(balance?.formatted || '0').toFixed(3)}
+      <span className="font-jakarta font-bold text-2xl" style={{ color: 'var(--text-primary)' }}>
+        {Number.parseFloat(balance?.formatted || '0').toFixed(3)}
       </span>
-      <span className="font-sans font-semibold text-slate-500">
+      <span className="font-sans font-semibold" style={{ color: 'var(--text-tertiary)' }}>
         PAS
       </span>
     </div>

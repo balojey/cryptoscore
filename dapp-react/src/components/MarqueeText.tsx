@@ -1,16 +1,16 @@
-import React from 'react';
+import React from 'react'
 
 interface MarqueeTextProps {
-  text: string;
-  threshold: number;
-  className?: string;
+  text: string
+  threshold: number
+  className?: string
 }
 
 export const MarqueeText: React.FC<MarqueeTextProps> = ({ text, threshold, className }) => {
-  const useMarquee = text.length > threshold;
+  const useMarquee = text.length > threshold
 
   if (!useMarquee) {
-    return <h4 className={`${className} truncate w-full`} title={text}>{text}</h4>;
+    return <h4 className={`${className} truncate w-full`} title={text}>{text}</h4>
   }
 
   return (
@@ -20,5 +20,5 @@ export const MarqueeText: React.FC<MarqueeTextProps> = ({ text, threshold, class
         <span className="mx-4">{text}</span>
       </div>
     </div>
-  );
-};
+  )
+}

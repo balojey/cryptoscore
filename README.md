@@ -92,24 +92,29 @@ A self-contained prediction market contract:
 
 ### **Frameworks & Core Tools**
 
-* React + TypeScript
-* Wagmi (Polkadot connector)
-* Vite
-* TailwindCSS
-* Custom Match Data Hook (`useMatchData.ts`)
+* React 19.1 + TypeScript 5.9
+* Wagmi 2.17 (Ethereum/Polkadot connector)
+* Viem 2.37 (TypeScript Ethereum interface)
+* Vite 7.1 (Build tool)
+* TailwindCSS 4.1 + DaisyUI 5.1
+* TanStack Query 5.90 (Data fetching/caching)
+* React Router 7.9 (Routing)
+* Recharts 3.4 (Data visualization)
+* @tanstack/react-virtual 3.13 (Virtual scrolling)
 
 ### **Key UI Concepts**
 
-* **Markets Modal** for creating markets
-* **PublicMarketCard** and **MarketInfoCard** for clean market display
-* **Content** page as the entrypoint for browsing active markets
-* **MyMarkets** route for user-specific market activity
-* **MarketDetail** page with dynamic actions:
-
-  * Join Market
-  * Resolve Market
-  * Withdraw
-  * Closed/Disabled states
+* **Dark Terminal Theme** - Professional trader-focused design
+* **Enhanced Market Cards** - Prediction distribution visualization
+* **Portfolio Dashboard** - Track performance, P&L, win rates
+* **Advanced Filtering** - Status, time range, pool size, entry fee
+* **Real-Time Updates** - 10-second polling with toast notifications
+* **Data Visualizations** - Charts for predictions, performance, trends
+* **Leaderboard System** - Top traders across 4 categories
+* **Social Features** - Comments and sharing to Twitter/Farcaster
+* **Virtual Scrolling** - Smooth performance with 1000+ markets
+* **PWA Support** - Installable app with offline capability
+* **Full Accessibility** - WCAG AA compliant, keyboard navigation
 
 ---
 
@@ -215,15 +220,15 @@ npm run interact
 
 ## 🎨 UI/UX Design System
 
-CryptoScore uses a custom AI-ready design language built around:
+CryptoScore uses a professional dark terminal theme:
 
-* CryptoScore Blue & Pitch Green
-* Inter typography
-* Rounded, soft, high-contrast components
-* Market state correctness rules
-* Professional, finance-grade visual cues
-
-(See the system prompt in your design folder for full DLS specs.)
+* **Colors**: Cyan primary (#00D4FF), Green success (#00FF88), Red danger (#FF3366)
+* **Design Tokens**: 40+ tokens for colors, spacing, shadows
+* **Components**: 30+ reusable component classes
+* **Animations**: Comprehensive library (fade, slide, scale, pulse, shimmer)
+* **Glassmorphism**: Modern glass effects throughout
+* **Typography**: System fonts with monospace for code
+* **Accessibility**: WCAG AA compliant with full keyboard navigation
 
 ---
 

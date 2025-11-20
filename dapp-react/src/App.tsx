@@ -1,25 +1,63 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import Content from './components/Content'
-import Footer from './components/Footer'
-import Header from './components/Header'
-import { MarketDetail } from './pages/MarketDetail'
-import { MyMarkets } from './pages/MyMarkets'
+import Footer from './components/layout/Footer'
+import Header from './components/layout/Header'
+import ToastProvider from './components/ui/ToastProvider'
+import { ThemeProvider } from './contexts/ThemeContext'
+
+// Lazy load pages for better performance
+const MarketDetail = lazy(() => import('./pages/MarketDetail').then(m => ({ default: m.MarketDetail })))
+const Dashboard = lazy(() => import('./pages/Dashboard').then(m => ({ default: m.Dashboard })))
+const Leaderboard = lazy(() => import('./pages/Leaderboard').then(m => ({ default: m.Leaderboard })))
+
+// Loading fallback component
+function PageLoader() {
+  return (
+    <div
+      className="min-h-screen flex items-center justify-center"
+      style={{ background: 'var(--bg-primary)' }}
+    >
+      <div className="text-center">
+        <div
+          className="w-16 h-16 border-4 rounded-full animate-spin mx-auto mb-4"
+          style={{
+            borderColor: 'var(--border-default)',
+            borderTopColor: 'var(--accent-cyan)',
+          }}
+        />
+        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+          Loading...
+        </p>
+      </div>
+    </div>
+  )
+}
 
 function App() {
   return (
-    <BrowserRouter>
-      <div className="min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-grow">
-          <Routes>
-            <Route path="/" element={<Content />} />
-            <Route path="/my-markets" element={<MyMarkets />} />
-            <Route path="/market/:marketAddress" element={<MarketDetail />} />
-          </Routes>
-        </main>
-        <Footer />
-      </div>
-    </BrowserRouter>
+    <ThemeProvider>
+      <BrowserRouter>
+        <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg-primary)' }}>
+          <a href="#main-content" className="skip-to-main">
+            Skip to main content
+          </a>
+          <Header />
+          <main id="main-content" className="flex-grow" role="main">
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                <Route path="/" element={<Content />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/market/:marketAddress" element={<MarketDetail />} />
+                <Route path="/leaderboard" element={<Leaderboard />} />
+              </Routes>
+            </Suspense>
+          </main>
+          <Footer />
+          <ToastProvider />
+        </div>
+      </BrowserRouter>
+    </ThemeProvider>
   )
 }
 
