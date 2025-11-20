@@ -100,7 +100,7 @@ export function UserMarkets() {
           My Active Markets
         </h2>
         <Link
-          to="/my-markets"
+          to="/dashboard"
           className="flex items-center gap-2 text-sm font-bold hover:underline"
           style={{ color: 'var(--accent-cyan)' }}
         >
