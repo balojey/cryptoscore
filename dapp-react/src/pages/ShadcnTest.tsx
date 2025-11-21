@@ -1,10 +1,17 @@
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Checkbox } from '@/components/ui/checkbox'
 import { useTheme } from '../contexts/ThemeContext'
 
 export default function ShadcnTest() {
   const { theme, setTheme } = useTheme()
+  const [inputValue, setInputValue] = useState('')
+  const [selectValue, setSelectValue] = useState('')
+  const [checked, setChecked] = useState(false)
 
   const themes = [
     'dark-terminal',
@@ -180,6 +187,211 @@ export default function ShadcnTest() {
                   <Badge variant="success">HOME</Badge>
                   <Badge variant="neutral">DRAW</Badge>
                   <Badge variant="error">AWAY</Badge>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Form Components */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Form Components</CardTitle>
+            <CardDescription>Input, Select, and Checkbox with theme integration</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {/* Input Examples */}
+              <div className="space-y-3">
+                <p className="text-[var(--text-secondary)] text-sm font-semibold">Input Component</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm text-[var(--text-primary)]">Text Input</label>
+                    <Input
+                      type="text"
+                      placeholder="Enter text..."
+                      value={inputValue}
+                      onChange={(e) => setInputValue(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm text-[var(--text-primary)]">Number Input</label>
+                    <Input
+                      type="number"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm text-[var(--text-primary)]">Email Input</label>
+                    <Input
+                      type="email"
+                      placeholder="user@example.com"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm text-[var(--text-primary)]">Disabled Input</label>
+                    <Input
+                      type="text"
+                      placeholder="Disabled"
+                      disabled
+                      value="Cannot edit"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Select Examples */}
+              <div className="space-y-3">
+                <p className="text-[var(--text-secondary)] text-sm font-semibold">Select Component</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm text-[var(--text-primary)]">Market Status</label>
+                    <Select value={selectValue} onValueChange={setSelectValue}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select status..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Markets</SelectItem>
+                        <SelectItem value="open">Open</SelectItem>
+                        <SelectItem value="live">Live</SelectItem>
+                        <SelectItem value="resolved">Resolved</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm text-[var(--text-primary)]">Prediction</label>
+                    <Select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select prediction..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="home">HOME</SelectItem>
+                        <SelectItem value="draw">DRAW</SelectItem>
+                        <SelectItem value="away">AWAY</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm text-[var(--text-primary)]">Sort By</label>
+                    <Select>
+                      <SelectTrigger size="sm">
+                        <SelectValue placeholder="Sort by..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="newest">Newest First</SelectItem>
+                        <SelectItem value="ending">Ending Soon</SelectItem>
+                        <SelectItem value="pool">Highest Pool</SelectItem>
+                        <SelectItem value="participants">Most Participants</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm text-[var(--text-primary)]">Disabled Select</label>
+                    <Select disabled>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Disabled" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="option">Option</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Checkbox Examples */}
+              <div className="space-y-3">
+                <p className="text-[var(--text-secondary)] text-sm font-semibold">Checkbox Component</p>
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="terms"
+                      checked={checked}
+                      onCheckedChange={(checked) => setChecked(checked as boolean)}
+                    />
+                    <label
+                      htmlFor="terms"
+                      className="text-sm text-[var(--text-primary)] cursor-pointer"
+                    >
+                      I agree to the terms and conditions
+                    </label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox id="private" />
+                    <label
+                      htmlFor="private"
+                      className="text-sm text-[var(--text-primary)] cursor-pointer"
+                    >
+                      Make this market private
+                    </label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox id="notifications" defaultChecked />
+                    <label
+                      htmlFor="notifications"
+                      className="text-sm text-[var(--text-primary)] cursor-pointer"
+                    >
+                      Enable notifications (default checked)
+                    </label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox id="disabled" disabled />
+                    <label
+                      htmlFor="disabled"
+                      className="text-sm text-[var(--text-primary)] opacity-50 cursor-not-allowed"
+                    >
+                      Disabled checkbox
+                    </label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox id="disabled-checked" disabled checked />
+                    <label
+                      htmlFor="disabled-checked"
+                      className="text-sm text-[var(--text-primary)] opacity-50 cursor-not-allowed"
+                    >
+                      Disabled and checked
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Form Example */}
+              <div className="space-y-3 pt-4 border-t border-[var(--border-default)]">
+                <p className="text-[var(--text-secondary)] text-sm font-semibold">Complete Form Example</p>
+                <div className="space-y-4 p-4 rounded-lg bg-[var(--bg-secondary)]">
+                  <div className="space-y-2">
+                    <label className="text-sm text-[var(--text-primary)] font-medium">Market Name</label>
+                    <Input type="text" placeholder="e.g., Manchester United vs Liverpool" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm text-[var(--text-primary)] font-medium">Entry Fee (PAS)</label>
+                      <Input type="number" placeholder="0.00" />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm text-[var(--text-primary)] font-medium">League</label>
+                      <Select>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select league..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="premier">Premier League</SelectItem>
+                          <SelectItem value="laliga">La Liga</SelectItem>
+                          <SelectItem value="bundesliga">Bundesliga</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox id="form-private" />
+                    <label htmlFor="form-private" className="text-sm text-[var(--text-primary)] cursor-pointer">
+                      Make this market private
+                    </label>
+                  </div>
+                  <div className="flex gap-2 pt-2">
+                    <Button variant="default">Create Market</Button>
+                    <Button variant="outline">Cancel</Button>
+                  </div>
                 </div>
               </div>
             </div>

@@ -72,7 +72,7 @@
   - _Requirements: 4.3, 1.1, 3.2_
 
 - [ ] 6. Install and configure form components
-- [ ] 6.1 Install Input, Select, and Checkbox components
+- [x] 6.1 Install Input, Select, and Checkbox components
   - Run shadcn CLI to add input, select, and checkbox components
   - Customize Input component with --border-default, --bg-secondary, focus states
   - Customize Select component with proper dropdown styling
