@@ -267,21 +267,21 @@ function MoverCard({ mover }: { mover: TopMover }) {
 // Loading skeleton
 function TopMoversLoading() {
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 animate-fade-in">
       {[1, 2, 3].map(i => (
         <div
           key={i}
-          className="p-3 rounded-lg animate-pulse"
+          className="p-3 rounded-lg"
           style={{
             background: 'var(--bg-secondary)',
             border: '1px solid var(--border-default)',
           }}
         >
           <div className="flex items-center justify-between mb-2">
-            <div className="h-4 w-32 skeleton" />
+            <div className="h-4 w-32 skeleton rounded" />
             <div className="h-5 w-16 skeleton rounded" />
           </div>
-          <div className="h-3 w-full skeleton mb-2" />
+          <div className="h-3 w-full skeleton rounded mb-2" />
           <div className="h-2 w-full skeleton rounded-full" />
         </div>
       ))}
@@ -363,7 +363,7 @@ export default function TopMovers({ markets, isLoading, error, onRetry }: TopMov
 
         {/* Top movers list */}
         {!isLoading && !error && topMovers.length > 0 && (
-          <div className="space-y-3">
+          <div className="space-y-3 animate-fade-in">
             {topMovers.map(mover => (
               <MoverCard key={mover.market.marketAddress} mover={mover} />
             ))}

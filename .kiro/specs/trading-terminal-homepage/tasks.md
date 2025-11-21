@@ -104,7 +104,7 @@
   - Handle API rate limit errors gracefully
   - _Requirements: 2.1, 8.4_
 
-- [ ] 11. Add loading states and skeletons
+- [x] 11. Add loading states and skeletons
   - Create loading skeletons for MetricsBar
   - Create loading skeleton for MarketOverviewChart
   - Create loading skeletons for FeaturedMarkets cards

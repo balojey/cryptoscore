@@ -240,6 +240,7 @@ export function TradingTerminal() {
                 <RecentActivity
                   markets={displayMarkets}
                   limit={10}
+                  isLoading={isLoadingMarkets && !cachedMarkets.length}
                   error={fetchError && !cachedMarkets.length ? getErrorMessage() : undefined}
                   onRetry={handleRetry}
                 />

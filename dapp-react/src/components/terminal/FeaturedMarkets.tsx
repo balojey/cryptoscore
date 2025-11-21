@@ -205,28 +205,28 @@ function FeaturedMarketCard({ market }: { market: FeaturedMarket }) {
 // Loading skeleton for featured markets
 function FeaturedMarketsLoading() {
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 animate-fade-in">
       {[1, 2, 3].map(i => (
         <div
           key={i}
-          className="p-4 rounded-lg animate-pulse"
+          className="p-4 rounded-lg"
           style={{
             background: 'var(--bg-secondary)',
             border: '1px solid var(--border-default)',
           }}
         >
           <div className="flex items-center justify-between mb-3">
-            <div className="h-4 w-24 skeleton" />
+            <div className="h-4 w-24 skeleton rounded" />
             <div className="h-5 w-20 skeleton rounded-full" />
           </div>
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 skeleton rounded" />
-            <div className="h-4 w-8 skeleton" />
+            <div className="h-4 w-8 skeleton rounded" />
             <div className="w-10 h-10 skeleton rounded" />
           </div>
           <div className="flex justify-between">
-            <div className="h-3 w-16 skeleton" />
-            <div className="h-3 w-16 skeleton" />
+            <div className="h-3 w-16 skeleton rounded" />
+            <div className="h-3 w-16 skeleton rounded" />
           </div>
         </div>
       ))}
@@ -308,7 +308,7 @@ export default function FeaturedMarkets({ markets, isLoading, error, onRetry }: 
 
         {/* Featured markets list */}
         {!isLoading && !error && featuredMarkets.length > 0 && (
-          <div className="space-y-3">
+          <div className="space-y-3 animate-fade-in">
             {featuredMarkets.map(market => (
               <FeaturedMarketCard key={market.marketAddress} market={market} />
             ))}

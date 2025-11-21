@@ -32,7 +32,7 @@ function MetricCard({ label, value, suffix = '', icon, trend, isLoading }: Metri
         <span className="text-xl">{icon}</span>
       </div>
       <div
-        className="text-2xl font-bold font-mono mb-1"
+        className="text-2xl font-bold font-mono mb-1 transition-opacity duration-300"
         style={{ color: 'var(--text-primary)' }}
       >
         {isLoading ? (
@@ -184,7 +184,7 @@ export default function MetricsBar({ error }: MetricsBarProps) {
   const showError = error && !marketsData
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in">
       <MetricCard
         label="Total Markets"
         value={showError ? 0 : metrics.totalMarkets}

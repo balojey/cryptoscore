@@ -56,16 +56,24 @@ function CustomTooltip({ active, payload, label, metricType }: any) {
 // Loading Skeleton Component
 function ChartSkeleton() {
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="h-6 w-32 skeleton rounded" />
-        <div className="flex gap-2">
-          <div className="h-8 w-16 skeleton rounded" />
-          <div className="h-8 w-16 skeleton rounded" />
-          <div className="h-8 w-20 skeleton rounded" />
+    <div
+      className="p-4 md:p-6 rounded-lg animate-fade-in"
+      style={{
+        background: 'var(--bg-elevated)',
+        boxShadow: 'var(--shadow-lg)',
+      }}
+    >
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="h-6 w-32 skeleton rounded" />
+          <div className="flex gap-2">
+            <div className="h-8 w-16 skeleton rounded" />
+            <div className="h-8 w-16 skeleton rounded" />
+            <div className="h-8 w-20 skeleton rounded" />
+          </div>
         </div>
+        <div className="h-64 md:h-80 skeleton rounded" />
       </div>
-      <div className="h-64 md:h-80 skeleton rounded" />
     </div>
   )
 }
@@ -434,7 +442,7 @@ export default function MarketOverviewChart({
 
   return (
     <div
-      className="p-4 md:p-6 rounded-lg"
+      className="p-4 md:p-6 rounded-lg animate-fade-in"
       style={{
         background: 'var(--bg-elevated)',
         boxShadow: 'var(--shadow-lg)',

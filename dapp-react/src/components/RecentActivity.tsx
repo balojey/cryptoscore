@@ -8,6 +8,7 @@ import { useEffect, useRef } from 'react'
 interface RecentActivityProps {
   markets: Market[]
   limit?: number
+  isLoading?: boolean
   error?: string
   onRetry?: () => void
 }
@@ -21,7 +22,39 @@ interface ActivityItem {
   timestamp: bigint
 }
 
-export default function RecentActivity({ markets, limit = 10, error, onRetry }: RecentActivityProps) {
+// Loading skeleton for recent activity
+function RecentActivityLoading({ count = 5 }: { count?: number }) {
+  return (
+    <div className="space-y-3 animate-fade-in">
+      {Array.from({ length: count }).map((_, i) => (
+        <div
+          key={i}
+          className="p-4 rounded-lg"
+          style={{
+            background: 'var(--bg-secondary)',
+            border: '1px solid var(--border-default)',
+          }}
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-3 flex-1">
+              <div className="w-10 h-10 skeleton rounded-lg" />
+              <div className="flex-1 space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-24 skeleton rounded" />
+                  <div className="h-5 w-16 skeleton rounded-full" />
+                </div>
+                <div className="h-3 w-48 skeleton rounded" />
+              </div>
+            </div>
+            <div className="h-3 w-12 skeleton rounded" />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+export default function RecentActivity({ markets, limit = 10, isLoading = false, error, onRetry }: RecentActivityProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const prevMarketsLengthRef = useRef(markets.length)
   // Auto-scroll to top on new activity
@@ -55,57 +88,6 @@ export default function RecentActivity({ markets, limit = 10, error, onRetry }: 
   const recentActivities = [...activities]
     .sort((a, b) => Number(b.timestamp) - Number(a.timestamp))
     .slice(0, limit)
-
-  // Error state
-  if (error) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
-        </CardHeader>
-        <CardContent className="text-center py-8">
-          <span className="icon-[mdi--alert-circle-outline] w-12 h-12 mx-auto mb-3" style={{ color: 'var(--accent-red)' }} />
-          <p className="font-medium mb-2" style={{ color: 'var(--text-primary)' }}>Unable to load activity</p>
-          <p className="text-sm mb-4" style={{ color: 'var(--text-tertiary)' }}>
-            {error}
-          </p>
-          {onRetry && (
-            <button
-              onClick={onRetry}
-              className="px-4 py-2 text-sm font-medium rounded transition-all hover-lift"
-              style={{
-                background: 'var(--accent-cyan)',
-                color: 'var(--text-inverse)',
-              }}
-            >
-              <span className="flex items-center gap-2">
-                <span className="icon-[mdi--refresh] w-4 h-4" />
-                <span>Retry</span>
-              </span>
-            </button>
-          )}
-        </CardContent>
-      </Card>
-    )
-  }
-
-  // Empty state
-  if (recentActivities.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
-        </CardHeader>
-        <CardContent className="text-center py-8">
-          <span className="icon-[mdi--history] w-12 h-12 mx-auto mb-3" style={{ color: 'var(--text-tertiary)' }} />
-          <p style={{ color: 'var(--text-secondary)' }}>No recent activity</p>
-          <p className="text-sm mt-1" style={{ color: 'var(--text-tertiary)' }}>
-            Markets will appear here once created
-          </p>
-        </CardContent>
-      </Card>
-    )
-  }
 
   // Get icon based on activity type
   const getActivityIcon = (type: ActivityType): string => {
@@ -184,94 +166,141 @@ export default function RecentActivity({ markets, limit = 10, error, onRetry }: 
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
         <CardTitle>Recent Activity</CardTitle>
-        <Link
-          to="/dashboard"
-          className="text-sm font-medium hover:underline"
-          style={{ color: 'var(--accent-cyan)' }}
-        >
-          View All
-        </Link>
+        {!isLoading && !error && recentActivities.length > 0 && (
+          <Link
+            to="/dashboard"
+            className="text-sm font-medium hover:underline"
+            style={{ color: 'var(--accent-cyan)' }}
+          >
+            View All
+          </Link>
+        )}
       </CardHeader>
 
-      <CardContent className="space-y-3 pt-0 max-h-[600px] overflow-y-auto" ref={containerRef}>
-        {recentActivities.map(({ market, type }) => (
-          <Link
-            key={market.marketAddress}
-            to={`/markets/${market.marketAddress}`}
-            className="block p-4 rounded-lg transition-all"
-            style={{
-              background: 'var(--bg-secondary)',
-              border: '1px solid var(--border-default)',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = 'var(--border-hover)'
-              e.currentTarget.style.transform = 'translateX(4px)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = 'var(--border-default)'
-              e.currentTarget.style.transform = 'translateX(0)'
-            }}
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-start gap-3 flex-1 min-w-0">
-                <div
-                  className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{ background: 'var(--bg-primary)' }}
-                >
-                  <span
-                    className={`icon-[${getActivityIcon(type)}] w-5 h-5`}
-                    style={{ color: getActivityColor(type) }}
-                  />
-                </div>
+      <CardContent className="pt-0">
+        {/* Loading state */}
+        {isLoading && <RecentActivityLoading count={5} />}
 
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span
-                      className="text-sm font-semibold truncate"
-                      style={{ color: 'var(--text-primary)' }}
+        {/* Error state */}
+        {!isLoading && error && (
+          <div className="text-center py-8">
+            <span className="icon-[mdi--alert-circle-outline] w-12 h-12 mx-auto mb-3" style={{ color: 'var(--accent-red)' }} />
+            <p className="font-medium mb-2" style={{ color: 'var(--text-primary)' }}>Unable to load activity</p>
+            <p className="text-sm mb-4" style={{ color: 'var(--text-tertiary)' }}>
+              {error}
+            </p>
+            {onRetry && (
+              <button
+                onClick={onRetry}
+                className="px-4 py-2 text-sm font-medium rounded transition-all hover-lift"
+                style={{
+                  background: 'var(--accent-cyan)',
+                  color: 'var(--text-inverse)',
+                }}
+              >
+                <span className="flex items-center gap-2">
+                  <span className="icon-[mdi--refresh] w-4 h-4" />
+                  <span>Retry</span>
+                </span>
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Empty state */}
+        {!isLoading && !error && recentActivities.length === 0 && (
+          <div className="text-center py-8">
+            <span className="icon-[mdi--history] w-12 h-12 mx-auto mb-3" style={{ color: 'var(--text-tertiary)' }} />
+            <p style={{ color: 'var(--text-secondary)' }}>No recent activity</p>
+            <p className="text-sm mt-1" style={{ color: 'var(--text-tertiary)' }}>
+              Markets will appear here once created
+            </p>
+          </div>
+        )}
+
+        {/* Activity list */}
+        {!isLoading && !error && recentActivities.length > 0 && (
+          <div className="space-y-3 max-h-[600px] overflow-y-auto animate-fade-in" ref={containerRef}>
+            {recentActivities.map(({ market, type }) => (
+              <Link
+                key={market.marketAddress}
+                to={`/markets/${market.marketAddress}`}
+                className="block p-4 rounded-lg transition-all"
+                style={{
+                  background: 'var(--bg-secondary)',
+                  border: '1px solid var(--border-default)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--border-hover)'
+                  e.currentTarget.style.transform = 'translateX(4px)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--border-default)'
+                  e.currentTarget.style.transform = 'translateX(0)'
+                }}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    <div
+                      className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                      style={{ background: 'var(--bg-primary)' }}
                     >
-                      Match #
-                      {market.matchId.toString()}
-                    </span>
-                    <Badge 
-                      variant={
-                        type === 'resolve' ? 'success' : 
-                        type === 'live' ? 'warning' : 
-                        type === 'join' ? 'info' :
-                        'default'
-                      }
-                      className="text-[10px] px-2 py-0"
-                    >
-                      {getActivityLabel(type)}
-                    </Badge>
+                      <span
+                        className={`icon-[${getActivityIcon(type)}] w-5 h-5`}
+                        style={{ color: getActivityColor(type) }}
+                      />
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span
+                          className="text-sm font-semibold truncate"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Match #
+                          {market.matchId.toString()}
+                        </span>
+                        <Badge 
+                          variant={
+                            type === 'resolve' ? 'success' : 
+                            type === 'live' ? 'warning' : 
+                            type === 'join' ? 'info' :
+                            'default'
+                          }
+                          className="text-[10px] px-2 py-0"
+                        >
+                          {getActivityLabel(type)}
+                        </Badge>
+                      </div>
+
+                      <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                        <span className="icon-[mdi--account-group-outline] w-3 h-3" />
+                        <span>
+                          {Number(market.participantsCount)}
+                          {' '}
+                          participants
+                        </span>
+                        <span>•</span>
+                        <span className="icon-[mdi--database-outline] w-3 h-3" />
+                        <span>
+                          {formatEther(market.entryFee)}
+                          {' '}
+                          PAS
+                        </span>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                    <span className="icon-[mdi--account-group-outline] w-3 h-3" />
-                    <span>
-                      {Number(market.participantsCount)}
-                      {' '}
-                      participants
-                    </span>
-                    <span>•</span>
-                    <span className="icon-[mdi--database-outline] w-3 h-3" />
-                    <span>
-                      {formatEther(market.entryFee)}
-                      {' '}
-                      PAS
-                    </span>
+                  <div className="text-right flex-shrink-0">
+                    <div className="text-xs font-mono" style={{ color: 'var(--text-tertiary)' }}>
+                      {getTimeAgo(market.startTime)}
+                    </div>
                   </div>
                 </div>
-              </div>
-
-              <div className="text-right flex-shrink-0">
-                <div className="text-xs font-mono" style={{ color: 'var(--text-tertiary)' }}>
-                  {getTimeAgo(market.startTime)}
-                </div>
-              </div>
-            </div>
-          </Link>
-        ))}
+              </Link>
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   )
