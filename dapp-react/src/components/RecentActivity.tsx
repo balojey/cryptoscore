@@ -3,19 +3,58 @@ import { Link } from 'react-router-dom'
 import { formatEther } from 'viem'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { useEffect, useRef } from 'react'
 
 interface RecentActivityProps {
   markets: Market[]
   limit?: number
 }
 
-export default function RecentActivity({ markets, limit = 5 }: RecentActivityProps) {
-  // Sort by start time (most recent first) and limit
-  const recentMarkets = [...markets]
-    .sort((a, b) => Number(b.startTime) - Number(a.startTime))
+// Activity types based on market state
+type ActivityType = 'create' | 'join' | 'resolve' | 'live'
+
+interface ActivityItem {
+  market: Market
+  type: ActivityType
+  timestamp: bigint
+}
+
+export default function RecentActivity({ markets, limit = 10 }: RecentActivityProps) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const prevMarketsLengthRef = useRef(markets.length)
+  // Auto-scroll to top on new activity
+  useEffect(() => {
+    if (markets.length > prevMarketsLengthRef.current && containerRef.current) {
+      containerRef.current.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+    prevMarketsLengthRef.current = markets.length
+  }, [markets.length])
+
+  // Determine activity type based on market state
+  const getActivityType = (market: Market): ActivityType => {
+    if (market.resolved) return 'resolve'
+    
+    const now = Date.now()
+    const startTime = Number(market.startTime) * 1000
+    
+    if (now > startTime) return 'live'
+    if (Number(market.participantsCount) > 1) return 'join'
+    return 'create'
+  }
+
+  // Create activity items with types
+  const activities: ActivityItem[] = markets.map(market => ({
+    market,
+    type: getActivityType(market),
+    timestamp: market.startTime,
+  }))
+
+  // Sort by timestamp (most recent first) and limit to 10
+  const recentActivities = [...activities]
+    .sort((a, b) => Number(b.timestamp) - Number(a.timestamp))
     .slice(0, limit)
 
-  if (recentMarkets.length === 0) {
+  if (recentActivities.length === 0) {
     return (
       <Card>
         <CardHeader>
@@ -29,51 +68,76 @@ export default function RecentActivity({ markets, limit = 5 }: RecentActivityPro
     )
   }
 
-  const getActivityIcon = (market: Market) => {
-    if (market.resolved)
-      return 'mdi--check-circle'
-    const now = new Date()
-    const startTime = new Date(Number(market.startTime) * 1000)
-    if (now > startTime)
-      return 'mdi--lightning-bolt'
-    return 'mdi--clock-outline'
+  // Get icon based on activity type
+  const getActivityIcon = (type: ActivityType): string => {
+    switch (type) {
+      case 'create':
+        return 'mdi--plus-circle'
+      case 'join':
+        return 'mdi--account-plus'
+      case 'resolve':
+        return 'mdi--check-circle'
+      case 'live':
+        return 'mdi--lightning-bolt'
+      default:
+        return 'mdi--clock-outline'
+    }
   }
 
-  const getActivityColor = (market: Market) => {
-    if (market.resolved)
-      return 'var(--accent-green)'
-    const now = new Date()
-    const startTime = new Date(Number(market.startTime) * 1000)
-    if (now > startTime)
-      return 'var(--accent-amber)'
-    return 'var(--accent-cyan)'
+  // Get color based on activity type
+  const getActivityColor = (type: ActivityType): string => {
+    switch (type) {
+      case 'create':
+        return 'var(--accent-cyan)'
+      case 'join':
+        return 'var(--accent-purple)'
+      case 'resolve':
+        return 'var(--accent-green)'
+      case 'live':
+        return 'var(--accent-amber)'
+      default:
+        return 'var(--text-tertiary)'
+    }
   }
 
-  const getActivityLabel = (market: Market) => {
-    if (market.resolved)
-      return 'Resolved'
-    const now = new Date()
-    const startTime = new Date(Number(market.startTime) * 1000)
-    if (now > startTime)
-      return 'Live'
-    return 'Upcoming'
+  // Get label based on activity type
+  const getActivityLabel = (type: ActivityType): string => {
+    switch (type) {
+      case 'create':
+        return 'Created'
+      case 'join':
+        return 'Joined'
+      case 'resolve':
+        return 'Resolved'
+      case 'live':
+        return 'Live'
+      default:
+        return 'Activity'
+    }
   }
 
-  const getTimeAgo = (timestamp: bigint) => {
+  // Relative timestamp formatting
+  const getTimeAgo = (timestamp: bigint): string => {
     const now = Date.now()
     const time = Number(timestamp) * 1000
     const diff = now - time
 
+    const seconds = Math.floor(diff / 1000)
     const minutes = Math.floor(diff / 60000)
     const hours = Math.floor(diff / 3600000)
     const days = Math.floor(diff / 86400000)
+    const weeks = Math.floor(diff / 604800000)
 
+    if (weeks > 0)
+      return `${weeks}w ago`
     if (days > 0)
       return `${days}d ago`
     if (hours > 0)
       return `${hours}h ago`
     if (minutes > 0)
       return `${minutes}m ago`
+    if (seconds > 5)
+      return `${seconds}s ago`
     return 'Just now'
   }
 
@@ -90,8 +154,8 @@ export default function RecentActivity({ markets, limit = 5 }: RecentActivityPro
         </Link>
       </CardHeader>
 
-      <CardContent className="space-y-3 pt-0">
-        {recentMarkets.map(market => (
+      <CardContent className="space-y-3 pt-0 max-h-[600px] overflow-y-auto" ref={containerRef}>
+        {recentActivities.map(({ market, type }) => (
           <Link
             key={market.marketAddress}
             to={`/market/${market.marketAddress}`}
@@ -116,8 +180,8 @@ export default function RecentActivity({ markets, limit = 5 }: RecentActivityPro
                   style={{ background: 'var(--bg-primary)' }}
                 >
                   <span
-                    className={`icon-[${getActivityIcon(market)}] w-5 h-5`}
-                    style={{ color: getActivityColor(market) }}
+                    className={`icon-[${getActivityIcon(type)}] w-5 h-5`}
+                    style={{ color: getActivityColor(type) }}
                   />
                 </div>
 
@@ -132,13 +196,14 @@ export default function RecentActivity({ markets, limit = 5 }: RecentActivityPro
                     </span>
                     <Badge 
                       variant={
-                        market.resolved ? 'success' : 
-                        new Date() > new Date(Number(market.startTime) * 1000) ? 'warning' : 
-                        'info'
+                        type === 'resolve' ? 'success' : 
+                        type === 'live' ? 'warning' : 
+                        type === 'join' ? 'info' :
+                        'default'
                       }
                       className="text-[10px] px-2 py-0"
                     >
-                      {getActivityLabel(market)}
+                      {getActivityLabel(type)}
                     </Badge>
                   </div>
 

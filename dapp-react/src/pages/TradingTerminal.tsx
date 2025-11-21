@@ -7,6 +7,7 @@ import TerminalHeader from '../components/terminal/TerminalHeader'
 import MarketOverviewChart from '../components/terminal/MarketOverviewChart'
 import FeaturedMarkets from '../components/terminal/FeaturedMarkets'
 import TopMovers from '../components/terminal/TopMovers'
+import RecentActivity from '../components/RecentActivity'
 import type { Market } from '../types'
 
 type Timeframe = '24h' | '7d' | '30d' | 'all'
@@ -130,32 +131,12 @@ export function TradingTerminal() {
               <TopMovers markets={markets} isLoading={isLoadingMarkets} />
             </div>
 
-            {/* Recent Activity - Placeholder for Task 8 */}
+            {/* Recent Activity */}
             <div
-              className="p-4 md:p-6 rounded-lg animate-slide-in-right"
-              style={{
-                background: 'var(--bg-elevated)',
-                boxShadow: 'var(--shadow-lg)',
-                animationDelay: '0.5s',
-              }}
+              className="animate-slide-in-right"
+              style={{ animationDelay: '0.5s' }}
             >
-              <h3
-                className="text-xl font-semibold mb-4"
-                style={{ color: 'var(--text-primary)' }}
-              >
-                Recent Activity
-              </h3>
-              <div
-                className="h-48 flex items-center justify-center rounded"
-                style={{
-                  background: 'var(--bg-secondary)',
-                  border: `1px solid var(--border-default)`,
-                }}
-              >
-                <p style={{ color: 'var(--text-tertiary)' }}>
-                  Recent activity will be implemented in Task 8
-                </p>
-              </div>
+              <RecentActivity markets={markets} limit={10} />
             </div>
           </div>
         </div>

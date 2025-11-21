@@ -80,7 +80,7 @@
   - Display mini prediction distribution bars
   - _Requirements: 2.1, 6.3_
 
-- [ ] 8. Enhance RecentActivity component for terminal context
+- [x] 8. Enhance RecentActivity component for terminal context
   - Update `src/components/RecentActivity.tsx` for terminal usage
   - Add activity type icons (join, create, resolve, withdraw)
   - Implement relative timestamps ("2m ago", "1h ago")
