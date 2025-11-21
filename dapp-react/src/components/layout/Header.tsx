@@ -3,17 +3,21 @@ import { Link, useLocation } from 'react-router-dom'
 import Connect from '../Connect'
 import SearchBar from '../SearchBar'
 import ThemeSwitcher from '../ThemeSwitcher'
+import { ThemePreset, themePresets, useTheme } from '@/contexts/ThemeContext'
 import { Button } from '@/components/ui/button'
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 export default function Header() {
   const [showSearch, setShowSearch] = useState(false)
   const location = useLocation()
   const isHomePage = location.pathname === '/'
+  const { theme, setTheme } = useTheme()
   return (
     <header
       className="sticky top-0 z-50 w-full backdrop-blur-sm"
@@ -66,7 +70,7 @@ export default function Header() {
                 />
               </svg>
               <span
-                className="font-['Plus_Jakarta_Sans'] text-2xl font-bold tracking-tighter transition-colors hidden sm:block"
+                className="font-['Plus_Jakarta_Sans'] text-xl sm:text-2xl font-bold tracking-tighter transition-colors"
                 style={{ color: 'var(--text-primary)' }}
               >
                 CryptoScore
@@ -81,34 +85,12 @@ export default function Header() {
             </div>
           )}
 
-          {/* Right - Actions */}
-          <div className="flex items-center gap-3">
-            {/* Search Toggle (Mobile) */}
-            {isHomePage && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setShowSearch(!showSearch)}
-                    className="md:hidden"
-                    aria-label="Toggle search"
-                  >
-                    <span className="icon-[mdi--magnify] w-5 h-5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Search markets</p>
-                </TooltipContent>
-              </Tooltip>
-            )}
-
-            {/* Dashboard Link */}
+          {/* Desktop Actions */}
+          <div className="hidden md:flex items-center gap-3">
             <Button
               variant="outline"
               size="sm"
               asChild
-              className="hidden sm:flex"
             >
               <Link to="/dashboard">
                 <span className="icon-[mdi--view-dashboard-outline] w-4 h-4" />
@@ -116,12 +98,10 @@ export default function Header() {
               </Link>
             </Button>
 
-            {/* Leaderboard Link */}
             <Button
               variant="outline"
               size="sm"
               asChild
-              className="hidden sm:flex"
             >
               <Link to="/leaderboard">
                 <span className="icon-[mdi--trophy] w-4 h-4" />
@@ -129,12 +109,88 @@ export default function Header() {
               </Link>
             </Button>
 
-            {/* Theme Switcher */}
             <ThemeSwitcher />
 
-            {/* Wallet Connect */}
             <Connect />
           </div>
+
+          {/* Mobile Menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden"
+                aria-label="Open menu"
+              >
+                <span className="icon-[mdi--menu] w-5 h-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              {isHomePage && (
+                <>
+                  <DropdownMenuItem
+                    onClick={() => setShowSearch(!showSearch)}
+                    className="flex items-center gap-2 cursor-pointer"
+                  >
+                    <span className="icon-[mdi--magnify] w-4 h-4" />
+                    <span>{showSearch ? 'Hide Search' : 'Show Search'}</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                </>
+              )}
+              
+              <DropdownMenuItem asChild>
+                <Link to="/dashboard" className="flex items-center gap-2 cursor-pointer">
+                  <span className="icon-[mdi--view-dashboard-outline] w-4 h-4" />
+                  <span>Dashboard</span>
+                </Link>
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem asChild>
+                <Link to="/leaderboard" className="flex items-center gap-2 cursor-pointer">
+                  <span className="icon-[mdi--trophy] w-4 h-4" />
+                  <span>Leaderboard</span>
+                </Link>
+              </DropdownMenuItem>
+              
+              <DropdownMenuSeparator />
+              
+              <div className="px-2 py-2">
+                <div className="text-xs font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+                  Theme: {themePresets[theme].name}
+                </div>
+                {(Object.keys(themePresets) as ThemePreset[]).map((presetKey) => {
+                  const preset = themePresets[presetKey]
+                  const isActive = theme === presetKey
+
+                  return (
+                    <DropdownMenuItem
+                      key={presetKey}
+                      onClick={() => setTheme(presetKey)}
+                      className="gap-3 py-2 cursor-pointer"
+                      style={{
+                        color: isActive ? 'var(--accent-cyan)' : 'var(--text-secondary)',
+                        background: isActive ? 'var(--bg-hover)' : 'transparent',
+                      }}
+                    >
+                      <span className={`icon-[${preset.icon}] w-4 h-4 flex-shrink-0`} />
+                      <span className="flex-1">{preset.name}</span>
+                      {isActive && (
+                        <span className="icon-[mdi--check] w-4 h-4 flex-shrink-0" />
+                      )}
+                    </DropdownMenuItem>
+                  )
+                })}
+              </div>
+              
+              <DropdownMenuSeparator />
+              
+              <div className="px-2 py-2">
+                <Connect />
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {/* Mobile Search Bar */}
