@@ -123,7 +123,7 @@ function FeaturedMarketCard({ market }: { market: FeaturedMarket }) {
 
   return (
     <Link
-      to={`/market/${market.marketAddress}`}
+      to={`/markets/${market.marketAddress}`}
       className="block"
       style={{ textDecoration: 'none' }}
     >

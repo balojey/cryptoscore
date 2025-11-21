@@ -166,7 +166,7 @@ function MoverCard({ mover }: { mover: TopMover }) {
 
   return (
     <Link
-      to={`/market/${mover.market.marketAddress}`}
+      to={`/markets/${mover.market.marketAddress}`}
       className="block"
       style={{ textDecoration: 'none' }}
     >
