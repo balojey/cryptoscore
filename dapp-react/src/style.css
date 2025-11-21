@@ -206,3 +206,23 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* ============================================
+   SONNER TOAST VARIANTS
+   Theme-aware toast notification styles
+   ============================================ */
+.toast-success {
+  border-left: 4px solid var(--accent-green) !important;
+}
+
+.toast-error {
+  border-left: 4px solid var(--accent-red) !important;
+}
+
+.toast-warning {
+  border-left: 4px solid var(--accent-amber) !important;
+}
+
+.toast-info {
+  border-left: 4px solid var(--accent-cyan) !important;
+}

@@ -7,6 +7,11 @@ import { useMatchData } from '../../hooks/useMatchData'
 import { shortenAddress } from '../../utils/formatters'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 
 interface EnhancedMarketCardProps {
   market: Market
@@ -296,47 +301,68 @@ export default function EnhancedMarketCard({ market }: EnhancedMarketCardProps) 
 
       {/* Market Stats */}
       <div className="space-y-2 mb-4">
-        <div className="info-row py-2">
-          <div className="info-label">
-            <span className="icon-[mdi--database-outline] w-4 h-4" />
-            <span>Pool Size</span>
-          </div>
-          <div className="info-value font-mono">
-            {poolSize.toFixed(2)}
-            {' '}
-            <span style={{ color: 'var(--text-tertiary)' }}>PAS</span>
-          </div>
-        </div>
-
-        <div className="info-row py-2">
-          <div className="info-label">
-            <span className="icon-[mdi--account-group-outline] w-4 h-4" />
-            <span>Participants</span>
-          </div>
-          <div className="info-value">
-            {Number(market.participantsCount)}
-            {distribution.total > 0 && (
-              <span style={{ color: 'var(--text-tertiary)' }} className="ml-2 text-xs">
-                (
-                {distribution.total}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="info-row py-2">
+              <div className="info-label">
+                <span className="icon-[mdi--database-outline] w-4 h-4" />
+                <span>Pool Size</span>
+              </div>
+              <div className="info-value font-mono">
+                {poolSize.toFixed(2)}
                 {' '}
-                predictions)
-              </span>
-            )}
-          </div>
-        </div>
+                <span style={{ color: 'var(--text-tertiary)' }}>PAS</span>
+              </div>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Total value locked in this market</p>
+          </TooltipContent>
+        </Tooltip>
 
-        <div className="info-row py-2">
-          <div className="info-label">
-            <span className="icon-[mdi--login] w-4 h-4" />
-            <span>Entry Fee</span>
-          </div>
-          <div className="info-value font-mono">
-            {formatEther(market.entryFee)}
-            {' '}
-            <span style={{ color: 'var(--text-tertiary)' }}>PAS</span>
-          </div>
-        </div>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="info-row py-2">
+              <div className="info-label">
+                <span className="icon-[mdi--account-group-outline] w-4 h-4" />
+                <span>Participants</span>
+              </div>
+              <div className="info-value">
+                {Number(market.participantsCount)}
+                {distribution.total > 0 && (
+                  <span style={{ color: 'var(--text-tertiary)' }} className="ml-2 text-xs">
+                    (
+                    {distribution.total}
+                    {' '}
+                    predictions)
+                  </span>
+                )}
+              </div>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Number of users who joined this market</p>
+          </TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="info-row py-2">
+              <div className="info-label">
+                <span className="icon-[mdi--login] w-4 h-4" />
+                <span>Entry Fee</span>
+              </div>
+              <div className="info-value font-mono">
+                {formatEther(market.entryFee)}
+                {' '}
+                <span style={{ color: 'var(--text-tertiary)' }}>PAS</span>
+              </div>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Cost to join and make a prediction</p>
+          </TooltipContent>
+        </Tooltip>
       </div>
 
         </CardContent>

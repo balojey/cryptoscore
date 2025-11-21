@@ -4,6 +4,11 @@ import Connect from '../Connect'
 import SearchBar from '../SearchBar'
 import ThemeSwitcher from '../ThemeSwitcher'
 import { Button } from '@/components/ui/button'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 
 export default function Header() {
   const [showSearch, setShowSearch] = useState(false)
@@ -80,15 +85,22 @@ export default function Header() {
           <div className="flex items-center gap-3">
             {/* Search Toggle (Mobile) */}
             {isHomePage && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowSearch(!showSearch)}
-                className="md:hidden"
-                aria-label="Toggle search"
-              >
-                <span className="icon-[mdi--magnify] w-5 h-5" />
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setShowSearch(!showSearch)}
+                    className="md:hidden"
+                    aria-label="Toggle search"
+                  >
+                    <span className="icon-[mdi--magnify] w-5 h-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Search markets</p>
+                </TooltipContent>
+              </Tooltip>
             )}
 
             {/* Dashboard Link */}

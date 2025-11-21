@@ -1,4 +1,4 @@
-import toast from 'react-hot-toast'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -45,7 +45,7 @@ export default function SharePrediction({ marketAddress, matchInfo, prediction }
   const copyLink = () => {
     navigator.clipboard.writeText(shareUrl)
     toast.success('Link copied to clipboard!', {
-      icon: '📋',
+      description: '📋',
       duration: 2000,
     })
   }

@@ -7,6 +7,11 @@ import { CRYPTO_SCORE_DASHBOARD_ADDRESS, CryptoScoreDashboardABI } from '../conf
 import { shortenAddress } from '../utils/formatters'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 
 type LeaderboardTab = 'winRate' | 'earnings' | 'active' | 'streak'
 
@@ -206,15 +211,22 @@ export function Leaderboard() {
                     onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-secondary)'}
                   >
                     {/* Rank */}
-                    <div
-                      className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg"
-                      style={{
-                        background: rank <= 3 ? `${getRankColor(rank)}20` : 'var(--bg-primary)',
-                        color: getRankColor(rank),
-                      }}
-                    >
-                      {getRankIcon(rank)}
-                    </div>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div
+                          className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg"
+                          style={{
+                            background: rank <= 3 ? `${getRankColor(rank)}20` : 'var(--bg-primary)',
+                            color: getRankColor(rank),
+                          }}
+                        >
+                          {getRankIcon(rank)}
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Rank #{rank}</p>
+                      </TooltipContent>
+                    </Tooltip>
 
                     {/* Trader Info */}
                     <div className="flex-1 min-w-0">

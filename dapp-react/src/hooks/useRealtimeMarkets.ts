@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
-import toast from 'react-hot-toast'
+import { toast } from 'sonner'
 
 interface RealtimeOptions {
   enabled?: boolean
@@ -37,52 +37,28 @@ export function useRealtimeMarkets(options: RealtimeOptions = {}) {
 export const marketToast = {
   newParticipant: () => {
     toast.success('New participant joined!', {
-      icon: '👥',
+      description: '👥',
       duration: 3000,
-      position: 'bottom-right',
-      style: {
-        background: 'var(--bg-elevated)',
-        color: 'var(--text-primary)',
-        border: '1px solid var(--accent-green)',
-      },
     })
   },
 
   marketResolved: (outcome: string) => {
     toast.success(`Market resolved: ${outcome}`, {
-      icon: '✅',
+      description: '✅',
       duration: 5000,
-      position: 'bottom-right',
-      style: {
-        background: 'var(--bg-elevated)',
-        color: 'var(--text-primary)',
-        border: '1px solid var(--accent-green)',
-      },
     })
   },
 
   marketStarting: () => {
-    toast('Market is starting soon!', {
-      icon: '⚡',
+    toast.info('Market is starting soon!', {
+      description: '⚡',
       duration: 4000,
-      position: 'bottom-right',
-      style: {
-        background: 'var(--bg-elevated)',
-        color: 'var(--text-primary)',
-        border: '1px solid var(--accent-amber)',
-      },
     })
   },
 
   error: (message: string) => {
     toast.error(message, {
       duration: 4000,
-      position: 'bottom-right',
-      style: {
-        background: 'var(--bg-elevated)',
-        color: 'var(--text-primary)',
-        border: '1px solid var(--accent-red)',
-      },
     })
   },
 }
