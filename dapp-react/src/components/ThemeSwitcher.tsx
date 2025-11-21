@@ -1,159 +1,122 @@
-import { useState } from 'react'
 import { ThemePreset, themePresets, useTheme } from '../contexts/ThemeContext'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 export default function ThemeSwitcher() {
   const { theme, setTheme } = useTheme()
-  const [isOpen, setIsOpen] = useState(false)
 
   return (
-    <div className="relative">
-      {/* Theme Button */}
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => setIsOpen(!isOpen)}
-        aria-label="Change theme (Ctrl+Shift+T)"
-        aria-expanded={isOpen}
-        title="Change theme (Ctrl+Shift+T to cycle)"
-        className="gap-2"
-      >
-        <span className={`icon-[${themePresets[theme].icon}] w-5 h-5`} />
-        <span className="hidden sm:inline">{themePresets[theme].name}</span>
-        <span className={`icon-[mdi--chevron-down] w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-      </Button>
-
-      {/* Dropdown Menu */}
-      {isOpen && (
-        <>
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 z-40"
-            onClick={() => setIsOpen(false)}
-            aria-hidden="true"
-          />
-
-          {/* Menu */}
-          <div
-            className="absolute right-0 mt-2 w-56 rounded-xl shadow-xl z-50 overflow-hidden animate-fade-in"
-            style={{
-              background: 'var(--bg-elevated)',
-              border: '1px solid var(--border-default)',
-              boxShadow: 'var(--shadow-xl)',
-            }}
-            role="menu"
-            aria-orientation="vertical"
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          aria-label="Change theme (Ctrl+Shift+T)"
+          title="Change theme (Ctrl+Shift+T to cycle)"
+          className="gap-2"
+        >
+          <span className={`icon-[${themePresets[theme].icon}] w-5 h-5`} />
+          <span className="hidden sm:inline">{themePresets[theme].name}</span>
+          <span className="icon-[mdi--chevron-down] w-4 h-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      
+      <DropdownMenuContent align="end" className="w-56">
+        <div className="px-2 py-2">
+          <DropdownMenuLabel>Choose Theme</DropdownMenuLabel>
+          <p
+            className="text-xs mt-1 px-2"
+            style={{ color: 'var(--text-disabled)' }}
           >
-            <div
-              className="px-4 py-3 border-b"
-              style={{ borderColor: 'var(--border-default)' }}
+            Press Ctrl+Shift+T to cycle
+          </p>
+        </div>
+        
+        <DropdownMenuSeparator />
+        
+        {(Object.keys(themePresets) as ThemePreset[]).map((presetKey) => {
+          const preset = themePresets[presetKey]
+          const isActive = theme === presetKey
+
+          return (
+            <DropdownMenuItem
+              key={presetKey}
+              onClick={() => setTheme(presetKey)}
+              className="gap-3 py-3 cursor-pointer"
+              style={{
+                color: isActive ? 'var(--accent-cyan)' : 'var(--text-secondary)',
+                background: isActive ? 'var(--bg-hover)' : 'transparent',
+              }}
             >
-              <p
-                className="text-xs font-semibold uppercase tracking-wider"
-                style={{ color: 'var(--text-tertiary)' }}
-              >
-                Choose Theme
-              </p>
-              <p
-                className="text-xs mt-1"
-                style={{ color: 'var(--text-disabled)' }}
-              >
-                Press Ctrl+Shift+T to cycle
-              </p>
-            </div>
-
-            <div className="py-2">
-              {(Object.keys(themePresets) as ThemePreset[]).map((presetKey) => {
-                const preset = themePresets[presetKey]
-                const isActive = theme === presetKey
-
-                return (
-                  <Button
-                    key={presetKey}
-                    variant="ghost"
-                    onClick={() => {
-                      setTheme(presetKey)
-                      setIsOpen(false)
-                    }}
-                    className="w-full justify-start gap-3 px-4 py-3 h-auto font-medium"
-                    style={{
-                      color: isActive ? 'var(--accent-cyan)' : 'var(--text-secondary)',
-                      background: isActive ? 'var(--bg-hover)' : 'transparent',
-                    }}
-                    role="menuitem"
-                  >
-                    {/* Icon */}
-                    <span className={`icon-[${preset.icon}] w-5 h-5 flex-shrink-0`} />
-
-                    {/* Name */}
-                    <span className="flex-1 text-left">{preset.name}</span>
-
-                    {/* Active Indicator */}
-                    {isActive && (
-                      <span className="icon-[mdi--check] w-5 h-5 flex-shrink-0" />
-                    )}
-                  </Button>
-                )
-              })}
-            </div>
-
-            {/* Preview Colors */}
+              <span className={`icon-[${preset.icon}] w-5 h-5 flex-shrink-0`} />
+              <span className="flex-1">{preset.name}</span>
+              {isActive && (
+                <span className="icon-[mdi--check] w-5 h-5 flex-shrink-0" />
+              )}
+            </DropdownMenuItem>
+          )
+        })}
+        
+        <DropdownMenuSeparator />
+        
+        <div className="px-4 py-3">
+          <p
+            className="text-xs font-semibold uppercase tracking-wider mb-2"
+            style={{ color: 'var(--text-tertiary)' }}
+          >
+            Preview
+          </p>
+          <div className="flex gap-2">
             <div
-              className="px-4 py-3 border-t"
-              style={{ borderColor: 'var(--border-default)' }}
-            >
-              <p
-                className="text-xs font-semibold uppercase tracking-wider mb-2"
-                style={{ color: 'var(--text-tertiary)' }}
-              >
-                Preview
-              </p>
-              <div className="flex gap-2">
-                <div
-                  className="w-8 h-8 rounded-lg border-2"
-                  style={{
-                    background: 'var(--accent-cyan)',
-                    borderColor: 'var(--border-default)',
-                  }}
-                  title="Primary Accent"
-                />
-                <div
-                  className="w-8 h-8 rounded-lg border-2"
-                  style={{
-                    background: 'var(--accent-green)',
-                    borderColor: 'var(--border-default)',
-                  }}
-                  title="Success"
-                />
-                <div
-                  className="w-8 h-8 rounded-lg border-2"
-                  style={{
-                    background: 'var(--accent-red)',
-                    borderColor: 'var(--border-default)',
-                  }}
-                  title="Error"
-                />
-                <div
-                  className="w-8 h-8 rounded-lg border-2"
-                  style={{
-                    background: 'var(--accent-amber)',
-                    borderColor: 'var(--border-default)',
-                  }}
-                  title="Warning"
-                />
-                <div
-                  className="w-8 h-8 rounded-lg border-2"
-                  style={{
-                    background: 'var(--accent-purple)',
-                    borderColor: 'var(--border-default)',
-                  }}
-                  title="Info"
-                />
-              </div>
-            </div>
+              className="w-8 h-8 rounded-lg border-2"
+              style={{
+                background: 'var(--accent-cyan)',
+                borderColor: 'var(--border-default)',
+              }}
+              title="Primary Accent"
+            />
+            <div
+              className="w-8 h-8 rounded-lg border-2"
+              style={{
+                background: 'var(--accent-green)',
+                borderColor: 'var(--border-default)',
+              }}
+              title="Success"
+            />
+            <div
+              className="w-8 h-8 rounded-lg border-2"
+              style={{
+                background: 'var(--accent-red)',
+                borderColor: 'var(--border-default)',
+              }}
+              title="Error"
+            />
+            <div
+              className="w-8 h-8 rounded-lg border-2"
+              style={{
+                background: 'var(--accent-amber)',
+                borderColor: 'var(--border-default)',
+              }}
+              title="Warning"
+            />
+            <div
+              className="w-8 h-8 rounded-lg border-2"
+              style={{
+                background: 'var(--accent-purple)',
+                borderColor: 'var(--border-default)',
+              }}
+              title="Info"
+            />
           </div>
-        </>
-      )}
-    </div>
+        </div>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }

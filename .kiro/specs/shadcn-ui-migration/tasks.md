@@ -92,21 +92,21 @@
   - Verify debouncing and real-time filtering still works
   - _Requirements: 4.6, 1.2, 8.1_
 
-- [ ] 7. Install and configure overlay components
-- [ ] 7.1 Install Dialog and DropdownMenu components
+- [x] 7. Install and configure overlay components
+- [x] 7.1 Install Dialog and DropdownMenu components
   - Run shadcn CLI to add dialog and dropdown-menu components
   - Customize Dialog with --bg-elevated, --border-default, backdrop blur
   - Customize DropdownMenu with proper positioning and styling
   - _Requirements: 4.4, 4.5, 3.1, 3.2_
 
-- [ ] 7.2 Replace modal dialogs across application
+- [x] 7.2 Replace modal dialogs across application
   - Replace market creation modal in Market.tsx with Shadcn UI Dialog
   - Verify modal open/close animations work
   - Verify modal backdrop and focus trap work correctly
   - Test keyboard navigation (Escape to close)
   - _Requirements: 4.4, 1.2, 9.2, 9.4_
 
-- [ ] 7.3 Replace dropdown menus across application
+- [x] 7.3 Replace dropdown menus across application
   - Replace theme switcher dropdown in ThemeSwitcher.tsx with Shadcn UI DropdownMenu
   - Replace share dropdown in SharePrediction.tsx with Shadcn UI DropdownMenu
   - Verify dropdown positioning and animations

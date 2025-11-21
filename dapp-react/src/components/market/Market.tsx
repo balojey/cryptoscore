@@ -8,6 +8,15 @@ import { MarqueeText } from '../MarqueeText'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
 
 export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: MarketProps) {
   const { address: userAddress } = useAccount()
@@ -155,21 +164,26 @@ export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: 
           </div>
         )}
 
-        {!isCreating
-          ? (
-              <div className="text-center">
-                <Button
-                  variant="default"
-                  onClick={() => setIsCreating(true)}
-                  className="gap-2"
-                >
-                  <span className="icon-[mdi--plus-circle-outline] w-4 h-4" />
-                  {hasMarket ? 'Create Another' : 'Create Market'}
-                </Button>
-              </div>
-            )
-          : (
-              <div className="space-y-4 animate-fade-in">
+        <div className="text-center">
+          <Dialog open={isCreating} onOpenChange={setIsCreating}>
+            <DialogTrigger asChild>
+              <Button
+                variant="default"
+                className="gap-2"
+              >
+                <span className="icon-[mdi--plus-circle-outline] w-4 h-4" />
+                {hasMarket ? 'Create Another' : 'Create Market'}
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create Prediction Market</DialogTitle>
+                <DialogDescription>
+                  Set up a new prediction market for {match.homeTeam.name} vs {match.awayTeam.name}
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="space-y-4 py-4">
                 {/* Entry Fee */}
                 <div>
                   <label htmlFor={`entryFee-${match.id}`} className="font-sans text-xs font-medium mb-2 block" style={{ color: 'var(--text-tertiary)' }}>
@@ -183,6 +197,7 @@ export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: 
                     placeholder="e.g., 100"
                   />
                 </div>
+                
                 {/* Public Toggle */}
                 <div className="flex items-center gap-2">
                   <Checkbox
@@ -194,24 +209,8 @@ export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: 
                     Public Market
                   </label>
                 </div>
-                {/* Actions */}
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="success"
-                    onClick={handleCreateMarket}
-                    disabled={isLoading}
-                    className="flex-1 gap-2"
-                  >
-                    {isLoading && <span className="icon-[mdi--loading] animate-spin" />}
-                    <span>{isLoading ? 'Creating...' : 'Confirm'}</span>
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    onClick={() => setIsCreating(false)}
-                  >
-                    Cancel
-                  </Button>
-                </div>
+                
+                {/* Error Messages */}
                 {error && (
                   <p className="text-xs text-center" style={{ color: 'var(--error)' }}>
                     {error}
@@ -223,7 +222,27 @@ export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: 
                   </p>
                 )}
               </div>
-            )}
+              
+              <DialogFooter>
+                <Button
+                  variant="secondary"
+                  onClick={() => setIsCreating(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="success"
+                  onClick={handleCreateMarket}
+                  disabled={isLoading}
+                  className="gap-2"
+                >
+                  {isLoading && <span className="icon-[mdi--loading] animate-spin" />}
+                  <span>{isLoading ? 'Creating...' : 'Create Market'}</span>
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
     </div>
   )

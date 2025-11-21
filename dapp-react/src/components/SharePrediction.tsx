@@ -1,6 +1,13 @@
-import { useState } from 'react'
 import toast from 'react-hot-toast'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 interface SharePredictionProps {
   marketAddress: string
@@ -13,8 +20,6 @@ interface SharePredictionProps {
 }
 
 export default function SharePrediction({ marketAddress, matchInfo, prediction }: SharePredictionProps) {
-  const [isOpen, setIsOpen] = useState(false)
-
   const shareUrl = `${window.location.origin}/market/${marketAddress}`
 
   const getShareText = () => {
@@ -46,70 +51,40 @@ export default function SharePrediction({ marketAddress, matchInfo, prediction }
   }
 
   return (
-    <div className="relative">
-      <Button
-        variant="secondary"
-        size="sm"
-        onClick={() => setIsOpen(!isOpen)}
-        className="gap-2"
-      >
-        <span className="icon-[mdi--share-variant] w-4 h-4" />
-        <span>Share</span>
-      </Button>
-
-      {isOpen && (
-        <>
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 z-40"
-            onClick={() => setIsOpen(false)}
-          />
-
-          {/* Dropdown */}
-          <div
-            className="absolute right-0 mt-2 w-64 rounded-lg shadow-xl z-50 p-2"
-            style={{
-              background: 'var(--bg-elevated)',
-              border: '1px solid var(--border-default)',
-            }}
-          >
-            <div className="mb-3 px-2 py-1">
-              <p className="text-xs font-medium" style={{ color: 'var(--text-tertiary)' }}>
-                Share this market
-              </p>
-            </div>
-
-            <Button
-              variant="ghost"
-              onClick={shareToTwitter}
-              className="w-full justify-start gap-3"
-            >
-              <span className="icon-[mdi--twitter] w-5 h-5" />
-              <span>Share on Twitter</span>
-            </Button>
-
-            <Button
-              variant="ghost"
-              onClick={shareToFarcaster}
-              className="w-full justify-start gap-3"
-            >
-              <span className="icon-[mdi--cast] w-5 h-5" />
-              <span>Share on Farcaster</span>
-            </Button>
-
-            <div className="my-2 border-t" style={{ borderColor: 'var(--border-default)' }} />
-
-            <Button
-              variant="ghost"
-              onClick={copyLink}
-              className="w-full justify-start gap-3"
-            >
-              <span className="icon-[mdi--link-variant] w-5 h-5" />
-              <span>Copy Link</span>
-            </Button>
-          </div>
-        </>
-      )}
-    </div>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="secondary"
+          size="sm"
+          className="gap-2"
+        >
+          <span className="icon-[mdi--share-variant] w-4 h-4" />
+          <span>Share</span>
+        </Button>
+      </DropdownMenuTrigger>
+      
+      <DropdownMenuContent align="end" className="w-64">
+        <DropdownMenuLabel>Share this market</DropdownMenuLabel>
+        
+        <DropdownMenuSeparator />
+        
+        <DropdownMenuItem onClick={shareToTwitter} className="gap-3 cursor-pointer">
+          <span className="icon-[mdi--twitter] w-5 h-5" />
+          <span>Share on Twitter</span>
+        </DropdownMenuItem>
+        
+        <DropdownMenuItem onClick={shareToFarcaster} className="gap-3 cursor-pointer">
+          <span className="icon-[mdi--cast] w-5 h-5" />
+          <span>Share on Farcaster</span>
+        </DropdownMenuItem>
+        
+        <DropdownMenuSeparator />
+        
+        <DropdownMenuItem onClick={copyLink} className="gap-3 cursor-pointer">
+          <span className="icon-[mdi--link-variant] w-5 h-5" />
+          <span>Copy Link</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
