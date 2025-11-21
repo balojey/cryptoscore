@@ -8,6 +8,8 @@ import { useEffect, useRef } from 'react'
 interface RecentActivityProps {
   markets: Market[]
   limit?: number
+  error?: string
+  onRetry?: () => void
 }
 
 // Activity types based on market state
@@ -19,7 +21,7 @@ interface ActivityItem {
   timestamp: bigint
 }
 
-export default function RecentActivity({ markets, limit = 10 }: RecentActivityProps) {
+export default function RecentActivity({ markets, limit = 10, error, onRetry }: RecentActivityProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const prevMarketsLengthRef = useRef(markets.length)
   // Auto-scroll to top on new activity
@@ -54,15 +56,52 @@ export default function RecentActivity({ markets, limit = 10 }: RecentActivityPr
     .sort((a, b) => Number(b.timestamp) - Number(a.timestamp))
     .slice(0, limit)
 
+  // Error state
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Activity</CardTitle>
+        </CardHeader>
+        <CardContent className="text-center py-8">
+          <span className="icon-[mdi--alert-circle-outline] w-12 h-12 mx-auto mb-3" style={{ color: 'var(--accent-red)' }} />
+          <p className="font-medium mb-2" style={{ color: 'var(--text-primary)' }}>Unable to load activity</p>
+          <p className="text-sm mb-4" style={{ color: 'var(--text-tertiary)' }}>
+            {error}
+          </p>
+          {onRetry && (
+            <button
+              onClick={onRetry}
+              className="px-4 py-2 text-sm font-medium rounded transition-all hover-lift"
+              style={{
+                background: 'var(--accent-cyan)',
+                color: 'var(--text-inverse)',
+              }}
+            >
+              <span className="flex items-center gap-2">
+                <span className="icon-[mdi--refresh] w-4 h-4" />
+                <span>Retry</span>
+              </span>
+            </button>
+          )}
+        </CardContent>
+      </Card>
+    )
+  }
+
+  // Empty state
   if (recentActivities.length === 0) {
     return (
       <Card>
         <CardHeader>
           <CardTitle>Recent Activity</CardTitle>
         </CardHeader>
-        <CardContent className="text-center">
+        <CardContent className="text-center py-8">
           <span className="icon-[mdi--history] w-12 h-12 mx-auto mb-3" style={{ color: 'var(--text-tertiary)' }} />
           <p style={{ color: 'var(--text-secondary)' }}>No recent activity</p>
+          <p className="text-sm mt-1" style={{ color: 'var(--text-tertiary)' }}>
+            Markets will appear here once created
+          </p>
         </CardContent>
       </Card>
     )

@@ -17,6 +17,8 @@ interface FeaturedMarket extends Market {
 interface FeaturedMarketsProps {
   markets: Market[]
   isLoading?: boolean
+  error?: string
+  onRetry?: () => void
 }
 
 // Selection algorithm for featured markets
@@ -233,7 +235,7 @@ function FeaturedMarketsLoading() {
 }
 
 // Main FeaturedMarkets component
-export default function FeaturedMarkets({ markets, isLoading }: FeaturedMarketsProps) {
+export default function FeaturedMarkets({ markets, isLoading, error, onRetry }: FeaturedMarketsProps) {
   // Apply selection algorithm
   const featuredMarkets = useMemo(() => {
     if (!markets || markets.length === 0)
@@ -255,8 +257,40 @@ export default function FeaturedMarkets({ markets, isLoading }: FeaturedMarketsP
         {/* Loading state */}
         {isLoading && <FeaturedMarketsLoading />}
 
+        {/* Error state */}
+        {!isLoading && error && (
+          <div
+            className="text-center py-8 rounded-lg"
+            style={{
+              background: 'var(--bg-secondary)',
+              border: '2px solid var(--accent-red)',
+            }}
+          >
+            <span className="icon-[mdi--alert-circle-outline] w-12 h-12 mx-auto mb-3" style={{ color: 'var(--accent-red)' }} />
+            <p className="font-medium mb-2" style={{ color: 'var(--text-primary)' }}>Unable to load featured markets</p>
+            <p className="text-sm mb-4" style={{ color: 'var(--text-tertiary)' }}>
+              {error}
+            </p>
+            {onRetry && (
+              <button
+                onClick={onRetry}
+                className="px-4 py-2 text-sm font-medium rounded transition-all hover-lift"
+                style={{
+                  background: 'var(--accent-cyan)',
+                  color: 'var(--text-inverse)',
+                }}
+              >
+                <span className="flex items-center gap-2">
+                  <span className="icon-[mdi--refresh] w-4 h-4" />
+                  <span>Retry</span>
+                </span>
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Empty state */}
-        {!isLoading && featuredMarkets.length === 0 && (
+        {!isLoading && !error && featuredMarkets.length === 0 && (
           <div
             className="text-center py-8 rounded-lg"
             style={{
@@ -273,7 +307,7 @@ export default function FeaturedMarkets({ markets, isLoading }: FeaturedMarketsP
         )}
 
         {/* Featured markets list */}
-        {!isLoading && featuredMarkets.length > 0 && (
+        {!isLoading && !error && featuredMarkets.length > 0 && (
           <div className="space-y-3">
             {featuredMarkets.map(market => (
               <FeaturedMarketCard key={market.marketAddress} market={market} />
@@ -282,7 +316,7 @@ export default function FeaturedMarkets({ markets, isLoading }: FeaturedMarketsP
         )}
 
         {/* View All Markets link */}
-        {!isLoading && featuredMarkets.length > 0 && (
+        {!isLoading && !error && featuredMarkets.length > 0 && (
           <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--border-default)' }}>
             <Link
               to="/markets"

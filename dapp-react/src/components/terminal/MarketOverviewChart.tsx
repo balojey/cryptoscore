@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { AreaChart, Area, BarChart, Bar, CartesianGrid, LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { formatEther } from 'viem'
+import { ErrorBoundary } from '../ErrorBoundary'
 import type { Market } from '../../types'
 
 type ChartType = 'tvl' | 'volume' | 'participants'
@@ -11,6 +12,8 @@ interface MarketOverviewChartProps {
   selectedTimeframe: Timeframe
   selectedMetric: ChartType
   isLoading?: boolean
+  error?: string
+  onRetry?: () => void
 }
 
 // Custom Tooltip Component
@@ -72,6 +75,8 @@ export default function MarketOverviewChart({
   selectedTimeframe,
   selectedMetric,
   isLoading = false,
+  error,
+  onRetry,
 }: MarketOverviewChartProps) {
   // Chart type selector state (internal to component)
   const [chartType, setChartType] = useState<'line' | 'bar' | 'area'>('line')
@@ -206,6 +211,67 @@ export default function MarketOverviewChart({
     return <ChartSkeleton />
   }
 
+  // Error state
+  if (error) {
+    return (
+      <div
+        className="p-6 rounded-lg"
+        style={{
+          background: 'var(--bg-elevated)',
+          boxShadow: 'var(--shadow-lg)',
+        }}
+      >
+        <div className="flex items-center justify-between mb-6">
+          <h3
+            className="text-xl font-semibold"
+            style={{ color: 'var(--text-primary)' }}
+          >
+            Market Overview
+          </h3>
+        </div>
+        <div
+          className="h-64 md:h-80 flex flex-col items-center justify-center rounded"
+          style={{
+            background: 'var(--bg-secondary)',
+            border: `2px solid var(--accent-red)`,
+          }}
+        >
+          <span
+            className="icon-[mdi--alert-circle-outline] w-16 h-16 mb-4"
+            style={{ color: 'var(--accent-red)' }}
+          />
+          <p
+            className="text-lg font-medium mb-2"
+            style={{ color: 'var(--text-primary)' }}
+          >
+            Unable to load chart data
+          </p>
+          <p
+            className="text-sm mb-4 text-center max-w-md"
+            style={{ color: 'var(--text-tertiary)' }}
+          >
+            {error}
+          </p>
+          {onRetry && (
+            <button
+              onClick={onRetry}
+              className="px-4 py-2 text-sm font-medium rounded transition-all hover-lift"
+              style={{
+                background: 'var(--accent-cyan)',
+                color: 'var(--text-inverse)',
+              }}
+            >
+              <span className="flex items-center gap-2">
+                <span className="icon-[mdi--refresh] w-4 h-4" />
+                <span>Retry</span>
+              </span>
+            </button>
+          )}
+        </div>
+      </div>
+    )
+  }
+
   // Empty state
   if (chartData.length === 0) {
     return (
@@ -277,6 +343,11 @@ export default function MarketOverviewChart({
 
   // Render appropriate chart based on selected type
   const renderChart = () => {
+    // Validate chart data before rendering
+    if (!chartData || chartData.length === 0) {
+      return null
+    }
+
     const commonProps = {
       data: chartData,
       margin: { top: 5, right: 30, left: 20, bottom: 5 },
@@ -294,64 +365,70 @@ export default function MarketOverviewChart({
       },
     }
 
-    switch (chartType) {
-      case 'bar':
-        return (
-          <BarChart {...commonProps}>
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--border-default)" />
-            <XAxis {...axisProps.xAxis} />
-            <YAxis {...axisProps.yAxis} />
-            <Tooltip content={<CustomTooltip metricType={selectedMetric} />} />
-            <Bar
-              dataKey="value"
-              fill="var(--accent-cyan)"
-              radius={[4, 4, 0, 0]}
-            />
-          </BarChart>
-        )
+    try {
+      switch (chartType) {
+        case 'bar':
+          return (
+            <BarChart {...commonProps}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-default)" />
+              <XAxis {...axisProps.xAxis} />
+              <YAxis {...axisProps.yAxis} />
+              <Tooltip content={<CustomTooltip metricType={selectedMetric} />} />
+              <Bar
+                dataKey="value"
+                fill="var(--accent-cyan)"
+                radius={[4, 4, 0, 0]}
+              />
+            </BarChart>
+          )
 
-      case 'area':
-        return (
-          <AreaChart {...commonProps}>
-            <defs>
-              <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--accent-cyan)" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="var(--accent-cyan)" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--border-default)" />
-            <XAxis {...axisProps.xAxis} />
-            <YAxis {...axisProps.yAxis} />
-            <Tooltip content={<CustomTooltip metricType={selectedMetric} />} />
-            <Area
-              type="monotone"
-              dataKey="value"
-              stroke="var(--accent-cyan)"
-              strokeWidth={2}
-              fillOpacity={1}
-              fill="url(#colorValue)"
-            />
-          </AreaChart>
-        )
+        case 'area':
+          return (
+            <AreaChart {...commonProps}>
+              <defs>
+                <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="var(--accent-cyan)" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="var(--accent-cyan)" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-default)" />
+              <XAxis {...axisProps.xAxis} />
+              <YAxis {...axisProps.yAxis} />
+              <Tooltip content={<CustomTooltip metricType={selectedMetric} />} />
+              <Area
+                type="monotone"
+                dataKey="value"
+                stroke="var(--accent-cyan)"
+                strokeWidth={2}
+                fillOpacity={1}
+                fill="url(#colorValue)"
+              />
+            </AreaChart>
+          )
 
-      case 'line':
-      default:
-        return (
-          <LineChart {...commonProps}>
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--border-default)" />
-            <XAxis {...axisProps.xAxis} />
-            <YAxis {...axisProps.yAxis} />
-            <Tooltip content={<CustomTooltip metricType={selectedMetric} />} />
-            <Line
-              type="monotone"
-              dataKey="value"
-              stroke="var(--accent-cyan)"
-              strokeWidth={2}
-              dot={{ fill: 'var(--accent-cyan)', r: 4 }}
-              activeDot={{ r: 6 }}
-            />
-          </LineChart>
-        )
+        case 'line':
+        default:
+          return (
+            <LineChart {...commonProps}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-default)" />
+              <XAxis {...axisProps.xAxis} />
+              <YAxis {...axisProps.yAxis} />
+              <Tooltip content={<CustomTooltip metricType={selectedMetric} />} />
+              <Line
+                type="monotone"
+                dataKey="value"
+                stroke="var(--accent-cyan)"
+                strokeWidth={2}
+                dot={{ fill: 'var(--accent-cyan)', r: 4 }}
+                activeDot={{ r: 6 }}
+              />
+            </LineChart>
+          )
+      }
+    }
+    catch (error) {
+      console.error('Chart rendering error:', error)
+      return null
     }
   }
 
@@ -397,9 +474,38 @@ export default function MarketOverviewChart({
       </div>
 
       {/* Chart Container */}
-      <ResponsiveContainer width="100%" height={window.innerWidth < 768 ? 300 : 400}>
-        {renderChart()}
-      </ResponsiveContainer>
+      <ErrorBoundary
+        fallback={
+          <div
+            className="h-64 md:h-80 flex flex-col items-center justify-center rounded"
+            style={{
+              background: 'var(--bg-secondary)',
+              border: '2px solid var(--accent-red)',
+            }}
+          >
+            <span
+              className="icon-[mdi--alert-circle-outline] w-12 h-12 mb-3"
+              style={{ color: 'var(--accent-red)' }}
+            />
+            <p
+              className="text-sm font-medium"
+              style={{ color: 'var(--text-primary)' }}
+            >
+              Chart rendering error
+            </p>
+            <p
+              className="text-xs mt-1"
+              style={{ color: 'var(--text-tertiary)' }}
+            >
+              Unable to display chart data
+            </p>
+          </div>
+        }
+      >
+        <ResponsiveContainer width="100%" height={window.innerWidth < 768 ? 300 : 400}>
+          {renderChart()}
+        </ResponsiveContainer>
+      </ErrorBoundary>
     </div>
   )
 }

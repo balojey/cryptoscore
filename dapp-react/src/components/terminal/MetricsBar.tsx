@@ -76,7 +76,11 @@ interface TerminalMetrics {
   }
 }
 
-export default function MetricsBar() {
+interface MetricsBarProps {
+  error?: Error | null
+}
+
+export default function MetricsBar({ error }: MetricsBarProps) {
   // Fetch all markets to calculate metrics
   const { data: marketsData, isLoading } = useReadContract({
     address: CRYPTO_SCORE_DASHBOARD_ADDRESS,
@@ -176,36 +180,39 @@ export default function MetricsBar() {
     metrics.trends.traders = traderTrend
   }
 
+  // Show error state if there's an error and no data
+  const showError = error && !marketsData
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <MetricCard
         label="Total Markets"
-        value={metrics.totalMarkets}
+        value={showError ? 0 : metrics.totalMarkets}
         icon="📊"
-        trend={metrics.trends.markets}
+        trend={showError ? undefined : metrics.trends.markets}
         isLoading={isLoading}
       />
       <MetricCard
         label="Total Value Locked"
-        value={metrics.totalValueLocked}
+        value={showError ? 0 : metrics.totalValueLocked}
         suffix=" PAS"
         icon="🔒"
-        trend={metrics.trends.tvl}
+        trend={showError ? undefined : metrics.trends.tvl}
         isLoading={isLoading}
       />
       <MetricCard
         label="Active Traders"
-        value={metrics.activeTraders}
+        value={showError ? 0 : metrics.activeTraders}
         icon="👥"
-        trend={metrics.trends.traders}
+        trend={showError ? undefined : metrics.trends.traders}
         isLoading={isLoading}
       />
       <MetricCard
         label="24h Volume"
-        value={metrics.volume24h}
+        value={showError ? 0 : metrics.volume24h}
         suffix=" PAS"
         icon="📈"
-        trend={metrics.trends.volume}
+        trend={showError ? undefined : metrics.trends.volume}
         isLoading={isLoading}
       />
     </div>

@@ -19,6 +19,8 @@ interface TopMover {
 interface TopMoversProps {
   markets: Market[]
   isLoading?: boolean
+  error?: string
+  onRetry?: () => void
 }
 
 // Calculate pool size changes (last 24h)
@@ -288,7 +290,7 @@ function TopMoversLoading() {
 }
 
 // Main TopMovers component
-export default function TopMovers({ markets, isLoading }: TopMoversProps) {
+export default function TopMovers({ markets, isLoading, error, onRetry }: TopMoversProps) {
   // Calculate top movers
   const topMovers = useMemo(() => {
     if (!markets || markets.length === 0)
@@ -310,8 +312,40 @@ export default function TopMovers({ markets, isLoading }: TopMoversProps) {
         {/* Loading state */}
         {isLoading && <TopMoversLoading />}
 
+        {/* Error state */}
+        {!isLoading && error && (
+          <div
+            className="text-center py-8 rounded-lg"
+            style={{
+              background: 'var(--bg-secondary)',
+              border: '2px solid var(--accent-red)',
+            }}
+          >
+            <span className="icon-[mdi--alert-circle-outline] w-12 h-12 mx-auto mb-3" style={{ color: 'var(--accent-red)' }} />
+            <p className="font-medium mb-2" style={{ color: 'var(--text-primary)' }}>Unable to load top movers</p>
+            <p className="text-sm mb-4" style={{ color: 'var(--text-tertiary)' }}>
+              {error}
+            </p>
+            {onRetry && (
+              <button
+                onClick={onRetry}
+                className="px-4 py-2 text-sm font-medium rounded transition-all hover-lift"
+                style={{
+                  background: 'var(--accent-cyan)',
+                  color: 'var(--text-inverse)',
+                }}
+              >
+                <span className="flex items-center gap-2">
+                  <span className="icon-[mdi--refresh] w-4 h-4" />
+                  <span>Retry</span>
+                </span>
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Empty state */}
-        {!isLoading && topMovers.length === 0 && (
+        {!isLoading && !error && topMovers.length === 0 && (
           <div
             className="text-center py-8 rounded-lg"
             style={{
@@ -328,7 +362,7 @@ export default function TopMovers({ markets, isLoading }: TopMoversProps) {
         )}
 
         {/* Top movers list */}
-        {!isLoading && topMovers.length > 0 && (
+        {!isLoading && !error && topMovers.length > 0 && (
           <div className="space-y-3">
             {topMovers.map(mover => (
               <MoverCard key={mover.market.marketAddress} mover={mover} />
