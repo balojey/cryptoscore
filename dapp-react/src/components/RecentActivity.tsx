@@ -1,6 +1,7 @@
 import type { Market } from '../types'
 import { Link } from 'react-router-dom'
 import { formatEther } from 'viem'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 
 interface RecentActivityProps {
   markets: Market[]
@@ -15,13 +16,15 @@ export default function RecentActivity({ markets, limit = 5 }: RecentActivityPro
 
   if (recentMarkets.length === 0) {
     return (
-      <div className="card">
-        <h3 className="card-title mb-4">Recent Activity</h3>
-        <div className="text-center py-8">
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Activity</CardTitle>
+        </CardHeader>
+        <CardContent className="text-center">
           <span className="icon-[mdi--history] w-12 h-12 mx-auto mb-3" style={{ color: 'var(--text-tertiary)' }} />
           <p style={{ color: 'var(--text-secondary)' }}>No recent activity</p>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     )
   }
 
@@ -74,9 +77,9 @@ export default function RecentActivity({ markets, limit = 5 }: RecentActivityPro
   }
 
   return (
-    <div className="card">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="card-title">Recent Activity</h3>
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+        <CardTitle>Recent Activity</CardTitle>
         <Link
           to="/dashboard"
           className="text-sm font-medium hover:underline"
@@ -84,9 +87,9 @@ export default function RecentActivity({ markets, limit = 5 }: RecentActivityPro
         >
           View All
         </Link>
-      </div>
+      </CardHeader>
 
-      <div className="space-y-3">
+      <CardContent className="space-y-3 pt-0">
         {recentMarkets.map(market => (
           <Link
             key={market.marketAddress}
@@ -164,7 +167,7 @@ export default function RecentActivity({ markets, limit = 5 }: RecentActivityPro
             </div>
           </Link>
         ))}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   )
 }

@@ -1,5 +1,6 @@
 import type { Market } from '../types'
 import { useMemo } from 'react'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 
 interface PerformanceChartProps {
   markets: Market[]
@@ -29,22 +30,27 @@ export default function PerformanceChart({ markets }: PerformanceChartProps) {
 
   if (chartData.total === 0) {
     return (
-      <div className="card">
-        <h3 className="card-title mb-4">Performance</h3>
-        <div className="text-center py-8">
+      <Card>
+        <CardHeader>
+          <CardTitle>Performance</CardTitle>
+        </CardHeader>
+        <CardContent className="text-center">
           <span className="icon-[mdi--chart-line] w-12 h-12 mx-auto mb-3" style={{ color: 'var(--text-tertiary)' }} />
           <p style={{ color: 'var(--text-secondary)' }}>No resolved markets yet</p>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     )
   }
 
   return (
-    <div className="card">
-      <h3 className="card-title mb-6">Performance Overview</h3>
+    <Card>
+      <CardHeader>
+        <CardTitle>Performance Overview</CardTitle>
+      </CardHeader>
 
-      {/* Win/Loss Bar */}
-      <div className="mb-6">
+      <CardContent className="pt-0">
+        {/* Win/Loss Bar */}
+        <div className="mb-6">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
             Win Rate
@@ -129,6 +135,7 @@ export default function PerformanceChart({ markets }: PerformanceChartProps) {
           </span>
         </div>
       </div>
-    </div>
+      </CardContent>
+    </Card>
   )
 }

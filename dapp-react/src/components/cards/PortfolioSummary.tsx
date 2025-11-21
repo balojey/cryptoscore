@@ -1,6 +1,7 @@
 import type { MarketDashboardInfo } from '../../types'
 import { useMemo } from 'react'
 import { formatEther } from 'viem'
+import { Card, CardContent } from '@/components/ui/card'
 
 interface PortfolioSummaryProps {
   markets: MarketDashboardInfo[]
@@ -118,32 +119,34 @@ export default function PortfolioSummary({ markets, userAddress, joinedMarkets =
     subtitle?: string
     trend?: 'up' | 'down' | 'neutral'
   }) => (
-    <div className="stat-card">
-      <div className="flex items-center justify-between mb-3">
-        <span className="stat-label">{label}</span>
-        <span className={`icon-[${icon}] w-6 h-6`} style={{ color }} />
-      </div>
-      <div className="stat-value mb-1">{value}</div>
-      {subtitle && (
-        <div className="flex items-center gap-2">
-          {trend && (
-            <span
-              className={`icon-[mdi--${trend === 'up' ? 'trending-up' : trend === 'down' ? 'trending-down' : 'minus'}] w-4 h-4`}
-              style={{
-                color: trend === 'up'
-                  ? 'var(--accent-green)'
-                  : trend === 'down'
-                    ? 'var(--accent-red)'
-                    : 'var(--text-tertiary)',
-              }}
-            />
-          )}
-          <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-            {subtitle}
-          </span>
+    <Card>
+      <CardContent>
+        <div className="flex items-center justify-between mb-3">
+          <span className="stat-label">{label}</span>
+          <span className={`icon-[${icon}] w-6 h-6`} style={{ color }} />
         </div>
-      )}
-    </div>
+        <div className="stat-value mb-1">{value}</div>
+        {subtitle && (
+          <div className="flex items-center gap-2">
+            {trend && (
+              <span
+                className={`icon-[mdi--${trend === 'up' ? 'trending-up' : trend === 'down' ? 'trending-down' : 'minus'}] w-4 h-4`}
+                style={{
+                  color: trend === 'up'
+                    ? 'var(--accent-green)'
+                    : trend === 'down'
+                      ? 'var(--accent-red)'
+                      : 'var(--text-tertiary)',
+                }}
+              />
+            )}
+            <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+              {subtitle}
+            </span>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   )
 
   return (

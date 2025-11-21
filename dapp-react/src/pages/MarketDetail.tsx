@@ -13,6 +13,7 @@ import { CRYPTO_SCORE_FACTORY_ADDRESS, CryptoScoreFactoryABI, CryptoScoreMarketA
 import { useMatchData } from '../hooks/useMatchData'
 import { useUserPrediction } from '../hooks/useUserPrediction'
 import { shortenAddress } from '../utils/formatters'
+import { Button } from '@/components/ui/button'
 
 // --- SUB-COMPONENTS ---
 
@@ -324,21 +325,13 @@ function ActionPanel({ matchData, marketStatus, isMatchStarted, isUserParticipan
   }
 
   const OutcomeButton = ({ team, outcome, selected, onSelect }: any) => (
-    <button
-      type="button"
+    <Button
+      variant="ghost"
       onClick={() => onSelect(outcome)}
-      className="p-6 rounded-xl border-2 text-center transition-all w-full"
+      className="p-6 rounded-xl border-2 text-center transition-all w-full h-auto flex-col"
       style={{
         borderColor: selected ? 'var(--accent-cyan)' : 'var(--border-default)',
         background: selected ? 'rgba(0, 212, 255, 0.1)' : 'var(--bg-secondary)',
-      }}
-      onMouseEnter={(e) => {
-        if (!selected)
-          e.currentTarget.style.borderColor = 'var(--border-hover)'
-      }}
-      onMouseLeave={(e) => {
-        if (!selected)
-          e.currentTarget.style.borderColor = 'var(--border-default)'
       }}
     >
       <div
@@ -357,7 +350,7 @@ function ActionPanel({ matchData, marketStatus, isMatchStarted, isUserParticipan
       <h4 className="font-jakarta font-bold text-xl" style={{ color: 'var(--text-primary)' }}>
         {team?.name || 'Draw'}
       </h4>
-    </button>
+    </Button>
   )
 
   return (
@@ -596,12 +589,12 @@ export function MarketDetail() {
     if (marketStatus) { // Resolved
       return (
         <div className="flex items-center gap-4">
-          <button className="btn-secondary" disabled>Resolved</button>
+          <Button variant="secondary" disabled>Resolved</Button>
           {isUserParticipant && (
-            <button className="btn-success" onClick={handleWithdraw}>
+            <Button variant="success" onClick={handleWithdraw} className="gap-2">
               <span className="icon-[mdi--cash-multiple] w-5 h-5" />
               Withdraw
-            </button>
+            </Button>
           )}
         </div>
       )
@@ -610,24 +603,26 @@ export function MarketDetail() {
     if (isMatchStarted) {
       if (isUserParticipant && (matchData as any)?.status === 'FINISHED') {
         return (
-          <button className="btn-primary" onClick={handleResolveMarket}>
+          <Button variant="default" onClick={handleResolveMarket} className="gap-2">
             <span className="icon-[mdi--check-decagram] w-5 h-5" />
             Resolve Market
-          </button>
+          </Button>
         )
       }
-      return <button className="btn-secondary" disabled>Market Closed</button>
+      return <Button variant="secondary" disabled>Market Closed</Button>
     }
 
     return (
-      <button
-        className="btn-primary btn-lg"
+      <Button
+        variant="default"
+        size="lg"
         onClick={handleJoinMarket}
         disabled={selectedTeam === null || isUserParticipant}
+        className="gap-2"
       >
         <span className="icon-[mdi--login] w-5 h-5" />
         Join Market
-      </button>
+      </Button>
     )
   }
 

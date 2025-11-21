@@ -5,6 +5,8 @@ import { useReadContract } from 'wagmi'
 import AnimatedNumber from '../components/ui/AnimatedNumber'
 import { CRYPTO_SCORE_DASHBOARD_ADDRESS, CryptoScoreDashboardABI } from '../config/contracts'
 import { shortenAddress } from '../utils/formatters'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 
 type LeaderboardTab = 'winRate' | 'earnings' | 'active' | 'streak'
 
@@ -100,19 +102,15 @@ export function Leaderboard() {
   }) => {
     const isActive = activeTab === tab
     return (
-      <button
-        type="button"
+      <Button
+        variant={isActive ? 'default' : 'secondary'}
+        size="sm"
         onClick={() => setActiveTab(tab)}
-        className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
-        style={{
-          background: isActive ? 'var(--accent-cyan)' : 'var(--bg-secondary)',
-          color: isActive ? 'var(--text-inverse)' : 'var(--text-secondary)',
-          border: `1px solid ${isActive ? 'var(--accent-cyan)' : 'var(--border-default)'}`,
-        }}
+        className="gap-2"
       >
         <span className={`icon-[${icon}] w-4 h-4`} />
         <span>{label}</span>
-      </button>
+      </Button>
     )
   }
 
@@ -171,9 +169,10 @@ export function Leaderboard() {
         </div>
 
         {/* Leaderboard Table */}
-        <div className="card">
-          {isLoading ? (
-            <div className="space-y-4">
+        <Card>
+          <CardContent className="p-6">
+            {isLoading ? (
+              <div className="space-y-4">
               {[...Array.from({ length: 10 })].map((_, i) => (
                 <div key={i} className="flex items-center gap-4 p-4 animate-pulse">
                   <div className="w-12 h-12 skeleton rounded-full" />
@@ -285,7 +284,8 @@ export function Leaderboard() {
               })}
             </div>
           )}
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

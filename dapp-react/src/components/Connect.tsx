@@ -3,6 +3,7 @@ import { useMemo, useRef } from 'react'
 import { useAccount, useChainId, useChains, useConnect, useConnectorClient } from 'wagmi'
 import { ensurePaseoTestnet } from '../utils/chain'
 import Account from './Account'
+import { Button } from '@/components/ui/button'
 
 // Popular wallets for when no connectors are available
 const popularWallets = [
@@ -116,26 +117,15 @@ export default function Connect() {
       <div className="flex items-center gap-2">
         {!isConnected
           ? (
-              <button
-                type="button"
-                className="flex items-center gap-2 h-10 px-4 rounded-[12px] font-sans text-sm font-bold uppercase tracking-wider transition-all shadow-lg"
-                style={{
-                  background: 'var(--accent-cyan)',
-                  color: 'var(--text-inverse)',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'var(--accent-cyan-hover)'
-                  e.currentTarget.style.boxShadow = 'var(--shadow-cyan-glow)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'var(--accent-cyan)'
-                  e.currentTarget.style.boxShadow = 'var(--shadow-lg)'
-                }}
+              <Button
+                variant="default"
+                size="default"
                 onClick={openConnectModal}
+                className="gap-2"
               >
                 <span className="icon-[mdi--wallet]" />
                 <span>Connect</span>
-              </button>
+              </Button>
             )
           : (
               <Account
@@ -170,20 +160,14 @@ export default function Connect() {
                 <span className="font-semibold" style={{ color: 'var(--text-secondary)' }}>{connectedChain.name}</span>
               </p>
             </div>
-            <button
-              type="button"
-              className="btn btn-sm btn-circle btn-ghost transition-colors"
-              style={{ color: 'var(--text-tertiary)' }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'var(--bg-hover)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'transparent'
-              }}
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={closeConnectModal}
+              className="h-8 w-8"
             >
               <span className="icon-[mdi--close] w-5 h-5" />
-            </button>
+            </Button>
           </div>
 
           {/* Wallets */}

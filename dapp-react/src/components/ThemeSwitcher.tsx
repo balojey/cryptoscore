@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ThemePreset, themePresets, useTheme } from '../contexts/ThemeContext'
+import { Button } from '@/components/ui/button'
 
 export default function ThemeSwitcher() {
   const { theme, setTheme } = useTheme()
@@ -8,31 +9,19 @@ export default function ThemeSwitcher() {
   return (
     <div className="relative">
       {/* Theme Button */}
-      <button
-        type="button"
+      <Button
+        variant="outline"
+        size="sm"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all"
-        style={{
-          color: 'var(--text-secondary)',
-          border: '1px solid var(--border-default)',
-          background: 'var(--bg-elevated)',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.borderColor = 'var(--accent-cyan)'
-          e.currentTarget.style.color = 'var(--accent-cyan)'
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.borderColor = 'var(--border-default)'
-          e.currentTarget.style.color = 'var(--text-secondary)'
-        }}
         aria-label="Change theme (Ctrl+Shift+T)"
         aria-expanded={isOpen}
         title="Change theme (Ctrl+Shift+T to cycle)"
+        className="gap-2"
       >
         <span className={`icon-[${themePresets[theme].icon}] w-5 h-5`} />
         <span className="hidden sm:inline">{themePresets[theme].name}</span>
         <span className={`icon-[mdi--chevron-down] w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-      </button>
+      </Button>
 
       {/* Dropdown Menu */}
       {isOpen && (
@@ -79,29 +68,17 @@ export default function ThemeSwitcher() {
                 const isActive = theme === presetKey
 
                 return (
-                  <button
+                  <Button
                     key={presetKey}
-                    type="button"
+                    variant="ghost"
                     onClick={() => {
                       setTheme(presetKey)
                       setIsOpen(false)
                     }}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all"
+                    className="w-full justify-start gap-3 px-4 py-3 h-auto font-medium"
                     style={{
                       color: isActive ? 'var(--accent-cyan)' : 'var(--text-secondary)',
                       background: isActive ? 'var(--bg-hover)' : 'transparent',
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isActive) {
-                        e.currentTarget.style.background = 'var(--bg-hover)'
-                        e.currentTarget.style.color = 'var(--text-primary)'
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isActive) {
-                        e.currentTarget.style.background = 'transparent'
-                        e.currentTarget.style.color = 'var(--text-secondary)'
-                      }
                     }}
                     role="menuitem"
                   >
@@ -115,7 +92,7 @@ export default function ThemeSwitcher() {
                     {isActive && (
                       <span className="icon-[mdi--check] w-5 h-5 flex-shrink-0" />
                     )}
-                  </button>
+                  </Button>
                 )
               })}
             </div>

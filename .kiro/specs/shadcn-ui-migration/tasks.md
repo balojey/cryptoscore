@@ -9,30 +9,30 @@
   - Set up CSS variable mappings for Shadcn UI components to use existing theme system
   - _Requirements: 3.1, 3.2, 3.3, 6.3, 6.4_
 
-- [-] 2. Install and configure core Shadcn UI components
-- [-] 2.1 Install Button, Card, and Badge components
+- [x] 2. Install and configure core Shadcn UI components
+- [x] 2.1 Install Button, Card, and Badge components
   - Run shadcn CLI to add button, card, and badge components
   - Customize Button component variants to match existing btn-primary, btn-success, btn-danger styles
   - Customize Card component to use --bg-elevated, --border-default, and shadow variables
   - Customize Badge component variants for success, error, warning, info, neutral
   - _Requirements: 4.1, 4.2, 4.3, 3.1, 3.2_
 
-- [ ] 2.2 Test core components with all 6 themes
+- [x] 2.2 Test core components with all 6 themes
   - Verify Button renders correctly in Dark Terminal, Ocean Blue, Forest Green, Sunset Orange, Purple Haze, Light Mode
   - Verify Card renders correctly with proper backgrounds, borders, and shadows in all themes
   - Verify Badge colors and contrast in all themes
   - Check hover states and transitions work with theme-specific colors
   - _Requirements: 2.1, 2.2, 2.6, 3.3, 5.4_
 
-- [ ] 3. Replace Button components across application
-- [ ] 3.1 Replace buttons in Header component
+- [x] 3. Replace Button components across application
+- [x] 3.1 Replace buttons in Header component
   - Replace wallet connection button with Shadcn UI Button
   - Replace theme switcher button with Shadcn UI Button
   - Replace navigation buttons with Shadcn UI Button
   - Verify button styling matches original design
   - _Requirements: 4.1, 1.1, 1.2_
 
-- [ ] 3.2 Replace buttons in Market components
+- [x] 3.2 Replace buttons in Market components
   - Replace buttons in Market.tsx (create market modal)
   - Replace buttons in EnhancedMarketCard.tsx
   - Replace buttons in MarketDetail.tsx (join, predict, withdraw)
@@ -40,7 +40,7 @@
   - Verify all button interactions work correctly
   - _Requirements: 4.1, 1.2, 1.4_
 
-- [ ] 3.3 Replace buttons in remaining components
+- [x] 3.3 Replace buttons in remaining components
   - Replace buttons in Connect.tsx
   - Replace buttons in SharePrediction.tsx
   - Replace buttons in MarketComments.tsx
@@ -48,15 +48,15 @@
   - Verify button states (loading, disabled) work correctly
   - _Requirements: 4.1, 1.2, 8.1_
 
-- [ ] 4. Replace Card components across application
-- [ ] 4.1 Replace cards in market components
+- [x] 4. Replace Card components across application
+- [x] 4.1 Replace cards in market components
   - Replace card structure in EnhancedMarketCard.tsx with Card, CardHeader, CardTitle, CardContent
   - Replace card structure in PortfolioSummary.tsx
   - Maintain card-glass glassmorphism effect
   - Verify card hover effects and transitions
   - _Requirements: 4.2, 1.1, 5.2, 5.4_
 
-- [ ] 4.2 Replace cards in dashboard and analytics
+- [x] 4.2 Replace cards in dashboard and analytics
   - Replace cards in RecentActivity.tsx
   - Replace cards in PerformanceChart.tsx
   - Replace cards in Leaderboard.tsx (trader cards)

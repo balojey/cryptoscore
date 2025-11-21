@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import Connect from '../Connect'
 import SearchBar from '../SearchBar'
 import ThemeSwitcher from '../ThemeSwitcher'
+import { Button } from '@/components/ui/button'
 
 export default function Header() {
   const [showSearch, setShowSearch] = useState(false)
@@ -79,59 +80,42 @@ export default function Header() {
           <div className="flex items-center gap-3">
             {/* Search Toggle (Mobile) */}
             {isHomePage && (
-              <button
-                type="button"
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => setShowSearch(!showSearch)}
-                className="md:hidden p-2 rounded-lg transition-colors"
-                style={{ color: 'var(--text-secondary)' }}
-                onMouseEnter={e => e.currentTarget.style.color = 'var(--accent-cyan)'}
-                onMouseLeave={e => e.currentTarget.style.color = 'var(--text-secondary)'}
+                className="md:hidden"
+                aria-label="Toggle search"
               >
                 <span className="icon-[mdi--magnify] w-5 h-5" />
-              </button>
+              </Button>
             )}
 
             {/* Dashboard Link */}
-            <Link
-              to="/dashboard"
-              className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
-              style={{
-                color: 'var(--text-secondary)',
-                border: '1px solid var(--border-default)',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = 'var(--accent-cyan)'
-                e.currentTarget.style.color = 'var(--accent-cyan)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = 'var(--border-default)'
-                e.currentTarget.style.color = 'var(--text-secondary)'
-              }}
+            <Button
+              variant="outline"
+              size="sm"
+              asChild
+              className="hidden sm:flex"
             >
-              <span className="icon-[mdi--view-dashboard-outline] w-4 h-4" />
-              <span>Dashboard</span>
-            </Link>
+              <Link to="/dashboard">
+                <span className="icon-[mdi--view-dashboard-outline] w-4 h-4" />
+                <span>Dashboard</span>
+              </Link>
+            </Button>
 
             {/* Leaderboard Link */}
-            <Link
-              to="/leaderboard"
-              className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
-              style={{
-                color: 'var(--text-secondary)',
-                border: '1px solid var(--border-default)',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = 'var(--accent-amber)'
-                e.currentTarget.style.color = 'var(--accent-amber)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = 'var(--border-default)'
-                e.currentTarget.style.color = 'var(--text-secondary)'
-              }}
+            <Button
+              variant="outline"
+              size="sm"
+              asChild
+              className="hidden sm:flex"
             >
-              <span className="icon-[mdi--trophy] w-4 h-4" />
-              <span>Leaderboard</span>
-            </Link>
+              <Link to="/leaderboard">
+                <span className="icon-[mdi--trophy] w-4 h-4" />
+                <span>Leaderboard</span>
+              </Link>
+            </Button>
 
             {/* Theme Switcher */}
             <ThemeSwitcher />

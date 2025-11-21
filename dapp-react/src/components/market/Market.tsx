@@ -5,6 +5,7 @@ import { parseEther, parseEventLogs } from 'viem'
 import { useAccount, useReadContract, useTransactionReceipt, useWriteContract } from 'wagmi'
 import { CRYPTO_SCORE_FACTORY_ADDRESS, CryptoScoreFactoryABI } from '../../config/contracts'
 import { MarqueeText } from '../MarqueeText'
+import { Button } from '@/components/ui/button'
 
 export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: MarketProps) {
   const { address: userAddress } = useAccount()
@@ -155,14 +156,14 @@ export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: 
         {!isCreating
           ? (
               <div className="text-center">
-                <button
-                  type="button"
+                <Button
+                  variant="default"
                   onClick={() => setIsCreating(true)}
-                  className="btn-primary"
+                  className="gap-2"
                 >
                   <span className="icon-[mdi--plus-circle-outline] w-4 h-4" />
                   {hasMarket ? 'Create Another' : 'Create Market'}
-                </button>
+                </Button>
               </div>
             )
           : (
@@ -202,20 +203,21 @@ export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: 
                 </div>
                 {/* Actions */}
                 <div className="flex items-center gap-2">
-                  <button
+                  <Button
+                    variant="success"
                     onClick={handleCreateMarket}
                     disabled={isLoading}
-                    className="flex-1 btn-success"
+                    className="flex-1 gap-2"
                   >
                     {isLoading && <span className="icon-[mdi--loading] animate-spin" />}
                     <span>{isLoading ? 'Creating...' : 'Confirm'}</span>
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="secondary"
                     onClick={() => setIsCreating(false)}
-                    className="btn-secondary"
                   >
                     Cancel
-                  </button>
+                  </Button>
                 </div>
                 {error && (
                   <p className="text-xs text-center" style={{ color: 'var(--error)' }}>

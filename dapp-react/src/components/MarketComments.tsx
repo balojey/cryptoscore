@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useAccount } from 'wagmi'
 import { shortenAddress } from '../utils/formatters'
+import { Button } from '@/components/ui/button'
 
 interface Comment {
   id: string
@@ -108,30 +109,28 @@ export default function MarketComments({ marketAddress: _marketAddress }: Market
               Your prediction:
             </span>
             {(['HOME', 'DRAW', 'AWAY'] as const).map(pred => (
-              <button
+              <Button
                 key={pred}
-                type="button"
+                variant={selectedPrediction === pred ? 'default' : 'secondary'}
+                size="sm"
                 onClick={() => setSelectedPrediction(selectedPrediction === pred ? undefined : pred)}
-                className="px-3 py-1 rounded-full text-xs font-medium transition-all"
-                style={{
-                  background: selectedPrediction === pred ? 'var(--accent-cyan)' : 'var(--bg-secondary)',
-                  color: selectedPrediction === pred ? 'var(--text-inverse)' : 'var(--text-secondary)',
-                  border: `1px solid ${selectedPrediction === pred ? 'var(--accent-cyan)' : 'var(--border-default)'}`,
-                }}
+                className="rounded-full text-xs h-7 px-3"
               >
                 {pred}
-              </button>
+              </Button>
             ))}
           </div>
 
-          <button
+          <Button
+            variant="default"
+            size="sm"
             type="submit"
             disabled={!newComment.trim()}
-            className="btn-primary btn-sm"
+            className="gap-2"
           >
             <span className="icon-[mdi--send] w-4 h-4" />
             Post Comment
-          </button>
+          </Button>
         </form>
       ) : (
         <div className="mb-6 p-4 rounded-lg text-center" style={{ background: 'var(--bg-secondary)' }}>

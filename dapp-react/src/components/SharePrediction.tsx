@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import toast from 'react-hot-toast'
+import { Button } from '@/components/ui/button'
 
 interface SharePredictionProps {
   marketAddress: string
@@ -46,14 +47,15 @@ export default function SharePrediction({ marketAddress, matchInfo, prediction }
 
   return (
     <div className="relative">
-      <button
-        type="button"
+      <Button
+        variant="secondary"
+        size="sm"
         onClick={() => setIsOpen(!isOpen)}
-        className="btn-secondary btn-sm"
+        className="gap-2"
       >
         <span className="icon-[mdi--share-variant] w-4 h-4" />
         <span>Share</span>
-      </button>
+      </Button>
 
       {isOpen && (
         <>
@@ -77,61 +79,34 @@ export default function SharePrediction({ marketAddress, matchInfo, prediction }
               </p>
             </div>
 
-            <button
-              type="button"
+            <Button
+              variant="ghost"
               onClick={shareToTwitter}
-              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all"
-              style={{ color: 'var(--text-secondary)' }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'var(--bg-hover)'
-                e.currentTarget.style.color = '#1DA1F2'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'transparent'
-                e.currentTarget.style.color = 'var(--text-secondary)'
-              }}
+              className="w-full justify-start gap-3"
             >
               <span className="icon-[mdi--twitter] w-5 h-5" />
               <span>Share on Twitter</span>
-            </button>
+            </Button>
 
-            <button
-              type="button"
+            <Button
+              variant="ghost"
               onClick={shareToFarcaster}
-              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all"
-              style={{ color: 'var(--text-secondary)' }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'var(--bg-hover)'
-                e.currentTarget.style.color = '#8A63D2'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'transparent'
-                e.currentTarget.style.color = 'var(--text-secondary)'
-              }}
+              className="w-full justify-start gap-3"
             >
               <span className="icon-[mdi--cast] w-5 h-5" />
               <span>Share on Farcaster</span>
-            </button>
+            </Button>
 
             <div className="my-2 border-t" style={{ borderColor: 'var(--border-default)' }} />
 
-            <button
-              type="button"
+            <Button
+              variant="ghost"
               onClick={copyLink}
-              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all"
-              style={{ color: 'var(--text-secondary)' }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'var(--bg-hover)'
-                e.currentTarget.style.color = 'var(--accent-cyan)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'transparent'
-                e.currentTarget.style.color = 'var(--text-secondary)'
-              }}
+              className="w-full justify-start gap-3"
             >
               <span className="icon-[mdi--link-variant] w-5 h-5" />
               <span>Copy Link</span>
-            </button>
+            </Button>
           </div>
         </>
       )}

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Button } from '@/components/ui/button'
 
 export interface FilterOptions {
   status: 'all' | 'open' | 'live' | 'resolved'
@@ -44,29 +45,15 @@ export default function MarketFilters({ filters, onFilterChange }: MarketFilters
     icon: string
     label: string
   }) => (
-    <button
-      type="button"
+    <Button
+      variant={active ? 'default' : 'secondary'}
+      size="sm"
       onClick={onClick}
-      className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all"
-      style={{
-        background: active ? 'var(--accent-cyan)' : 'var(--bg-secondary)',
-        color: active ? 'var(--text-inverse)' : 'var(--text-secondary)',
-        border: `1px solid ${active ? 'var(--accent-cyan)' : 'var(--border-default)'}`,
-      }}
-      onMouseEnter={(e) => {
-        if (!active) {
-          e.currentTarget.style.borderColor = 'var(--border-hover)'
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (!active) {
-          e.currentTarget.style.borderColor = 'var(--border-default)'
-        }
-      }}
+      className="gap-2 whitespace-nowrap"
     >
       <span className={`icon-[${icon}] w-4 h-4`} />
       <span>{label}</span>
-    </button>
+    </Button>
   )
 
   return (
@@ -91,13 +78,11 @@ export default function MarketFilters({ filters, onFilterChange }: MarketFilters
 
       {/* Advanced Filters Toggle */}
       <div className="flex items-center justify-between">
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => setIsExpanded(!isExpanded)}
-          className="flex items-center gap-2 text-sm font-medium transition-colors"
-          style={{ color: 'var(--text-secondary)' }}
-          onMouseEnter={e => e.currentTarget.style.color = 'var(--accent-cyan)'}
-          onMouseLeave={e => e.currentTarget.style.color = 'var(--text-secondary)'}
+          className="gap-2"
         >
           <span className={`icon-[mdi--${isExpanded ? 'chevron-up' : 'chevron-down'}] w-5 h-5`} />
           <span>
@@ -105,7 +90,7 @@ export default function MarketFilters({ filters, onFilterChange }: MarketFilters
             {' '}
             Advanced Filters
           </span>
-        </button>
+        </Button>
       </div>
 
       {/* Advanced Filters - Expandable */}
@@ -325,8 +310,9 @@ export default function MarketFilters({ filters, onFilterChange }: MarketFilters
               PAS
             </span>
           )}
-          <button
-            type="button"
+          <Button
+            variant="link"
+            size="sm"
             onClick={() => onFilterChange({
               status: 'all',
               sortBy: 'newest',
@@ -336,11 +322,11 @@ export default function MarketFilters({ filters, onFilterChange }: MarketFilters
               minEntryFee: undefined,
               maxEntryFee: undefined,
             })}
-            className="text-xs hover:underline"
+            className="text-xs h-auto p-0"
             style={{ color: 'var(--accent-red)' }}
           >
             Clear all
-          </button>
+          </Button>
         </div>
       )}
     </div>

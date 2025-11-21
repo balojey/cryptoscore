@@ -5,6 +5,7 @@ import { useAccount, useReadContract } from 'wagmi'
 import { CryptoScoreMarketABI } from '../../config/contracts'
 import { useMatchData } from '../../hooks/useMatchData'
 import { shortenAddress } from '../../utils/formatters'
+import { Card, CardContent, CardFooter } from '@/components/ui/card'
 
 interface EnhancedMarketCardProps {
   market: Market
@@ -21,31 +22,33 @@ interface PredictionDistribution {
 // Skeleton for loading state
 export function EnhancedMarketCardSkeleton() {
   return (
-    <div className="card animate-pulse">
-      <div className="flex items-center justify-between mb-4">
-        <div className="h-4 w-32 skeleton" />
-        <div className="flex gap-2">
-          <div className="h-5 w-16 skeleton rounded-full" />
-          <div className="h-5 w-16 skeleton rounded-full" />
+    <Card className="animate-pulse">
+      <CardContent>
+        <div className="flex items-center justify-between mb-4">
+          <div className="h-4 w-32 skeleton" />
+          <div className="flex gap-2">
+            <div className="h-5 w-16 skeleton rounded-full" />
+            <div className="h-5 w-16 skeleton rounded-full" />
+          </div>
         </div>
-      </div>
-      <div className="flex items-center justify-between mb-6">
-        <div className="team-display">
-          <div className="w-16 h-16 skeleton rounded-lg" />
-          <div className="h-5 w-24 skeleton" />
+        <div className="flex items-center justify-between mb-6">
+          <div className="team-display">
+            <div className="w-16 h-16 skeleton rounded-lg" />
+            <div className="h-5 w-24 skeleton" />
+          </div>
+          <div className="h-6 w-12 skeleton" />
+          <div className="team-display">
+            <div className="w-16 h-16 skeleton rounded-lg" />
+            <div className="h-5 w-24 skeleton" />
+          </div>
         </div>
-        <div className="h-6 w-12 skeleton" />
-        <div className="team-display">
-          <div className="w-16 h-16 skeleton rounded-lg" />
-          <div className="h-5 w-24 skeleton" />
+        <div className="h-3 w-full skeleton rounded-full mb-4" />
+        <div className="space-y-3">
+          <div className="h-4 w-full skeleton" />
+          <div className="h-4 w-full skeleton" />
         </div>
-      </div>
-      <div className="h-3 w-full skeleton rounded-full mb-4" />
-      <div className="space-y-3">
-        <div className="h-4 w-full skeleton" />
-        <div className="h-4 w-full skeleton" />
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   )
 }
 
@@ -198,8 +201,8 @@ export default function EnhancedMarketCard({ market }: EnhancedMarketCardProps) 
 
   if (error || !matchData) {
     return (
-      <div className="card" style={{ borderColor: 'var(--error-border)' }}>
-        <div className="text-center py-8">
+      <Card style={{ borderColor: 'var(--error-border)' }}>
+        <CardContent className="text-center">
           <span className="icon-[mdi--alert-circle-outline] w-12 h-12 mx-auto mb-3" style={{ color: 'var(--error)' }} />
           <h3 className="font-bold text-lg mb-2">Match Data Unavailable</h3>
           <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>
@@ -207,8 +210,8 @@ export default function EnhancedMarketCard({ market }: EnhancedMarketCardProps) 
             {' '}
             {market.matchId.toString()}
           </p>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     )
   }
 
@@ -219,11 +222,13 @@ export default function EnhancedMarketCard({ market }: EnhancedMarketCardProps) 
   return (
     <Link
       to={`/market/${market.marketAddress}`}
-      className="card block"
+      className="block"
       style={{ textDecoration: 'none' }}
     >
-      {/* Header */}
-      <div className="flex items-start justify-between mb-4">
+      <Card className="h-full card-glass">
+        <CardContent className="pb-0">
+          {/* Header */}
+          <div className="flex items-start justify-between mb-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="icon-[mdi--trophy-outline] w-4 h-4" style={{ color: 'var(--accent-amber)' }} />
@@ -333,25 +338,28 @@ export default function EnhancedMarketCard({ market }: EnhancedMarketCardProps) 
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="flex items-center justify-between pt-4" style={{ borderTop: '1px solid var(--border-default)' }}>
-        <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--text-tertiary)' }}>
-          <span className="icon-[mdi--account-edit-outline] w-4 h-4" />
-          <span className="font-mono">{shortenAddress(market.creator)}</span>
-          {isOwner && (
-            <span className="badge badge-sm" style={{ background: 'var(--accent-purple-glow)', color: 'var(--accent-purple)' }}>
-              You
-            </span>
-          )}
-        </div>
+        </CardContent>
 
-        {hasJoined && (
-          <div className="flex items-center gap-1 text-xs font-semibold" style={{ color: 'var(--accent-green)' }}>
-            <span className="icon-[mdi--check-circle] w-4 h-4" />
-            <span>Joined</span>
+        {/* Footer */}
+        <CardFooter className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--text-tertiary)' }}>
+            <span className="icon-[mdi--account-edit-outline] w-4 h-4" />
+            <span className="font-mono">{shortenAddress(market.creator)}</span>
+            {isOwner && (
+              <span className="badge badge-sm" style={{ background: 'var(--accent-purple-glow)', color: 'var(--accent-purple)' }}>
+                You
+              </span>
+            )}
           </div>
-        )}
-      </div>
+
+          {hasJoined && (
+            <div className="flex items-center gap-1 text-xs font-semibold" style={{ color: 'var(--accent-green)' }}>
+              <span className="icon-[mdi--check-circle] w-4 h-4" />
+              <span>Joined</span>
+            </div>
+          )}
+        </CardFooter>
+      </Card>
     </Link>
   )
 }

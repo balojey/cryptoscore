@@ -99,7 +99,7 @@
 }
 
 .card-glass {
-  background: rgba(37, 41, 48, 0.7);
+  background: color-mix(in srgb, var(--bg-elevated) 70%, transparent);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
