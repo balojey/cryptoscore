@@ -48,6 +48,7 @@ function App() {
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/" element={<Content />} />
+                <Route path="/markets" element={<Content />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/markets/:marketAddress" element={<MarketDetail />} />
                 <Route path="/leaderboard" element={<Leaderboard />} />

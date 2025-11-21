@@ -16,7 +16,7 @@ import {
 export default function Header() {
   const [showSearch, setShowSearch] = useState(false)
   const location = useLocation()
-  const isHomePage = location.pathname === '/'
+  const isHomePage = location.pathname === '/' || location.pathname === '/markets'
   const { theme, setTheme } = useTheme()
   return (
     <header
@@ -92,6 +92,17 @@ export default function Header() {
               size="sm"
               asChild
             >
+              <Link to="/markets">
+                <span className="icon-[mdi--chart-box-outline] w-4 h-4" />
+                <span>Markets</span>
+              </Link>
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              asChild
+            >
               <Link to="/dashboard">
                 <span className="icon-[mdi--view-dashboard-outline] w-4 h-4" />
                 <span>Dashboard</span>
@@ -139,6 +150,13 @@ export default function Header() {
                   <DropdownMenuSeparator />
                 </>
               )}
+              
+              <DropdownMenuItem asChild>
+                <Link to="/markets" className="flex items-center gap-2 cursor-pointer">
+                  <span className="icon-[mdi--chart-box-outline] w-4 h-4" />
+                  <span>Markets</span>
+                </Link>
+              </DropdownMenuItem>
               
               <DropdownMenuItem asChild>
                 <Link to="/dashboard" className="flex items-center gap-2 cursor-pointer">
