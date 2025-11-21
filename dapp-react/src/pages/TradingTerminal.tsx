@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useRealtimeMarkets } from '../hooks/useRealtimeMarkets'
 import MetricsBar from '../components/terminal/MetricsBar'
+import TerminalHeader from '../components/terminal/TerminalHeader'
 
 type Timeframe = '24h' | '7d' | '30d' | 'all'
 type MetricType = 'tvl' | 'volume' | 'participants'
@@ -29,54 +30,11 @@ export function TradingTerminal() {
     >
       {/* Terminal Container */}
       <div className="container mx-auto px-4 md:px-6 py-6 md:py-8">
-        {/* Terminal Header - Placeholder for Task 4 */}
-        <div
-          className="mb-6 md:mb-8 p-4 md:p-6 rounded-lg animate-fade-in"
-          style={{
-            background: 'var(--bg-elevated)',
-            boxShadow: 'var(--shadow-lg)',
-          }}
-        >
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <h1
-                className="text-2xl md:text-3xl font-bold"
-                style={{ color: 'var(--text-primary)' }}
-              >
-                Trading Terminal
-              </h1>
-              <span
-                className="flex items-center gap-2 text-sm font-medium px-3 py-1 rounded-full animate-pulse"
-                style={{
-                  background: 'var(--accent-green)',
-                  color: 'var(--text-inverse)',
-                }}
-              >
-                <span className="w-2 h-2 rounded-full bg-white" />
-                LIVE
-              </span>
-            </div>
-            <div className="flex flex-wrap items-center gap-3">
-              {/* Timeframe Selector */}
-              <div className="flex gap-2">
-                {(['24h', '7d', '30d', 'all'] as Timeframe[]).map(timeframe => (
-                  <button
-                    key={timeframe}
-                    onClick={() => setSelectedTimeframe(timeframe)}
-                    className="px-3 py-1.5 text-sm font-medium rounded transition-all"
-                    style={{
-                      background: selectedTimeframe === timeframe ? 'var(--accent-cyan)' : 'var(--bg-secondary)',
-                      color: selectedTimeframe === timeframe ? 'var(--text-inverse)' : 'var(--text-secondary)',
-                      border: `1px solid ${selectedTimeframe === timeframe ? 'var(--accent-cyan)' : 'var(--border-default)'}`,
-                    }}
-                  >
-                    {timeframe === 'all' ? 'All Time' : timeframe.toUpperCase()}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* Terminal Header */}
+        <TerminalHeader
+          selectedTimeframe={selectedTimeframe}
+          onTimeframeChange={setSelectedTimeframe}
+        />
 
         {/* Metrics Bar */}
         <div

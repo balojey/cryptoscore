@@ -30,7 +30,7 @@
   - Add trend indicators with percentage changes
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 6.4_
 
-- [ ] 4. Create TerminalHeader component with navigation
+- [x] 4. Create TerminalHeader component with navigation
   - Create `src/components/terminal/TerminalHeader.tsx`
   - Add terminal title with live indicator (pulsing green dot)
   - Implement timeframe selector (24h, 7d, 30d, All Time)
