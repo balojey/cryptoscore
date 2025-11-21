@@ -38,8 +38,8 @@
   - Apply pulse-glow animation to live indicator
   - _Requirements: 7.1, 7.2_
 
-- [ ] 5. Build MarketOverviewChart component with data visualization
-- [ ] 5.1 Create chart component structure
+- [x] 5. Build MarketOverviewChart component with data visualization
+- [x] 5.1 Create chart component structure
   - Create `src/components/terminal/MarketOverviewChart.tsx`
   - Set up Recharts ResponsiveContainer with proper dimensions
   - Implement chart type selector (TVL, Volume, Participants)
@@ -47,7 +47,7 @@
   - Apply theme-aware colors to all chart elements
   - _Requirements: 4.1, 4.3, 4.4_
 
-- [ ] 5.2 Implement chart data transformation and integration
+- [x] 5.2 Implement chart data transformation and integration
   - Transform contract data into chart-compatible format
   - Implement data aggregation by timeframe (24h, 7d, 30d)
   - Add loading skeleton during data fetch
