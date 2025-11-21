@@ -15,15 +15,15 @@
   - Apply theme-aware styling using CSS variables
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 6.1, 6.2_
 
-- [ ] 3. Build MetricsBar component with platform statistics
-- [ ] 3.1 Create MetricsBar component structure
+- [x] 3. Build MetricsBar component with platform statistics
+- [x] 3.1 Create MetricsBar component structure
   - Create `src/components/terminal/MetricsBar.tsx`
   - Implement responsive grid layout (4 → 2 → 1 columns)
   - Create MetricCard sub-component for individual metrics
   - Apply theme-aware styling and shadows
   - _Requirements: 3.1, 3.2, 3.3_
 
-- [ ] 3.2 Implement metrics calculation logic
+- [x] 3.2 Implement metrics calculation logic
   - Fetch dashboard data using useReadContract hook
   - Calculate total markets, TVL, active traders, 24h volume
   - Implement AnimatedNumber component integration for smooth transitions

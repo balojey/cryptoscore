@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useRealtimeMarkets } from '../hooks/useRealtimeMarkets'
+import MetricsBar from '../components/terminal/MetricsBar'
 
 type Timeframe = '24h' | '7d' | '30d' | 'all'
 type MetricType = 'tvl' | 'volume' | 'participants'
@@ -77,45 +78,12 @@ export function TradingTerminal() {
           </div>
         </div>
 
-        {/* Metrics Bar - Placeholder for Task 3 */}
+        {/* Metrics Bar */}
         <div
           className="mb-6 md:mb-8 animate-fade-in"
           style={{ animationDelay: '0.1s' }}
         >
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[
-              { label: 'Total Markets', value: '0', icon: '📊' },
-              { label: 'Total Value Locked', value: '0 PAS', icon: '🔒' },
-              { label: 'Active Traders', value: '0', icon: '👥' },
-              { label: '24h Volume', value: '0 PAS', icon: '📈' },
-            ].map(metric => (
-              <div
-                key={metric.label}
-                className="p-4 rounded-lg"
-                style={{
-                  background: 'var(--bg-elevated)',
-                  boxShadow: 'var(--shadow-md)',
-                  border: `1px solid var(--border-default)`,
-                }}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span
-                    className="text-sm font-medium"
-                    style={{ color: 'var(--text-tertiary)' }}
-                  >
-                    {metric.label}
-                  </span>
-                  <span className="text-xl">{metric.icon}</span>
-                </div>
-                <div
-                  className="text-2xl font-bold font-mono"
-                  style={{ color: 'var(--text-primary)' }}
-                >
-                  {metric.value}
-                </div>
-              </div>
-            ))}
-          </div>
+          <MetricsBar />
         </div>
 
         {/* Responsive Grid Layout: 2-column desktop, stacked mobile */}
