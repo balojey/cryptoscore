@@ -6,6 +6,7 @@ import { CryptoScoreMarketABI } from '../../config/contracts'
 import { useMatchData } from '../../hooks/useMatchData'
 import { shortenAddress } from '../../utils/formatters'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 
 interface EnhancedMarketCardProps {
   market: Market
@@ -83,7 +84,7 @@ function usePredictionDistribution(marketAddress: string): PredictionDistributio
 // Status badge component
 function StatusBadge({ market, matchDate }: { market: Market, matchDate: Date }) {
   if (market.resolved) {
-    return <span className="badge badge-success">Resolved</span>
+    return <Badge variant="success">Resolved</Badge>
   }
 
   const now = new Date()
@@ -91,14 +92,14 @@ function StatusBadge({ market, matchDate }: { market: Market, matchDate: Date })
   const hoursUntilStart = timeUntilStart / (1000 * 60 * 60)
 
   if (now > matchDate) {
-    return <span className="badge badge-warning">Live</span>
+    return <Badge variant="warning">Live</Badge>
   }
 
   if (hoursUntilStart < 2) {
-    return <span className="badge badge-error animate-pulse">Ending Soon</span>
+    return <Badge variant="error" className="animate-pulse">Ending Soon</Badge>
   }
 
-  return <span className="badge badge-info">Open</span>
+  return <Badge variant="info">Open</Badge>
 }
 
 // Prediction distribution bar
@@ -249,10 +250,10 @@ export default function EnhancedMarketCard({ market }: EnhancedMarketCardProps) 
           <StatusBadge market={market} matchDate={matchDate} />
           {market.isPublic
             ? (
-                <span className="badge badge-info">Public</span>
+                <Badge variant="info">Public</Badge>
               )
             : (
-                <span className="badge badge-neutral">Private</span>
+                <Badge variant="neutral">Private</Badge>
               )}
         </div>
       </div>
@@ -346,9 +347,9 @@ export default function EnhancedMarketCard({ market }: EnhancedMarketCardProps) 
             <span className="icon-[mdi--account-edit-outline] w-4 h-4" />
             <span className="font-mono">{shortenAddress(market.creator)}</span>
             {isOwner && (
-              <span className="badge badge-sm" style={{ background: 'var(--accent-purple-glow)', color: 'var(--accent-purple)' }}>
+              <Badge variant="info" className="text-[10px] px-2 py-0">
                 You
-              </span>
+              </Badge>
             )}
           </div>
 

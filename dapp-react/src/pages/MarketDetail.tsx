@@ -14,6 +14,7 @@ import { useMatchData } from '../hooks/useMatchData'
 import { useUserPrediction } from '../hooks/useUserPrediction'
 import { shortenAddress } from '../utils/formatters'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 
 // --- SUB-COMPONENTS ---
 
@@ -83,10 +84,10 @@ function MarketStats({ marketInfo, poolSize, participantsCount, marketStatus, is
 
   const getStatusBadge = () => {
     if (marketStatus)
-      return <span className="badge badge-success">Resolved</span>
+      return <Badge variant="success">Resolved</Badge>
     if (isMatchStarted)
-      return <span className="badge badge-warning">Live</span>
-    return <span className="badge badge-info">Open</span>
+      return <Badge variant="warning">Live</Badge>
+    return <Badge variant="info">Open</Badge>
   }
 
   // Calculate prediction percentages

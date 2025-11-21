@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useAccount } from 'wagmi'
 import { shortenAddress } from '../utils/formatters'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 
 interface Comment {
   id: string
@@ -57,25 +58,18 @@ export default function MarketComments({ marketAddress: _marketAddress }: Market
     if (!prediction)
       return null
 
-    const colors = {
-      HOME: { bg: 'var(--accent-cyan-glow)', color: 'var(--accent-cyan)', border: 'var(--accent-cyan)' },
-      DRAW: { bg: 'var(--accent-amber-glow)', color: 'var(--accent-amber)', border: 'var(--accent-amber)' },
-      AWAY: { bg: 'var(--accent-red-glow)', color: 'var(--accent-red)', border: 'var(--accent-red)' },
+    const variants = {
+      HOME: 'default' as const,
+      DRAW: 'warning' as const,
+      AWAY: 'error' as const,
     }
 
-    const style = colors[prediction as keyof typeof colors]
+    const variant = variants[prediction as keyof typeof variants]
 
     return (
-      <span
-        className="badge badge-sm"
-        style={{
-          background: style.bg,
-          color: style.color,
-          border: `1px solid ${style.border}`,
-        }}
-      >
+      <Badge variant={variant}>
         {prediction}
-      </span>
+      </Badge>
     )
   }
 

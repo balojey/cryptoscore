@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 
 export interface FilterOptions {
   status: 'all' | 'open' | 'live' | 'resolved'
@@ -229,86 +230,44 @@ export default function MarketFilters({ filters, onFilterChange }: MarketFilters
             Active filters:
           </span>
           {filters.status !== 'all' && (
-            <span
-              className="badge badge-sm"
-              style={{
-                background: 'var(--accent-cyan-glow)',
-                color: 'var(--accent-cyan)',
-                border: '1px solid var(--accent-cyan)',
-              }}
-            >
+            <Badge variant="default">
               {statusOptions.find(o => o.value === filters.status)?.label}
-            </span>
+            </Badge>
           )}
           {filters.sortBy !== 'newest' && (
-            <span
-              className="badge badge-sm"
-              style={{
-                background: 'var(--accent-purple-glow)',
-                color: 'var(--accent-purple)',
-                border: '1px solid var(--accent-purple)',
-              }}
-            >
+            <Badge variant="info">
               {sortOptions.find(o => o.value === filters.sortBy)?.label}
-            </span>
+            </Badge>
           )}
           {filters.timeRange && filters.timeRange !== 'all' && (
-            <span
-              className="badge badge-sm"
-              style={{
-                background: 'var(--accent-amber-glow)',
-                color: 'var(--accent-amber)',
-                border: '1px solid var(--accent-amber)',
-              }}
-            >
+            <Badge variant="warning">
               {filters.timeRange === 'today'
                 ? 'Today'
                 : filters.timeRange === 'week' ? 'This Week' : 'This Month'}
-            </span>
+            </Badge>
           )}
           {filters.isPublic !== undefined && (
-            <span
-              className="badge badge-sm"
-              style={{
-                background: filters.isPublic ? 'var(--accent-cyan-glow)' : 'var(--accent-purple-glow)',
-                color: filters.isPublic ? 'var(--accent-cyan)' : 'var(--accent-purple)',
-                border: `1px solid ${filters.isPublic ? 'var(--accent-cyan)' : 'var(--accent-purple)'}`,
-              }}
-            >
+            <Badge variant={filters.isPublic ? 'default' : 'info'}>
               {filters.isPublic ? 'Public' : 'Private'}
-            </span>
+            </Badge>
           )}
           {filters.minPoolSize !== undefined && (
-            <span
-              className="badge badge-sm"
-              style={{
-                background: 'var(--accent-green-glow)',
-                color: 'var(--accent-green)',
-                border: '1px solid var(--accent-green)',
-              }}
-            >
+            <Badge variant="success">
               Pool ≥
               {' '}
               {filters.minPoolSize}
               {' '}
               PAS
-            </span>
+            </Badge>
           )}
           {filters.minEntryFee !== undefined && (
-            <span
-              className="badge badge-sm"
-              style={{
-                background: 'var(--accent-green-glow)',
-                color: 'var(--accent-green)',
-                border: '1px solid var(--accent-green)',
-              }}
-            >
+            <Badge variant="success">
               Entry ≥
               {' '}
               {filters.minEntryFee}
               {' '}
               PAS
-            </span>
+            </Badge>
           )}
           <Button
             variant="link"

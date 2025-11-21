@@ -2,6 +2,7 @@ import type { Market } from '../types'
 import { Link } from 'react-router-dom'
 import { formatEther } from 'viem'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 
 interface RecentActivityProps {
   markets: Market[]
@@ -129,16 +130,16 @@ export default function RecentActivity({ markets, limit = 5 }: RecentActivityPro
                       Match #
                       {market.matchId.toString()}
                     </span>
-                    <span
-                      className="badge badge-sm"
-                      style={{
-                        background: `${getActivityColor(market)}20`,
-                        color: getActivityColor(market),
-                        border: `1px solid ${getActivityColor(market)}40`,
-                      }}
+                    <Badge 
+                      variant={
+                        market.resolved ? 'success' : 
+                        new Date() > new Date(Number(market.startTime) * 1000) ? 'warning' : 
+                        'info'
+                      }
+                      className="text-[10px] px-2 py-0"
                     >
                       {getActivityLabel(market)}
-                    </span>
+                    </Badge>
                   </div>
 
                   <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--text-tertiary)' }}>

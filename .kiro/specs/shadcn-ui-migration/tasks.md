@@ -63,7 +63,7 @@
   - Verify card layouts remain responsive
   - _Requirements: 4.2, 1.1, 1.4_
 
-- [ ] 5. Replace Badge components across application
+- [x] 5. Replace Badge components across application
   - Replace status badges in EnhancedMarketCard.tsx (Open, Live, Ending Soon, Resolved)
   - Replace filter badges in MarketFilters.tsx
   - Replace prediction badges in MarketComments.tsx (HOME, DRAW, AWAY)
