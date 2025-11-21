@@ -54,8 +54,8 @@
   - Handle empty states and error conditions
   - _Requirements: 4.1, 4.2_
 
-- [ ] 6. Create FeaturedMarkets component with selection algorithm
-- [ ] 6.1 Build FeaturedMarkets component UI
+- [x] 6. Create FeaturedMarkets component with selection algorithm
+- [x] 6.1 Build FeaturedMarkets component UI
   - Create `src/components/terminal/FeaturedMarkets.tsx`
   - Create FeaturedMarketCard sub-component with compact layout
   - Implement badge system (Hot, Ending Soon, Popular)
@@ -63,7 +63,7 @@
   - Apply theme-aware styling and hover effects
   - _Requirements: 5.1, 5.3_
 
-- [ ] 6.2 Implement featured markets selection logic
+- [x] 6.2 Implement featured markets selection logic
   - Create algorithm to select top markets by pool size (top 3)
   - Add logic to identify markets ending soon (< 24 hours, top 2)
   - Add logic to identify most popular markets by participants (top 2)

@@ -5,6 +5,7 @@ import { CRYPTO_SCORE_DASHBOARD_ADDRESS, CryptoScoreDashboardABI } from '../conf
 import MetricsBar from '../components/terminal/MetricsBar'
 import TerminalHeader from '../components/terminal/TerminalHeader'
 import MarketOverviewChart from '../components/terminal/MarketOverviewChart'
+import FeaturedMarkets from '../components/terminal/FeaturedMarkets'
 import type { Market } from '../types'
 
 type Timeframe = '24h' | '7d' | '30d' | 'all'
@@ -109,32 +110,12 @@ export function TradingTerminal() {
               />
             </div>
 
-            {/* Featured Markets - Placeholder for Task 6 */}
+            {/* Featured Markets */}
             <div
-              className="p-4 md:p-6 rounded-lg animate-slide-in-right"
-              style={{
-                background: 'var(--bg-elevated)',
-                boxShadow: 'var(--shadow-lg)',
-                animationDelay: '0.3s',
-              }}
+              className="animate-slide-in-right"
+              style={{ animationDelay: '0.3s' }}
             >
-              <h3
-                className="text-xl font-semibold mb-4"
-                style={{ color: 'var(--text-primary)' }}
-              >
-                Featured Markets
-              </h3>
-              <div
-                className="h-48 flex items-center justify-center rounded"
-                style={{
-                  background: 'var(--bg-secondary)',
-                  border: `1px solid var(--border-default)`,
-                }}
-              >
-                <p style={{ color: 'var(--text-tertiary)' }}>
-                  Featured markets will be implemented in Task 6
-                </p>
-              </div>
+              <FeaturedMarkets markets={markets} isLoading={isLoadingMarkets} />
             </div>
           </div>
 
