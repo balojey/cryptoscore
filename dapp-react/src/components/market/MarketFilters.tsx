@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
 
 export interface FilterOptions {
   status: 'all' | 'open' | 'live' | 'resolved'
@@ -172,7 +173,7 @@ export default function MarketFilters({ filters, onFilterChange }: MarketFilters
               <label className="text-xs font-medium mb-2 block" style={{ color: 'var(--text-tertiary)' }}>
                 Min Pool Size (PAS)
               </label>
-              <input
+              <Input
                 type="number"
                 min="0"
                 step="0.1"
@@ -182,12 +183,6 @@ export default function MarketFilters({ filters, onFilterChange }: MarketFilters
                   ...filters,
                   minPoolSize: e.target.value ? Number(e.target.value) : undefined,
                 })}
-                className="w-full px-3 py-2 rounded-lg text-sm"
-                style={{
-                  background: 'var(--bg-secondary)',
-                  border: '1px solid var(--border-default)',
-                  color: 'var(--text-primary)',
-                }}
               />
             </div>
 
@@ -196,7 +191,7 @@ export default function MarketFilters({ filters, onFilterChange }: MarketFilters
               <label className="text-xs font-medium mb-2 block" style={{ color: 'var(--text-tertiary)' }}>
                 Min Entry Fee (PAS)
               </label>
-              <input
+              <Input
                 type="number"
                 min="0"
                 step="0.01"
@@ -206,12 +201,6 @@ export default function MarketFilters({ filters, onFilterChange }: MarketFilters
                   ...filters,
                   minEntryFee: e.target.value ? Number(e.target.value) : undefined,
                 })}
-                className="w-full px-3 py-2 rounded-lg text-sm"
-                style={{
-                  background: 'var(--bg-secondary)',
-                  border: '1px solid var(--border-default)',
-                  color: 'var(--text-primary)',
-                }}
               />
             </div>
           </div>

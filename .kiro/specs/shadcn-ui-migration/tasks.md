@@ -71,7 +71,7 @@
   - Verify badge colors match theme system (success, error, warning, info, neutral)
   - _Requirements: 4.3, 1.1, 3.2_
 
-- [ ] 6. Install and configure form components
+- [x] 6. Install and configure form components
 - [x] 6.1 Install Input, Select, and Checkbox components
   - Run shadcn CLI to add input, select, and checkbox components
   - Customize Input component with --border-default, --bg-secondary, focus states
@@ -79,14 +79,14 @@
   - Customize Checkbox component with --accent-cyan for checked state
   - _Requirements: 4.6, 3.1, 3.2_
 
-- [ ] 6.2 Replace form inputs in Market creation modal
+- [x] 6.2 Replace form inputs in Market creation modal
   - Replace text inputs in Market.tsx with Shadcn UI Input
   - Replace select dropdowns with Shadcn UI Select
   - Replace checkboxes with Shadcn UI Checkbox
   - Verify form validation still works
   - _Requirements: 4.6, 1.2, 8.1_
 
-- [ ] 6.3 Replace form inputs in filters and search
+- [x] 6.3 Replace form inputs in filters and search
   - Replace search input in SearchBar.tsx with Shadcn UI Input
   - Replace filter inputs in MarketFilters.tsx with Shadcn UI Select
   - Verify debouncing and real-time filtering still works

@@ -6,6 +6,8 @@ import { useAccount, useReadContract, useTransactionReceipt, useWriteContract } 
 import { CRYPTO_SCORE_FACTORY_ADDRESS, CryptoScoreFactoryABI } from '../../config/contracts'
 import { MarqueeText } from '../MarqueeText'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Checkbox } from '@/components/ui/checkbox'
 
 export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: MarketProps) {
   const { address: userAddress } = useAccount()
@@ -173,31 +175,22 @@ export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: 
                   <label htmlFor={`entryFee-${match.id}`} className="font-sans text-xs font-medium mb-2 block" style={{ color: 'var(--text-tertiary)' }}>
                     Entry Fee (PAS)
                   </label>
-                  <input
+                  <Input
                     id={`entryFee-${match.id}`}
                     type="number"
                     value={entryFee}
                     onChange={e => setEntryFee(e.target.value)}
                     placeholder="e.g., 100"
-                    className="block w-full px-3 py-2 rounded-lg text-sm"
-                    style={{
-                      background: 'var(--bg-secondary)',
-                      border: '1px solid var(--border-default)',
-                      color: 'var(--text-primary)',
-                    }}
                   />
                 </div>
                 {/* Public Toggle */}
                 <div className="flex items-center gap-2">
-                  <input
+                  <Checkbox
                     id={`isPublic-${match.id}`}
-                    type="checkbox"
                     checked={isPublic}
-                    onChange={e => setIsPublic(e.target.checked)}
-                    className="h-4 w-4 rounded"
-                    style={{ accentColor: 'var(--accent-cyan)' }}
+                    onCheckedChange={(checked) => setIsPublic(checked === true)}
                   />
-                  <label htmlFor={`isPublic-${match.id}`} className="font-sans text-sm" style={{ color: 'var(--text-secondary)' }}>
+                  <label htmlFor={`isPublic-${match.id}`} className="font-sans text-sm cursor-pointer" style={{ color: 'var(--text-secondary)' }}>
                     Public Market
                   </label>
                 </div>
