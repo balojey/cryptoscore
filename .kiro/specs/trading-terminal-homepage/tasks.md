@@ -71,7 +71,7 @@
   - Integrate with existing Market type and data structures
   - _Requirements: 5.1, 5.2, 5.4_
 
-- [ ] 7. Build TopMovers component for side panel
+- [x] 7. Build TopMovers component for side panel
   - Create `src/components/terminal/TopMovers.tsx`
   - Create MoverCard sub-component with change indicators
   - Implement logic to calculate pool size changes (last 24h)

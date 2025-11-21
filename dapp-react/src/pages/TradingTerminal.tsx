@@ -6,6 +6,7 @@ import MetricsBar from '../components/terminal/MetricsBar'
 import TerminalHeader from '../components/terminal/TerminalHeader'
 import MarketOverviewChart from '../components/terminal/MarketOverviewChart'
 import FeaturedMarkets from '../components/terminal/FeaturedMarkets'
+import TopMovers from '../components/terminal/TopMovers'
 import type { Market } from '../types'
 
 type Timeframe = '24h' | '7d' | '30d' | 'all'
@@ -121,32 +122,12 @@ export function TradingTerminal() {
 
           {/* Side Panel (30% on desktop) */}
           <div className="space-y-6 md:space-y-8">
-            {/* Top Movers - Placeholder for Task 7 */}
+            {/* Top Movers */}
             <div
-              className="p-4 md:p-6 rounded-lg animate-slide-in-right"
-              style={{
-                background: 'var(--bg-elevated)',
-                boxShadow: 'var(--shadow-lg)',
-                animationDelay: '0.4s',
-              }}
+              className="animate-slide-in-right"
+              style={{ animationDelay: '0.4s' }}
             >
-              <h3
-                className="text-xl font-semibold mb-4"
-                style={{ color: 'var(--text-primary)' }}
-              >
-                Top Movers
-              </h3>
-              <div
-                className="h-48 flex items-center justify-center rounded"
-                style={{
-                  background: 'var(--bg-secondary)',
-                  border: `1px solid var(--border-default)`,
-                }}
-              >
-                <p style={{ color: 'var(--text-tertiary)' }}>
-                  Top movers will be implemented in Task 7
-                </p>
-              </div>
+              <TopMovers markets={markets} isLoading={isLoadingMarkets} />
             </div>
 
             {/* Recent Activity - Placeholder for Task 8 */}
