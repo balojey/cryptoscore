@@ -49,7 +49,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<Content />} />
                 <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/market/:marketAddress" element={<MarketDetail />} />
+                <Route path="/markets/:marketAddress" element={<MarketDetail />} />
                 <Route path="/leaderboard" element={<Leaderboard />} />
                 <Route path="/shadcn-test" element={<ShadcnTest />} />
               </Routes>
