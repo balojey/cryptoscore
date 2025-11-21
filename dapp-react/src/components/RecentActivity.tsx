@@ -158,7 +158,7 @@ export default function RecentActivity({ markets, limit = 10 }: RecentActivityPr
         {recentActivities.map(({ market, type }) => (
           <Link
             key={market.marketAddress}
-            to={`/market/${market.marketAddress}`}
+            to={`/markets/${market.marketAddress}`}
             className="block p-4 rounded-lg transition-all"
             style={{
               background: 'var(--bg-secondary)',

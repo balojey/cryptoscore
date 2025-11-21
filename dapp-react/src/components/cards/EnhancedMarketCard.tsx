@@ -227,7 +227,7 @@ export default function EnhancedMarketCard({ market }: EnhancedMarketCardProps) 
 
   return (
     <Link
-      to={`/market/${market.marketAddress}`}
+      to={`/markets/${market.marketAddress}`}
       className="block"
       style={{ textDecoration: 'none' }}
     >

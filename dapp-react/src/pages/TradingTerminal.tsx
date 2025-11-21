@@ -46,6 +46,7 @@ export function TradingTerminal() {
   useRealtimeMarkets({
     enabled: true,
     interval: 10000,
+    markets, // Pass markets for event detection
     onUpdate: () => {
       // Refetch market data on updates
       refetch()
