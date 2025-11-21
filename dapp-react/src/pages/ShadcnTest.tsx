@@ -447,6 +447,144 @@ export default function ShadcnTest() {
           </CardFooter>
         </Card>
 
+        {/* Animation & Utility Classes */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Animations & Utility Classes</CardTitle>
+            <CardDescription>Testing animations and utility classes with Shadcn UI</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {/* Entrance Animations */}
+              <div className="space-y-3">
+                <p className="text-[var(--text-secondary)] text-sm font-semibold">Entrance Animations</p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Card className="animate-fade-in">
+                    <CardContent className="p-4">
+                      <p className="text-sm text-[var(--text-primary)] font-medium">Fade In</p>
+                      <p className="text-xs text-[var(--text-secondary)]">.animate-fade-in</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="animate-slide-in-right">
+                    <CardContent className="p-4">
+                      <p className="text-sm text-[var(--text-primary)] font-medium">Slide In Right</p>
+                      <p className="text-xs text-[var(--text-secondary)]">.animate-slide-in-right</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="animate-scale-in">
+                    <CardContent className="p-4">
+                      <p className="text-sm text-[var(--text-primary)] font-medium">Scale In</p>
+                      <p className="text-xs text-[var(--text-secondary)]">.animate-scale-in</p>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+
+              {/* Hover Effects */}
+              <div className="space-y-3">
+                <p className="text-[var(--text-secondary)] text-sm font-semibold">Hover Effects</p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Card className="hover-lift">
+                    <CardContent className="p-4">
+                      <p className="text-sm text-[var(--text-primary)] font-medium">Hover Lift</p>
+                      <p className="text-xs text-[var(--text-secondary)]">.hover-lift</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="hover-glow">
+                    <CardContent className="p-4">
+                      <p className="text-sm text-[var(--text-primary)] font-medium">Hover Glow</p>
+                      <p className="text-xs text-[var(--text-secondary)]">.hover-glow</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="hover-lift hover-glow">
+                    <CardContent className="p-4">
+                      <p className="text-sm text-[var(--text-primary)] font-medium">Combined</p>
+                      <p className="text-xs text-[var(--text-secondary)]">.hover-lift .hover-glow</p>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+
+              {/* Glow Effects */}
+              <div className="space-y-3">
+                <p className="text-[var(--text-secondary)] text-sm font-semibold">Glow Effects</p>
+                <div className="flex flex-wrap gap-3">
+                  <Button variant="default" className="glow-cyan">Cyan Glow</Button>
+                  <Button variant="success" className="glow-green">Green Glow</Button>
+                  <Button variant="destructive" className="glow-red">Red Glow</Button>
+                </div>
+              </div>
+
+              {/* Glassmorphism */}
+              <div className="space-y-3">
+                <p className="text-[var(--text-secondary)] text-sm font-semibold">Glassmorphism Effect</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Card>
+                    <CardContent className="p-4">
+                      <p className="text-sm text-[var(--text-primary)] font-medium">Regular Card</p>
+                      <p className="text-xs text-[var(--text-secondary)]">Standard background</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="card-glass">
+                    <CardContent className="p-4">
+                      <p className="text-sm text-[var(--text-primary)] font-medium">Glass Card</p>
+                      <p className="text-xs text-[var(--text-secondary)]">.card-glass with backdrop blur</p>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+
+              {/* Loading States */}
+              <div className="space-y-3">
+                <p className="text-[var(--text-secondary)] text-sm font-semibold">Loading States</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Card>
+                    <CardContent className="p-4 space-y-3">
+                      <div className="skeleton h-4 w-3/4 rounded"></div>
+                      <div className="skeleton h-4 w-1/2 rounded"></div>
+                      <div className="skeleton h-4 w-5/6 rounded"></div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4 flex items-center justify-center">
+                      <div className="spinner"></div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+
+              {/* Attention Animations */}
+              <div className="space-y-3">
+                <p className="text-[var(--text-secondary)] text-sm font-semibold">Attention Animations</p>
+                <div className="flex flex-wrap gap-3">
+                  <Badge variant="info" className="animate-pulse-glow">Live Market</Badge>
+                  <Button variant="default" className="animate-bounce-in">Success!</Button>
+                  <Button variant="destructive" className="animate-shake">Error</Button>
+                </div>
+              </div>
+
+              {/* Combined Effects */}
+              <div className="space-y-3">
+                <p className="text-[var(--text-secondary)] text-sm font-semibold">Combined Effects</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Card className="card-glass hover-lift animate-fade-in">
+                    <CardContent className="p-4">
+                      <p className="text-sm text-[var(--text-primary)] font-medium">Glass + Lift + Fade</p>
+                      <p className="text-xs text-[var(--text-secondary)]">Multiple utility classes</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="hover-lift hover-glow animate-scale-in">
+                    <CardContent className="p-4">
+                      <p className="text-sm text-[var(--text-primary)] font-medium">Lift + Glow + Scale</p>
+                      <p className="text-xs text-[var(--text-secondary)]">Smooth transitions</p>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Accessibility & Contrast Check */}
         <Card>
           <CardHeader>

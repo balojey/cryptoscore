@@ -4,8 +4,11 @@
  */
 
 /* ============================================
-   BUTTONS
+   BUTTONS - Shadcn UI Compatible
    ============================================ */
+
+/* Legacy button classes for backward compatibility */
+/* These work with both standard buttons and Shadcn UI Button components */
 
 .btn-primary {
   display: inline-flex;
@@ -81,8 +84,11 @@
 }
 
 /* ============================================
-   CARDS
+   CARDS - Shadcn UI Compatible
    ============================================ */
+
+/* Legacy card classes for backward compatibility */
+/* These work with both standard divs and Shadcn UI Card components */
 
 .card {
   background: var(--bg-elevated);
@@ -98,8 +104,9 @@
   transform: translateY(-2px);
 }
 
+/* Glassmorphism effect - works with Shadcn UI Card */
 .card-glass {
-  background: color-mix(in srgb, var(--bg-elevated) 70%, transparent);
+  background: color-mix(in srgb, var(--bg-elevated) 70%, transparent) !important;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
@@ -346,7 +353,7 @@
 }
 
 /* ============================================
-   LOADING STATES
+   LOADING STATES - Shadcn UI Compatible
    ============================================ */
 
 .skeleton {
@@ -480,3 +487,25 @@
     font-size: var(--text-xl);
   }
 }
+
+/* ============================================
+   SHADCN UI INTEGRATION NOTES
+   ============================================ */
+
+/*
+ * All component classes in this file are compatible with Shadcn UI components.
+ * 
+ * Usage Examples:
+ * 
+ * 1. Button with utility classes:
+ *    <Button className="hover-lift glow-cyan">Click me</Button>
+ * 
+ * 2. Card with glassmorphism:
+ *    <Card className="card-glass">Content</Card>
+ * 
+ * 3. Badge with custom styling:
+ *    <Badge variant="success" className="animate-fade-in">New</Badge>
+ * 
+ * The utility classes (.glow-cyan, .hover-lift, etc.) can be combined
+ * with Shadcn UI components using the className prop.
+ */

@@ -179,31 +179,31 @@
 }
 
 /* ============================================
-   UTILITY CLASSES
+   UTILITY CLASSES - Shadcn UI Compatible
    ============================================ */
 
-/* Glassmorphism Effect */
+/* Glassmorphism Effect - Works with any component */
 .glass {
-  background: rgba(37, 41, 48, 0.7);
+  background: rgba(37, 41, 48, 0.7) !important;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid var(--border-default);
 }
 
-/* Glow Effects */
+/* Glow Effects - Works with Buttons, Cards, etc. */
 .glow-cyan {
-  box-shadow: var(--shadow-cyan-glow);
+  box-shadow: var(--shadow-cyan-glow) !important;
 }
 
 .glow-green {
-  box-shadow: var(--shadow-green-glow);
+  box-shadow: var(--shadow-green-glow) !important;
 }
 
 .glow-red {
-  box-shadow: var(--shadow-red-glow);
+  box-shadow: var(--shadow-red-glow) !important;
 }
 
-/* Text Gradients */
+/* Text Gradients - Works with any text element */
 .text-gradient-cyan {
   background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-purple) 100%);
   -webkit-background-clip: text;

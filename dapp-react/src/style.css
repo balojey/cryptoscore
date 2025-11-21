@@ -1,6 +1,5 @@
 @import "tailwindcss";
 @plugin "@iconify/tailwind4";
-@plugin "daisyui";
 
 /* Import Design System v2.0 */
 @import "./styles/tokens.css";
@@ -25,15 +24,6 @@ body {
 .container {
   max-width: 1200px;
   margin: 0 auto;
-}
-
-@plugin "daisyui/theme" {
-  name: "light";
-  default: true;
-  --radius-selector: 0rem;
-  --radius-field: 0rem;
-  --radius-box: 0rem;
-  --depth: 0;
 }
 
 .competition-filter {
