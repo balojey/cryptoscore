@@ -319,7 +319,7 @@ export default function FeaturedMarkets({ markets, isLoading, error, onRetry }: 
         {!isLoading && !error && featuredMarkets.length > 0 && (
           <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--border-default)' }}>
             <Link
-              to="/markets"
+              to="/"
               className="flex items-center justify-center gap-2 py-2 px-4 rounded-lg transition-all hover-lift font-medium"
               style={{
                 background: 'var(--bg-secondary)',

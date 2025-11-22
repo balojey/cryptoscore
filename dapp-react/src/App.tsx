@@ -48,8 +48,8 @@ function App() {
           <main id="main-content" className="flex-grow" role="main">
             <Suspense fallback={<PageLoader />}>
               <Routes>
-                <Route path="/" element={<TradingTerminal />} />
-                <Route path="/markets" element={<Content />} />
+                <Route path="/" element={<Content />} />
+                <Route path="/terminal" element={<TradingTerminal />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/markets/:marketAddress" element={<MarketDetail />} />
                 <Route path="/leaderboard" element={<Leaderboard />} />

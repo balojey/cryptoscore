@@ -73,7 +73,11 @@ export default function PublicMarkets() {
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="btn-secondary btn-sm"
+      className="btn-secondary"
+      style={{
+        opacity: disabled ? 0.5 : 1,
+        cursor: disabled ? 'not-allowed' : 'pointer',
+      }}
     >
       {children}
     </button>
