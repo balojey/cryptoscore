@@ -97,6 +97,13 @@ export default function Connect() {
     connectModalRef.current?.close()
   }
 
+  function handleBackdropClick(e: React.MouseEvent<HTMLDialogElement>) {
+    const dialog = connectModalRef.current
+    if (dialog && e.target === dialog) {
+      closeConnectModal()
+    }
+  }
+
   async function handleConnect(connector: any) {
     try {
       connect({ connector, chainId: connectedChain.id as any })
@@ -137,16 +144,24 @@ export default function Connect() {
       </div>
 
       {/* Modal */}
-      <dialog ref={connectModalRef} className="modal modal-bottom sm:modal-middle">
+      <dialog 
+        ref={connectModalRef} 
+        className="p-0 border-0 bg-transparent max-w-none max-h-none w-screen h-screen"
+        style={{ 
+          margin: 0,
+        }}
+        onClick={handleBackdropClick}
+      >
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
         <div
-          className="modal-box max-w-sm rounded-[16px] shadow-2xl"
+          className="relative w-full max-w-sm rounded-[16px] shadow-2xl p-6"
           style={{
             background: 'var(--bg-elevated)',
             color: 'var(--text-primary)',
           }}
         >
           {/* Header */}
-          <div className="flex items-start justify-between mb-6">
+          <div className="flex items-start justify-between mb-4">
             <div>
               <h2
                 className="font-header font-bold text-xl"
@@ -287,9 +302,7 @@ export default function Connect() {
             </div>
           )}
         </div>
-        <form method="dialog" className="modal-backdrop">
-          <button type="button" onClick={closeConnectModal}>close</button>
-        </form>
+        </div>
       </dialog>
     </>
   )

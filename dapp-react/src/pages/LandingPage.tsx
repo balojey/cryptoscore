@@ -5,6 +5,7 @@ import HowItWorks from '../components/landing/HowItWorks'
 import KeyFeatures from '../components/landing/KeyFeatures'
 import FeaturedMarketsPreview from '../components/landing/FeaturedMarketsPreview'
 import WhyCryptoScore from '../components/landing/WhyCryptoScore'
+import FinalCTA from '../components/landing/FinalCTA'
 
 /**
  * LandingPage Component
@@ -94,25 +95,7 @@ export function LandingPage() {
       <WhyCryptoScore />
 
       {/* Final CTA Section - Below the fold, lazy loaded */}
-      <section
-        data-section="final-cta"
-        className={`landing-section final-cta-section ${visibleSections.has('final-cta') ? 'section-visible' : ''}`}
-      >
-        <div className="section-container">
-          <h2
-            className="text-3xl md:text-4xl font-bold text-center mb-12"
-            style={{ color: 'var(--text-primary)' }}
-          >
-            Final CTA Placeholder
-          </h2>
-          <p
-            className="text-center"
-            style={{ color: 'var(--text-secondary)' }}
-          >
-            This will be replaced with the FinalCTA component
-          </p>
-        </div>
-      </section>
+      <FinalCTA />
     </div>
   )
 }
