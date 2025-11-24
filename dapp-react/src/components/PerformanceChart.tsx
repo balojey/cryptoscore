@@ -48,7 +48,7 @@ export default function PerformanceChart({ markets }: PerformanceChartProps) {
     let wins = 0
     let losses = 0
 
-    resolvedMarkets.forEach((market, index) => {
+    resolvedMarkets.forEach((market) => {
       const predictionResult = predictionsData[markets.indexOf(market)]
       if (predictionResult?.status === 'success') {
         const prediction = Number(predictionResult.result)
