@@ -33,15 +33,15 @@
   - Implement entrance animations (fade-in, slide-in)
   - _Requirements: 1.3, 1.4, 7.1, 7.2, 7.3_
 
-- [ ] 4. Create LiveMetrics component with real-time data
-- [ ] 4.1 Build LiveMetrics component structure
+- [x] 4. Create LiveMetrics component with real-time data
+- [x] 4.1 Build LiveMetrics component structure
   - Create `src/components/landing/LiveMetrics.tsx`
   - Create MetricCard sub-component for individual metrics
   - Implement responsive grid layout (4 → 2 → 1 columns)
   - Apply theme-aware styling and card effects
   - _Requirements: 4.1, 9.1, 12.1_
 
-- [ ] 4.2 Integrate contract data and animations
+- [x] 4.2 Integrate contract data and animations
   - Fetch metrics from CryptoScoreDashboard contract using useReadContract
   - Calculate total markets, TVL, active traders, and markets resolved
   - Integrate AnimatedNumber component for smooth transitions
