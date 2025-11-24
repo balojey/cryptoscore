@@ -88,7 +88,7 @@
   - Enable click navigation to market detail pages
   - _Requirements: 5.2, 5.3, 7.3_
 
-- [ ] 8. Create WhyCryptoScore component
+- [x] 8. Create WhyCryptoScore component
   - Create `src/components/landing/WhyCryptoScore.tsx`
   - Define 5 benefit points: No Intermediaries, Transparent Odds, Lower Fees, Instant Payouts, Community Powered
   - Create benefit cards with checkmark icons and descriptions
