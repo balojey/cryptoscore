@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Checkbox } from '@/components/ui/checkbox'
 import { useTheme } from '../contexts/ThemeContext'
 
 export default function ShadcnTest() {
@@ -36,9 +36,12 @@ export default function ShadcnTest() {
           <CardContent>
             <div className="space-y-4">
               <div>
-                <p className="text-[var(--text-secondary)] mb-2">Current Theme: <strong className="text-[var(--text-primary)]">{theme}</strong></p>
+                <p className="text-[var(--text-secondary)] mb-2">
+                  Current Theme:
+                  <strong className="text-[var(--text-primary)]">{theme}</strong>
+                </p>
                 <div className="flex flex-wrap gap-2">
-                  {themes.map((t) => (
+                  {themes.map(t => (
                     <Button
                       key={t}
                       variant={theme === t ? 'default' : 'outline'}
@@ -211,7 +214,7 @@ export default function ShadcnTest() {
                       type="text"
                       placeholder="Enter text..."
                       value={inputValue}
-                      onChange={(e) => setInputValue(e.target.value)}
+                      onChange={e => setInputValue(e.target.value)}
                     />
                   </div>
                   <div className="space-y-2">
@@ -307,7 +310,7 @@ export default function ShadcnTest() {
                     <Checkbox
                       id="terms"
                       checked={checked}
-                      onCheckedChange={(checked) => setChecked(checked as boolean)}
+                      onCheckedChange={checked => setChecked(checked as boolean)}
                     />
                     <label
                       htmlFor="terms"
@@ -415,7 +418,7 @@ export default function ShadcnTest() {
                 </div>
                 <Badge variant="info">Live</Badge>
               </div>
-              
+
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
                   <p className="text-xs text-[var(--text-tertiary)] mb-1">Pool Size</p>

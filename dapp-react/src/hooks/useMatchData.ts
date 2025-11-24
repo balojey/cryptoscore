@@ -28,6 +28,16 @@ export function useMatchData(matchId: number) {
         })
 
         if (!response.ok) {
+          // Handle specific error codes
+          if (response.status === 429) {
+            throw new Error('API rate limit reached. Please try again in a moment.')
+          }
+          if (response.status === 404) {
+            throw new Error('Match not found')
+          }
+          if (response.status === 403) {
+            throw new Error('API access denied. Please check API key.')
+          }
           throw new Error(`HTTP error! status: ${response.status}`)
         }
 
@@ -36,7 +46,14 @@ export function useMatchData(matchId: number) {
         setData(result as Match)
       }
       catch (e: any) {
-        setError(e.message || 'Failed to fetch match data')
+        const errorMessage = e.message || 'Failed to fetch match data'
+        console.error('Match data fetch error:', errorMessage)
+        setError(errorMessage)
+
+        // For rate limit errors, don't set data to null to preserve any cached data
+        if (!errorMessage.includes('rate limit')) {
+          setData(null)
+        }
       }
       finally {
         setLoading(false)

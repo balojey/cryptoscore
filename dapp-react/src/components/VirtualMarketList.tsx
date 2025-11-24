@@ -62,7 +62,7 @@ export default function VirtualMarketList({ markets, columns = 3 }: VirtualMarke
                       : 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3'
                 }`}
               >
-                {rowMarkets.map((market) => (
+                {rowMarkets.map(market => (
                   <EnhancedMarketCard key={market.marketAddress} market={market} />
                 ))}
               </div>

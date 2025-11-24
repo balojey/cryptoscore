@@ -73,7 +73,11 @@ export default function PublicMarkets() {
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="btn-secondary btn-sm"
+      className="btn-secondary"
+      style={{
+        opacity: disabled ? 0.5 : 1,
+        cursor: disabled ? 'not-allowed' : 'pointer',
+      }}
     >
       {children}
     </button>
@@ -138,18 +142,20 @@ export default function PublicMarkets() {
       )}
 
       {/* Market Grid - Use virtual scrolling for large lists */}
-      {filteredMarkets.length > 20 ? (
-        <VirtualMarketList markets={filteredMarkets} columns={3} />
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {filteredMarkets.map((m, i) => (
-            <EnhancedMarketCard
-              key={`${m.marketAddress}-${i}`}
-              market={m}
-            />
-          ))}
-        </div>
-      )}
+      {filteredMarkets.length > 20
+        ? (
+            <VirtualMarketList markets={filteredMarkets} columns={3} />
+          )
+        : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {filteredMarkets.map((m, i) => (
+                <EnhancedMarketCard
+                  key={`${m.marketAddress}-${i}`}
+                  market={m}
+                />
+              ))}
+            </div>
+          )}
 
       {/* No Results */}
       {filteredMarkets.length === 0 && !isLoading && (

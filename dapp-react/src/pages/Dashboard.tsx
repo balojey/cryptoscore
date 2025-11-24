@@ -1,18 +1,18 @@
-import type { MarketDashboardInfo } from '../types'
 import type { FilterOptions } from '../components/market/MarketFilters'
+import type { MarketDashboardInfo } from '../types'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAccount, useReadContract } from 'wagmi'
+import EnhancedMarketCard, { EnhancedMarketCardSkeleton } from '../components/cards/EnhancedMarketCard'
+import PortfolioSummary from '../components/cards/PortfolioSummary'
 import PoolTrendChart from '../components/charts/PoolTrendChart'
 import PredictionDistributionChart from '../components/charts/PredictionDistributionChart'
-import EnhancedMarketCard, { EnhancedMarketCardSkeleton } from '../components/cards/EnhancedMarketCard'
+import MarketFilters from '../components/market/MarketFilters'
 import PerformanceChart from '../components/PerformanceChart'
-import PortfolioSummary from '../components/cards/PortfolioSummary'
 import RecentActivity from '../components/RecentActivity'
 import VirtualMarketList from '../components/VirtualMarketList'
-import MarketFilters from '../components/market/MarketFilters'
-import { useFilteredMarkets } from '../hooks/useFilteredMarkets'
 import { CRYPTO_SCORE_DASHBOARD_ADDRESS, CryptoScoreDashboardABI } from '../config/contracts'
+import { useFilteredMarkets } from '../hooks/useFilteredMarkets'
 
 function MarketList({ markets, isLoading, emptyMessage, emptyIcon }: {
   markets: MarketDashboardInfo[]
@@ -39,7 +39,7 @@ function MarketList({ markets, isLoading, emptyMessage, emptyIcon }: {
           {emptyMessage}
         </p>
         <Link
-          to="/"
+          to="/markets"
           className="inline-flex items-center gap-2 mt-6 btn-primary"
         >
           <span className="icon-[mdi--magnify] w-5 h-5" />
@@ -114,9 +114,9 @@ export function Dashboard() {
     // - allInvolvedCreatedMarkets: Markets user created
     // - allInvolvedJoinedMarkets: Markets user participated in (placed predictions)
     // Note: A market can appear in both if user created it AND participated in it
-    return { 
-      createdMarkets: allInvolvedCreatedMarkets || [], 
-      joinedMarkets: allInvolvedJoinedMarkets || [] 
+    return {
+      createdMarkets: allInvolvedCreatedMarkets || [],
+      joinedMarkets: allInvolvedJoinedMarkets || [],
     }
   }, [allInvolvedCreatedMarkets, allInvolvedJoinedMarkets])
 
@@ -228,8 +228,8 @@ export function Dashboard() {
 
         {/* Portfolio Summary */}
         <div className="mb-8">
-          <PortfolioSummary 
-            markets={allInvolvedMarkets} 
+          <PortfolioSummary
+            markets={allInvolvedMarkets}
             userAddress={address}
             joinedMarkets={joinedMarkets}
           />
@@ -296,7 +296,7 @@ export function Dashboard() {
               emptyMessage={
                 filters.status !== 'all' || filters.timeRange || filters.minPoolSize || filters.minEntryFee
                   ? 'No markets match your filters'
-                  : "You haven't created any markets yet."
+                  : 'You haven\'t created any markets yet.'
               }
               emptyIcon={
                 filters.status !== 'all' || filters.timeRange || filters.minPoolSize || filters.minEntryFee
@@ -312,7 +312,7 @@ export function Dashboard() {
               emptyMessage={
                 filters.status !== 'all' || filters.timeRange || filters.minPoolSize || filters.minEntryFee
                   ? 'No markets match your filters'
-                  : "You haven't joined any markets yet."
+                  : 'You haven\'t joined any markets yet.'
               }
               emptyIcon={
                 filters.status !== 'all' || filters.timeRange || filters.minPoolSize || filters.minEntryFee

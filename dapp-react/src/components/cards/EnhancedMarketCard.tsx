@@ -2,16 +2,16 @@ import type { Market } from '../../types'
 import { Link } from 'react-router-dom'
 import { formatEther } from 'viem'
 import { useAccount, useReadContract } from 'wagmi'
-import { CryptoScoreMarketABI } from '../../config/contracts'
-import { useMatchData } from '../../hooks/useMatchData'
-import { shortenAddress } from '../../utils/formatters'
-import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { CryptoScoreMarketABI } from '../../config/contracts'
+import { useMatchData } from '../../hooks/useMatchData'
+import { shortenAddress } from '../../utils/formatters'
 
 interface EnhancedMarketCardProps {
   market: Market
@@ -87,7 +87,7 @@ function usePredictionDistribution(marketAddress: string): PredictionDistributio
 }
 
 // Status badge component
-function StatusBadge({ market, matchDate }: { market: Market, matchDate: Date }) {
+function StatusBadge({ market, matchDate, matchStatus }: { market: Market, matchDate: Date, matchStatus?: string }) {
   if (market.resolved) {
     return <Badge variant="success">Resolved</Badge>
   }
@@ -95,6 +95,11 @@ function StatusBadge({ market, matchDate }: { market: Market, matchDate: Date })
   const now = new Date()
   const timeUntilStart = matchDate.getTime() - now.getTime()
   const hoursUntilStart = timeUntilStart / (1000 * 60 * 60)
+
+  // Check if match has ended but market is not resolved
+  if (matchStatus === 'FINISHED') {
+    return <Badge variant="warning">Unresolved</Badge>
+  }
 
   if (now > matchDate) {
     return <Badge variant="warning">Live</Badge>
@@ -227,7 +232,7 @@ export default function EnhancedMarketCard({ market }: EnhancedMarketCardProps) 
 
   return (
     <Link
-      to={`/market/${market.marketAddress}`}
+      to={`/markets/${market.marketAddress}`}
       className="block"
       style={{ textDecoration: 'none' }}
     >
@@ -235,135 +240,135 @@ export default function EnhancedMarketCard({ market }: EnhancedMarketCardProps) 
         <CardContent className="pb-0">
           {/* Header */}
           <div className="flex items-start justify-between mb-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="icon-[mdi--trophy-outline] w-4 h-4" style={{ color: 'var(--accent-amber)' }} />
-            <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
-              {matchData.competition.name}
-            </p>
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="icon-[mdi--trophy-outline] w-4 h-4" style={{ color: 'var(--accent-amber)' }} />
+                <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
+                  {matchData.competition.name}
+                </p>
+              </div>
+              <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                {matchDate.toLocaleString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <StatusBadge market={market} matchDate={matchDate} matchStatus={matchData.status} />
+              {market.isPublic
+                ? (
+                    <Badge variant="info">Public</Badge>
+                  )
+                : (
+                    <Badge variant="neutral">Private</Badge>
+                  )}
+            </div>
           </div>
-          <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-            {matchDate.toLocaleString('en-US', {
-              month: 'short',
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <StatusBadge market={market} matchDate={matchDate} />
-          {market.isPublic
-            ? (
-                <Badge variant="info">Public</Badge>
-              )
-            : (
-                <Badge variant="neutral">Private</Badge>
-              )}
-        </div>
-      </div>
 
-      {/* Teams */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="team-display flex-1">
-          <img
-            src={`https://corsproxy.io/?${matchData.homeTeam.crest}`}
-            alt={matchData.homeTeam.name}
-            className="team-logo"
-            onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/64' }}
-          />
-          <h3 className="team-name text-base">{matchData.homeTeam.name}</h3>
-        </div>
-
-        <div className="px-4">
-          <span className="text-2xl font-bold" style={{ color: 'var(--text-tertiary)' }}>VS</span>
-        </div>
-
-        <div className="team-display flex-1">
-          <img
-            src={`https://corsproxy.io/?${matchData.awayTeam.crest}`}
-            alt={matchData.awayTeam.name}
-            className="team-logo"
-            onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/64' }}
-          />
-          <h3 className="team-name text-base">{matchData.awayTeam.name}</h3>
-        </div>
-      </div>
-
-      {/* Prediction Distribution */}
-      <div className="mb-6">
-        <PredictionBar
-          distribution={distribution}
-          homeTeam={matchData.homeTeam.name}
-          awayTeam={matchData.awayTeam.name}
-        />
-      </div>
-
-      {/* Market Stats */}
-      <div className="space-y-2 mb-4">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div className="info-row py-2">
-              <div className="info-label">
-                <span className="icon-[mdi--database-outline] w-4 h-4" />
-                <span>Pool Size</span>
-              </div>
-              <div className="info-value font-mono">
-                {poolSize.toFixed(2)}
-                {' '}
-                <span style={{ color: 'var(--text-tertiary)' }}>PAS</span>
-              </div>
+          {/* Teams */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="team-display flex-1">
+              <img
+                src={`https://corsproxy.io/?${matchData.homeTeam.crest}`}
+                alt={matchData.homeTeam.name}
+                className="team-logo"
+                onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/64' }}
+              />
+              <h3 className="team-name text-base">{matchData.homeTeam.name}</h3>
             </div>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Total value locked in this market</p>
-          </TooltipContent>
-        </Tooltip>
 
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div className="info-row py-2">
-              <div className="info-label">
-                <span className="icon-[mdi--account-group-outline] w-4 h-4" />
-                <span>Participants</span>
-              </div>
-              <div className="info-value">
-                {Number(market.participantsCount)}
-                {distribution.total > 0 && (
-                  <span style={{ color: 'var(--text-tertiary)' }} className="ml-2 text-xs">
-                    (
-                    {distribution.total}
+            <div className="px-4">
+              <span className="text-2xl font-bold" style={{ color: 'var(--text-tertiary)' }}>VS</span>
+            </div>
+
+            <div className="team-display flex-1">
+              <img
+                src={`https://corsproxy.io/?${matchData.awayTeam.crest}`}
+                alt={matchData.awayTeam.name}
+                className="team-logo"
+                onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/64' }}
+              />
+              <h3 className="team-name text-base">{matchData.awayTeam.name}</h3>
+            </div>
+          </div>
+
+          {/* Prediction Distribution */}
+          <div className="mb-6">
+            <PredictionBar
+              distribution={distribution}
+              homeTeam={matchData.homeTeam.name}
+              awayTeam={matchData.awayTeam.name}
+            />
+          </div>
+
+          {/* Market Stats */}
+          <div className="space-y-2 mb-4">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="info-row py-2">
+                  <div className="info-label">
+                    <span className="icon-[mdi--database-outline] w-4 h-4" />
+                    <span>Pool Size</span>
+                  </div>
+                  <div className="info-value font-mono">
+                    {poolSize.toFixed(2)}
                     {' '}
-                    predictions)
-                  </span>
-                )}
-              </div>
-            </div>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Number of users who joined this market</p>
-          </TooltipContent>
-        </Tooltip>
+                    <span style={{ color: 'var(--text-tertiary)' }}>PAS</span>
+                  </div>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Total value locked in this market</p>
+              </TooltipContent>
+            </Tooltip>
 
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div className="info-row py-2">
-              <div className="info-label">
-                <span className="icon-[mdi--login] w-4 h-4" />
-                <span>Entry Fee</span>
-              </div>
-              <div className="info-value font-mono">
-                {formatEther(market.entryFee)}
-                {' '}
-                <span style={{ color: 'var(--text-tertiary)' }}>PAS</span>
-              </div>
-            </div>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Cost to join and make a prediction</p>
-          </TooltipContent>
-        </Tooltip>
-      </div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="info-row py-2">
+                  <div className="info-label">
+                    <span className="icon-[mdi--account-group-outline] w-4 h-4" />
+                    <span>Participants</span>
+                  </div>
+                  <div className="info-value">
+                    {Number(market.participantsCount)}
+                    {distribution.total > 0 && (
+                      <span style={{ color: 'var(--text-tertiary)' }} className="ml-2 text-xs">
+                        (
+                        {distribution.total}
+                        {' '}
+                        predictions)
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Number of users who joined this market</p>
+              </TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="info-row py-2">
+                  <div className="info-label">
+                    <span className="icon-[mdi--login] w-4 h-4" />
+                    <span>Entry Fee</span>
+                  </div>
+                  <div className="info-value font-mono">
+                    {formatEther(market.entryFee)}
+                    {' '}
+                    <span style={{ color: 'var(--text-tertiary)' }}>PAS</span>
+                  </div>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Cost to join and make a prediction</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
 
         </CardContent>
 

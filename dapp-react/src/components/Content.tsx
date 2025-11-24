@@ -39,11 +39,11 @@ export default function Content() {
               <span>Create Market</span>
             </button>
             <Link
-              to="/dashboard"
+              to="/terminal"
               className="btn-secondary btn-lg w-full sm:w-auto"
             >
-              <span className="icon-[mdi--view-dashboard-outline] w-5 h-5" />
-              <span>Dashboard</span>
+              <span className="icon-[mdi--monitor-dashboard] w-5 h-5" />
+              <span>Terminal</span>
             </Link>
           </div>
         </div>

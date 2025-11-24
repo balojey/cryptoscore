@@ -1,4 +1,4 @@
-import { ThemePreset, themePresets, useTheme } from '../contexts/ThemeContext'
+import type { ThemePreset } from '../contexts/ThemeContext'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -8,6 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { themePresets, useTheme } from '../contexts/ThemeContext'
 
 export default function ThemeSwitcher() {
   const { theme, setTheme } = useTheme()
@@ -27,7 +28,7 @@ export default function ThemeSwitcher() {
           <span className="icon-[mdi--chevron-down] w-4 h-4" />
         </Button>
       </DropdownMenuTrigger>
-      
+
       <DropdownMenuContent align="end" className="w-56">
         <div className="px-2 py-2">
           <DropdownMenuLabel>Choose Theme</DropdownMenuLabel>
@@ -38,9 +39,9 @@ export default function ThemeSwitcher() {
             Press Ctrl+Shift+T to cycle
           </p>
         </div>
-        
+
         <DropdownMenuSeparator />
-        
+
         {(Object.keys(themePresets) as ThemePreset[]).map((presetKey) => {
           const preset = themePresets[presetKey]
           const isActive = theme === presetKey
@@ -63,9 +64,9 @@ export default function ThemeSwitcher() {
             </DropdownMenuItem>
           )
         })}
-        
+
         <DropdownMenuSeparator />
-        
+
         <div className="px-4 py-3">
           <p
             className="text-xs font-semibold uppercase tracking-wider mb-2"

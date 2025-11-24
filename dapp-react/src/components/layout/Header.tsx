@@ -1,9 +1,6 @@
+import type { ThemePreset } from '@/contexts/ThemeContext'
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import Connect from '../Connect'
-import SearchBar from '../SearchBar'
-import ThemeSwitcher from '../ThemeSwitcher'
-import { ThemePreset, themePresets, useTheme } from '@/contexts/ThemeContext'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -12,11 +9,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { themePresets, useTheme } from '@/contexts/ThemeContext'
+import Connect from '../Connect'
+import SearchBar from '../SearchBar'
+import ThemeSwitcher from '../ThemeSwitcher'
 
 export default function Header() {
   const [showSearch, setShowSearch] = useState(false)
   const location = useLocation()
-  const isHomePage = location.pathname === '/'
+  const isMarketsPage = location.pathname === '/markets' || location.pathname.startsWith('/markets/')
   const { theme, setTheme } = useTheme()
   return (
     <header
@@ -78,8 +79,8 @@ export default function Header() {
             </Link>
           </div>
 
-          {/* Center - Search (Desktop only, on home page) */}
-          {isHomePage && (
+          {/* Center - Search (Desktop only, on markets page) */}
+          {isMarketsPage && (
             <div className="hidden md:block flex-1 max-w-md mx-8">
               <SearchBar placeholder="Search markets by team, competition..." />
             </div>
@@ -91,6 +92,59 @@ export default function Header() {
               variant="outline"
               size="sm"
               asChild
+              style={{
+                background: location.pathname === '/' ? 'var(--accent-cyan)' : undefined,
+                color: location.pathname === '/' ? 'var(--text-inverse)' : undefined,
+                borderColor: location.pathname === '/' ? 'var(--accent-cyan)' : undefined,
+              }}
+            >
+              <Link to="/">
+                <span className="icon-[mdi--home] w-4 h-4" />
+                <span>Home</span>
+              </Link>
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              asChild
+              style={{
+                background: location.pathname === '/markets' || location.pathname.startsWith('/markets/') ? 'var(--accent-cyan)' : undefined,
+                color: location.pathname === '/markets' || location.pathname.startsWith('/markets/') ? 'var(--text-inverse)' : undefined,
+                borderColor: location.pathname === '/markets' || location.pathname.startsWith('/markets/') ? 'var(--accent-cyan)' : undefined,
+              }}
+            >
+              <Link to="/markets">
+                <span className="icon-[mdi--chart-box-outline] w-4 h-4" />
+                <span>Markets</span>
+              </Link>
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              asChild
+              style={{
+                background: location.pathname === '/terminal' ? 'var(--accent-cyan)' : undefined,
+                color: location.pathname === '/terminal' ? 'var(--text-inverse)' : undefined,
+                borderColor: location.pathname === '/terminal' ? 'var(--accent-cyan)' : undefined,
+              }}
+            >
+              <Link to="/terminal">
+                <span className="icon-[mdi--monitor-dashboard] w-4 h-4" />
+                <span>Terminal</span>
+              </Link>
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              asChild
+              style={{
+                background: location.pathname === '/dashboard' ? 'var(--accent-cyan)' : undefined,
+                color: location.pathname === '/dashboard' ? 'var(--text-inverse)' : undefined,
+                borderColor: location.pathname === '/dashboard' ? 'var(--accent-cyan)' : undefined,
+              }}
             >
               <Link to="/dashboard">
                 <span className="icon-[mdi--view-dashboard-outline] w-4 h-4" />
@@ -102,6 +156,11 @@ export default function Header() {
               variant="outline"
               size="sm"
               asChild
+              style={{
+                background: location.pathname === '/leaderboard' ? 'var(--accent-cyan)' : undefined,
+                color: location.pathname === '/leaderboard' ? 'var(--text-inverse)' : undefined,
+                borderColor: location.pathname === '/leaderboard' ? 'var(--accent-cyan)' : undefined,
+              }}
             >
               <Link to="/leaderboard">
                 <span className="icon-[mdi--trophy] w-4 h-4" />
@@ -127,7 +186,7 @@ export default function Header() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              {isHomePage && (
+              {isMarketsPage && (
                 <>
                   <DropdownMenuItem
                     onClick={() => setShowSearch(!showSearch)}
@@ -139,26 +198,99 @@ export default function Header() {
                   <DropdownMenuSeparator />
                 </>
               )}
-              
+
               <DropdownMenuItem asChild>
-                <Link to="/dashboard" className="flex items-center gap-2 cursor-pointer">
+                <Link
+                  to="/"
+                  className="flex items-center gap-2 cursor-pointer"
+                  style={{
+                    color: location.pathname === '/' ? 'var(--accent-cyan)' : undefined,
+                    background: location.pathname === '/' ? 'var(--bg-hover)' : undefined,
+                  }}
+                >
+                  <span className="icon-[mdi--home] w-4 h-4" />
+                  <span>Home</span>
+                  {location.pathname === '/' && (
+                    <span className="icon-[mdi--check] w-4 h-4 ml-auto" />
+                  )}
+                </Link>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem asChild>
+                <Link
+                  to="/markets"
+                  className="flex items-center gap-2 cursor-pointer"
+                  style={{
+                    color: location.pathname === '/markets' || location.pathname.startsWith('/markets/') ? 'var(--accent-cyan)' : undefined,
+                    background: location.pathname === '/markets' || location.pathname.startsWith('/markets/') ? 'var(--bg-hover)' : undefined,
+                  }}
+                >
+                  <span className="icon-[mdi--chart-box-outline] w-4 h-4" />
+                  <span>Markets</span>
+                  {(location.pathname === '/markets' || location.pathname.startsWith('/markets/')) && (
+                    <span className="icon-[mdi--check] w-4 h-4 ml-auto" />
+                  )}
+                </Link>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem asChild>
+                <Link
+                  to="/terminal"
+                  className="flex items-center gap-2 cursor-pointer"
+                  style={{
+                    color: location.pathname === '/terminal' ? 'var(--accent-cyan)' : undefined,
+                    background: location.pathname === '/terminal' ? 'var(--bg-hover)' : undefined,
+                  }}
+                >
+                  <span className="icon-[mdi--monitor-dashboard] w-4 h-4" />
+                  <span>Terminal</span>
+                  {location.pathname === '/terminal' && (
+                    <span className="icon-[mdi--check] w-4 h-4 ml-auto" />
+                  )}
+                </Link>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem asChild>
+                <Link
+                  to="/dashboard"
+                  className="flex items-center gap-2 cursor-pointer"
+                  style={{
+                    color: location.pathname === '/dashboard' ? 'var(--accent-cyan)' : undefined,
+                    background: location.pathname === '/dashboard' ? 'var(--bg-hover)' : undefined,
+                  }}
+                >
                   <span className="icon-[mdi--view-dashboard-outline] w-4 h-4" />
                   <span>Dashboard</span>
+                  {location.pathname === '/dashboard' && (
+                    <span className="icon-[mdi--check] w-4 h-4 ml-auto" />
+                  )}
                 </Link>
               </DropdownMenuItem>
-              
+
               <DropdownMenuItem asChild>
-                <Link to="/leaderboard" className="flex items-center gap-2 cursor-pointer">
+                <Link
+                  to="/leaderboard"
+                  className="flex items-center gap-2 cursor-pointer"
+                  style={{
+                    color: location.pathname === '/leaderboard' ? 'var(--accent-cyan)' : undefined,
+                    background: location.pathname === '/leaderboard' ? 'var(--bg-hover)' : undefined,
+                  }}
+                >
                   <span className="icon-[mdi--trophy] w-4 h-4" />
                   <span>Leaderboard</span>
+                  {location.pathname === '/leaderboard' && (
+                    <span className="icon-[mdi--check] w-4 h-4 ml-auto" />
+                  )}
                 </Link>
               </DropdownMenuItem>
-              
+
               <DropdownMenuSeparator />
-              
+
               <div className="px-2 py-2">
                 <div className="text-xs font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
-                  Theme: {themePresets[theme].name}
+                  Theme:
+                  {' '}
+                  {themePresets[theme].name}
                 </div>
                 {(Object.keys(themePresets) as ThemePreset[]).map((presetKey) => {
                   const preset = themePresets[presetKey]
@@ -183,9 +315,9 @@ export default function Header() {
                   )
                 })}
               </div>
-              
+
               <DropdownMenuSeparator />
-              
+
               <div className="px-2 py-2">
                 <Connect />
               </div>
@@ -194,7 +326,7 @@ export default function Header() {
         </div>
 
         {/* Mobile Search Bar */}
-        {isHomePage && showSearch && (
+        {isMarketsPage && showSearch && (
           <div className="md:hidden pb-4">
             <SearchBar placeholder="Search markets..." />
           </div>

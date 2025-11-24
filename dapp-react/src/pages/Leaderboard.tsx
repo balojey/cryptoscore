@@ -2,9 +2,6 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { formatEther } from 'viem'
 import { useReadContract } from 'wagmi'
-import AnimatedNumber from '../components/ui/AnimatedNumber'
-import { CRYPTO_SCORE_DASHBOARD_ADDRESS, CryptoScoreDashboardABI } from '../config/contracts'
-import { shortenAddress } from '../utils/formatters'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -12,6 +9,9 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import AnimatedNumber from '../components/ui/AnimatedNumber'
+import { CRYPTO_SCORE_DASHBOARD_ADDRESS, CryptoScoreDashboardABI } from '../config/contracts'
+import { shortenAddress } from '../utils/formatters'
 
 type LeaderboardTab = 'winRate' | 'earnings' | 'active' | 'streak'
 
@@ -145,7 +145,7 @@ export function Leaderboard() {
         {/* Header */}
         <div className="mb-8">
           <Link
-            to="/"
+            to="/markets"
             className="text-sm font-medium flex items-center gap-2 mb-3 hover:underline"
             style={{ color: 'var(--text-tertiary)' }}
             onMouseEnter={e => e.currentTarget.style.color = 'var(--accent-cyan)'}
@@ -178,124 +178,127 @@ export function Leaderboard() {
           <CardContent className="p-6">
             {isLoading ? (
               <div className="space-y-4">
-              {[...Array.from({ length: 10 })].map((_, i) => (
-                <div key={i} className="flex items-center gap-4 p-4 animate-pulse">
-                  <div className="w-12 h-12 skeleton rounded-full" />
-                  <div className="flex-1">
-                    <div className="h-4 w-32 skeleton rounded mb-2" />
-                    <div className="h-3 w-24 skeleton rounded" />
+                {[...Array.from({ length: 10 })].map((_, i) => (
+                  <div key={i} className="flex items-center gap-4 p-4 animate-pulse">
+                    <div className="w-12 h-12 skeleton rounded-full" />
+                    <div className="flex-1">
+                      <div className="h-4 w-32 skeleton rounded mb-2" />
+                      <div className="h-3 w-24 skeleton rounded" />
+                    </div>
+                    <div className="h-6 w-20 skeleton rounded" />
                   </div>
-                  <div className="h-6 w-20 skeleton rounded" />
-                </div>
-              ))}
-            </div>
-          ) : sortedData.length === 0 ? (
-            <div className="text-center py-16">
-              <span className="icon-[mdi--trophy-broken] w-16 h-16 mx-auto mb-4" style={{ color: 'var(--text-tertiary)' }} />
-              <p style={{ color: 'var(--text-secondary)' }}>No leaderboard data yet</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {sortedData.slice(0, 50).map((trader, index) => {
-                const rank = index + 1
-                const winRate = trader.resolvedMarkets > 0
-                  ? (trader.estimatedWins / trader.resolvedMarkets) * 100
-                  : 0
+                ))}
+              </div>
+            ) : sortedData.length === 0 ? (
+              <div className="text-center py-16">
+                <span className="icon-[mdi--trophy-broken] w-16 h-16 mx-auto mb-4" style={{ color: 'var(--text-tertiary)' }} />
+                <p style={{ color: 'var(--text-secondary)' }}>No leaderboard data yet</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {sortedData.slice(0, 50).map((trader, index) => {
+                  const rank = index + 1
+                  const winRate = trader.resolvedMarkets > 0
+                    ? (trader.estimatedWins / trader.resolvedMarkets) * 100
+                    : 0
 
-                return (
-                  <div
-                    key={trader.address}
-                    className="flex items-center gap-4 p-4 rounded-lg transition-all"
-                    style={{ background: 'var(--bg-secondary)' }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-secondary)'}
-                  >
-                    {/* Rank */}
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div
-                          className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg"
-                          style={{
-                            background: rank <= 3 ? `${getRankColor(rank)}20` : 'var(--bg-primary)',
-                            color: getRankColor(rank),
-                          }}
-                        >
-                          {getRankIcon(rank)}
+                  return (
+                    <div
+                      key={trader.address}
+                      className="flex items-center gap-4 p-4 rounded-lg transition-all"
+                      style={{ background: 'var(--bg-secondary)' }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-secondary)'}
+                    >
+                      {/* Rank */}
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div
+                            className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg"
+                            style={{
+                              background: rank <= 3 ? `${getRankColor(rank)}20` : 'var(--bg-primary)',
+                              color: getRankColor(rank),
+                            }}
+                          >
+                            {getRankIcon(rank)}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>
+                            Rank #
+                            {rank}
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+
+                      {/* Trader Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="font-mono font-semibold" style={{ color: 'var(--text-primary)' }}>
+                          {shortenAddress(trader.address as `0x${string}`)}
                         </div>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Rank #{rank}</p>
-                      </TooltipContent>
-                    </Tooltip>
-
-                    {/* Trader Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="font-mono font-semibold" style={{ color: 'var(--text-primary)' }}>
-                        {shortenAddress(trader.address as `0x${string}`)}
+                        <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                          {trader.totalMarkets}
+                          {' '}
+                          markets •
+                          {trader.resolvedMarkets}
+                          {' '}
+                          resolved
+                        </div>
                       </div>
-                      <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                        {trader.totalMarkets}
-                        {' '}
-                        markets •
-                        {trader.resolvedMarkets}
-                        {' '}
-                        resolved
+
+                      {/* Stats */}
+                      <div className="text-right">
+                        {activeTab === 'winRate' && (
+                          <div>
+                            <div className="font-bold text-lg" style={{ color: 'var(--accent-green)' }}>
+                              <AnimatedNumber value={winRate} decimals={1} suffix="%" />
+                            </div>
+                            <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                              {trader.estimatedWins}
+                              W /
+                              {trader.resolvedMarkets - trader.estimatedWins}
+                              L
+                            </div>
+                          </div>
+                        )}
+                        {activeTab === 'earnings' && (
+                          <div>
+                            <div className="font-bold text-lg" style={{ color: 'var(--accent-green)' }}>
+                              <AnimatedNumber value={trader.estimatedEarnings} decimals={2} suffix=" PAS" />
+                            </div>
+                            <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                              {trader.totalVolume.toFixed(2)}
+                              {' '}
+                              PAS volume
+                            </div>
+                          </div>
+                        )}
+                        {activeTab === 'active' && (
+                          <div>
+                            <div className="font-bold text-lg" style={{ color: 'var(--accent-cyan)' }}>
+                              {trader.totalMarkets}
+                            </div>
+                            <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                              markets created
+                            </div>
+                          </div>
+                        )}
+                        {activeTab === 'streak' && (
+                          <div>
+                            <div className="font-bold text-lg" style={{ color: 'var(--accent-amber)' }}>
+                              {trader.estimatedWins}
+                            </div>
+                            <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                              wins
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
-
-                    {/* Stats */}
-                    <div className="text-right">
-                      {activeTab === 'winRate' && (
-                        <div>
-                          <div className="font-bold text-lg" style={{ color: 'var(--accent-green)' }}>
-                            <AnimatedNumber value={winRate} decimals={1} suffix="%" />
-                          </div>
-                          <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                            {trader.estimatedWins}
-                            W /
-                            {trader.resolvedMarkets - trader.estimatedWins}
-                            L
-                          </div>
-                        </div>
-                      )}
-                      {activeTab === 'earnings' && (
-                        <div>
-                          <div className="font-bold text-lg" style={{ color: 'var(--accent-green)' }}>
-                            <AnimatedNumber value={trader.estimatedEarnings} decimals={2} suffix=" PAS" />
-                          </div>
-                          <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                            {trader.totalVolume.toFixed(2)}
-                            {' '}
-                            PAS volume
-                          </div>
-                        </div>
-                      )}
-                      {activeTab === 'active' && (
-                        <div>
-                          <div className="font-bold text-lg" style={{ color: 'var(--accent-cyan)' }}>
-                            {trader.totalMarkets}
-                          </div>
-                          <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                            markets created
-                          </div>
-                        </div>
-                      )}
-                      {activeTab === 'streak' && (
-                        <div>
-                          <div className="font-bold text-lg" style={{ color: 'var(--accent-amber)' }}>
-                            {trader.estimatedWins}
-                          </div>
-                          <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                            wins
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
+                  )
+                })}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

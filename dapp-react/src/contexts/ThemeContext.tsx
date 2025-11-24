@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, use, useEffect, useState } from 'react'
 
 export type ThemePreset = 'dark-terminal' | 'ocean-blue' | 'forest-green' | 'sunset-orange' | 'purple-haze' | 'light-mode'
 
@@ -284,14 +284,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>
+    <ThemeContext value={{ theme, setTheme }}>
       {children}
-    </ThemeContext.Provider>
+    </ThemeContext>
   )
 }
 
 export function useTheme() {
-  const context = useContext(ThemeContext)
+  const context = use(ThemeContext)
   if (context === undefined) {
     throw new Error('useTheme must be used within a ThemeProvider')
   }

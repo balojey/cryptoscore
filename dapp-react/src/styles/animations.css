@@ -46,6 +46,38 @@
   animation: slideInRight 0.3s ease-out;
 }
 
+/* Slide In From Top - Works with Banners, Alerts */
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-in-down {
+  animation: slideInDown 0.3s ease-out;
+}
+
+/* Slide In From Bottom - Works with Hero sections */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-in-up {
+  animation: slideInUp 0.6s ease-out;
+}
+
 /* Scale In - Works with Modals, Tooltips */
 @keyframes scaleIn {
   from {
@@ -197,6 +229,54 @@
   box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
 }
 
+/* Hover Scale - Subtle scale effect */
+.hover-scale {
+  transition: transform 0.2s ease;
+}
+
+.hover-scale:hover {
+  transform: scale(1.02);
+}
+
+/* Hover Rotate - Subtle rotation effect */
+.hover-rotate {
+  transition: transform 0.3s ease;
+}
+
+.hover-rotate:hover {
+  transform: rotate(2deg);
+}
+
+/* Hover Brightness - Brighten on hover */
+.hover-brighten {
+  transition: filter 0.2s ease;
+}
+
+.hover-brighten:hover {
+  filter: brightness(1.1);
+}
+
+/* Hover Border Glow - Animated border glow */
+.hover-border-glow {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.hover-border-glow::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  background: linear-gradient(45deg, var(--accent-cyan), var(--accent-purple));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.hover-border-glow:hover::before {
+  opacity: 0.5;
+}
+
 /* Success Confetti */
 @keyframes confetti-fall {
   0% {
@@ -217,6 +297,43 @@
   pointer-events: none;
 }
 
+/* Float Animation - Works with decorative elements */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px);
+  }
+  25% {
+    transform: translateY(-20px) translateX(10px);
+  }
+  50% {
+    transform: translateY(-10px) translateX(-10px);
+  }
+  75% {
+    transform: translateY(-15px) translateX(5px);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Parallax Float - Slower, more subtle float for parallax elements */
+@keyframes parallaxFloat {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px) rotate(0deg);
+  }
+  33% {
+    transform: translateY(-15px) translateX(8px) rotate(2deg);
+  }
+  66% {
+    transform: translateY(-8px) translateX(-8px) rotate(-2deg);
+  }
+}
+
+.animate-parallax-float {
+  animation: parallaxFloat 10s ease-in-out infinite;
+}
+
 /* ============================================
    COMPLEX ANIMATIONS - Shadcn UI Compatible
    ============================================ */
@@ -233,6 +350,12 @@
 .stagger-children > *:nth-child(4) { animation-delay: 0.2s; }
 .stagger-children > *:nth-child(5) { animation-delay: 0.25s; }
 .stagger-children > *:nth-child(6) { animation-delay: 0.3s; }
+.stagger-children > *:nth-child(7) { animation-delay: 0.35s; }
+.stagger-children > *:nth-child(8) { animation-delay: 0.4s; }
+.stagger-children > *:nth-child(9) { animation-delay: 0.45s; }
+.stagger-children > *:nth-child(10) { animation-delay: 0.5s; }
+.stagger-children > *:nth-child(11) { animation-delay: 0.55s; }
+.stagger-children > *:nth-child(12) { animation-delay: 0.6s; }
 
 /* Loading Dots - Works with loading states */
 @keyframes loadingDots {

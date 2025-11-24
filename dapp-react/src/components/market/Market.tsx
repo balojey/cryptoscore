@@ -3,10 +3,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { parseEther, parseEventLogs } from 'viem'
 import { useAccount, useReadContract, useTransactionReceipt, useWriteContract } from 'wagmi'
-import { CRYPTO_SCORE_FACTORY_ADDRESS, CryptoScoreFactoryABI } from '../../config/contracts'
-import { MarqueeText } from '../MarqueeText'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
   Dialog,
@@ -17,6 +14,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { CRYPTO_SCORE_FACTORY_ADDRESS, CryptoScoreFactoryABI } from '../../config/contracts'
+import { MarqueeText } from '../MarqueeText'
 
 export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: MarketProps) {
   const { address: userAddress } = useAccount()
@@ -179,10 +179,16 @@ export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: 
               <DialogHeader>
                 <DialogTitle>Create Prediction Market</DialogTitle>
                 <DialogDescription>
-                  Set up a new prediction market for {match.homeTeam.name} vs {match.awayTeam.name}
+                  Set up a new prediction market for
+                  {' '}
+                  {match.homeTeam.name}
+                  {' '}
+                  vs
+                  {' '}
+                  {match.awayTeam.name}
                 </DialogDescription>
               </DialogHeader>
-              
+
               <div className="space-y-4 py-4">
                 {/* Entry Fee */}
                 <div>
@@ -197,19 +203,19 @@ export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: 
                     placeholder="e.g., 100"
                   />
                 </div>
-                
+
                 {/* Public Toggle */}
                 <div className="flex items-center gap-2">
                   <Checkbox
                     id={`isPublic-${match.id}`}
                     checked={isPublic}
-                    onCheckedChange={(checked) => setIsPublic(checked === true)}
+                    onCheckedChange={checked => setIsPublic(checked === true)}
                   />
                   <label htmlFor={`isPublic-${match.id}`} className="font-sans text-sm cursor-pointer" style={{ color: 'var(--text-secondary)' }}>
                     Public Market
                   </label>
                 </div>
-                
+
                 {/* Error Messages */}
                 {error && (
                   <p className="text-xs text-center" style={{ color: 'var(--error)' }}>
@@ -222,7 +228,7 @@ export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: 
                   </p>
                 )}
               </div>
-              
+
               <DialogFooter>
                 <Button
                   variant="secondary"

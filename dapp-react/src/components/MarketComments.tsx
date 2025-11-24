@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useAccount } from 'wagmi'
-import { shortenAddress } from '../utils/formatters'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { shortenAddress } from '../utils/formatters'
 
 interface Comment {
   id: string
