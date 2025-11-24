@@ -1,10 +1,11 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useReadContract } from 'wagmi'
 import { formatEther } from 'viem'
 import { CRYPTO_SCORE_DASHBOARD_ADDRESS, CryptoScoreDashboardABI } from '../../config/contracts'
 import type { MarketDashboardInfo } from '../../types'
 import AnimatedNumber from '../ui/AnimatedNumber'
 import { useRealtimeMarkets } from '../../hooks/useRealtimeMarkets'
+import ErrorBanner from '../terminal/ErrorBanner'
 
 interface MetricCardProps {
   label: string
@@ -59,25 +60,38 @@ function MetricCard({ label, value, suffix = '', icon, color, decimals = 0, isLo
 }
 
 export default function LiveMetrics() {
+  const [showError, setShowError] = useState(true)
+  const [cachedData, setCachedData] = useState<MarketDashboardInfo[] | null>(null)
+
   // Fetch all markets to calculate metrics
-  const { data: marketsData, isLoading, refetch } = useReadContract({
+  const { data: marketsData, isLoading, isError, refetch } = useReadContract({
     address: CRYPTO_SCORE_DASHBOARD_ADDRESS,
     abi: CryptoScoreDashboardABI,
     functionName: 'getMarketsDashboardPaginated',
     args: [BigInt(0), BigInt(1000), false], // Fetch up to 1000 markets (both public and private)
   })
 
+  // Cache successful data fetches
+  useEffect(() => {
+    if (marketsData && Array.isArray(marketsData) && marketsData.length > 0) {
+      setCachedData(marketsData as MarketDashboardInfo[])
+    }
+  }, [marketsData])
+
   // Enable real-time updates with polling
   useRealtimeMarkets({
-    enabled: true,
+    enabled: !isError,
     interval: 10000, // Poll every 10 seconds
     onUpdate: () => {
       refetch()
     },
   })
 
+  // Use cached data if available and current fetch failed
+  const dataToUse = (isError && cachedData) ? cachedData : (marketsData as MarketDashboardInfo[] | undefined)
+
   const metrics = useMemo(() => {
-    if (!marketsData || !Array.isArray(marketsData)) {
+    if (!dataToUse || !Array.isArray(dataToUse)) {
       return {
         totalMarkets: 0,
         totalValueLocked: 0,
@@ -86,7 +100,7 @@ export default function LiveMetrics() {
       }
     }
 
-    const markets = marketsData as MarketDashboardInfo[]
+    const markets = dataToUse
 
     // Total markets (all markets)
     const totalMarkets = markets.length
@@ -113,7 +127,16 @@ export default function LiveMetrics() {
       activeTraders,
       marketsResolved,
     }
-  }, [marketsData])
+  }, [dataToUse])
+
+  const handleRetry = () => {
+    setShowError(true)
+    refetch()
+  }
+
+  const handleDismiss = () => {
+    setShowError(false)
+  }
 
   return (
     <section className="py-16 md:py-24">
@@ -130,6 +153,18 @@ export default function LiveMetrics() {
             Real-time metrics from the blockchain
           </p>
         </div>
+
+        {/* Error Banner */}
+        {isError && showError && (
+          <ErrorBanner
+            message={cachedData
+              ? 'Unable to fetch latest metrics. Showing cached data.'
+              : 'Unable to load platform metrics. Please try again.'}
+            type={cachedData ? 'warning' : 'error'}
+            onRetry={handleRetry}
+            onDismiss={handleDismiss}
+          />
+        )}
 
         {/* Metrics Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

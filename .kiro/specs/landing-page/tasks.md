@@ -121,7 +121,7 @@
   - Add micro-interactions on hover states
   - _Requirements: 9.1_
 
-- [ ] 11. Add loading states and error handling
+- [x] 11. Add loading states and error handling
   - Create loading skeletons for LiveMetrics cards
   - Create loading skeletons for FeaturedMarketsPreview cards
   - Implement error banners for contract read failures
