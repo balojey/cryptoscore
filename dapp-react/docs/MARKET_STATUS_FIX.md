@@ -45,6 +45,38 @@ const userIsWinner = isUserParticipant && predictionName !== 'NONE' && (
 )
 ```
 
+### 3. Prevent Double Withdrawals
+
+**Problem:** Users could see the withdraw button even after they've already withdrawn their rewards.
+
+**Solution:** Added reward balance check that reads from the smart contract's `rewards` mapping:
+- Fetch user's reward balance using `useReadContract` with `rewards` function
+- Only show withdraw button if `userRewardBalance > 0`
+- Show "Withdrawn" status badge for winners who have already claimed
+
+**Files Modified:**
+- `src/pages/MarketDetail.tsx` - Added `userRewardBalance` read and updated `renderButtons` function
+
+**Logic:**
+```typescript
+// Get user's reward balance to check if they've already withdrawn
+const { data: userRewardBalance } = useReadContract({
+  abi: CryptoScoreMarketABI,
+  address: marketAddress,
+  functionName: 'rewards',
+  args: [userAddress!],
+  query: { enabled: !!marketAddress && !!userAddress && marketStatus === true },
+})
+
+// Check if user has already withdrawn (reward balance is 0)
+const hasRewardToWithdraw = userRewardBalance && Number(userRewardBalance) > 0
+```
+
+**UI States:**
+- **Winner with rewards:** Shows green "Withdraw" button
+- **Winner already withdrawn:** Shows green "Withdrawn" badge with checkmark
+- **Non-winner:** No button or badge shown
+
 ## Testing Checklist
 
 - [ ] Market shows "Open" status before match starts
@@ -55,6 +87,9 @@ const userIsWinner = isUserParticipant && predictionName !== 'NONE' && (
 - [ ] Withdraw button only appears for winning participants
 - [ ] Withdraw button does not appear for losing participants
 - [ ] Withdraw button does not appear for non-participants
+- [ ] Withdraw button disappears after successful withdrawal
+- [ ] "Withdrawn" badge appears for winners who already claimed
+- [ ] Non-winners never see withdraw button or withdrawn badge
 
 ## User Experience Improvements
 
@@ -62,6 +97,8 @@ const userIsWinner = isUserParticipant && predictionName !== 'NONE' && (
 2. **Prevent Confusion:** Non-winners won't see a withdraw button they can't use
 3. **Better UX:** Winners get clear visual feedback that they can claim rewards
 4. **Status Accuracy:** Market status accurately reflects the current state
+5. **Prevent Double Withdrawals:** Users can't accidentally try to withdraw twice
+6. **Clear Withdrawal Status:** Winners see confirmation that they've already claimed their rewards
 
 ## Technical Details
 

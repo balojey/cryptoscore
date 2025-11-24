@@ -479,6 +479,15 @@ export function MarketDetail() {
     query: { enabled: !!marketAddress },
   })
 
+  // Get user's reward balance to check if they've already withdrawn
+  const { data: userRewardBalance } = useReadContract({
+    abi: CryptoScoreMarketABI,
+    address: marketAddress,
+    functionName: 'rewards',
+    args: [userAddress!],
+    query: { enabled: !!marketAddress && !!userAddress && marketStatus === true },
+  })
+
   // Get user's prediction
   const { predictionName, hasJoined } = useUserPrediction(marketAddress)
 
@@ -598,14 +607,23 @@ export function MarketDetail() {
         (winningTeam === 3 && predictionName === 'DRAW')
       )
 
+      // Check if user has already withdrawn (reward balance is 0)
+      const hasRewardToWithdraw = userRewardBalance && Number(userRewardBalance) > 0
+
       return (
         <div className="flex items-center gap-4">
           <Button variant="secondary" disabled>Resolved</Button>
-          {userIsWinner && (
+          {userIsWinner && hasRewardToWithdraw && (
             <Button variant="success" onClick={handleWithdraw} className="gap-2">
               <span className="icon-[mdi--cash-multiple] w-5 h-5" />
               Withdraw
             </Button>
+          )}
+          {userIsWinner && !hasRewardToWithdraw && (
+            <div className="text-sm font-medium flex items-center gap-2" style={{ color: 'var(--accent-green)' }}>
+              <span className="icon-[mdi--check-circle] w-5 h-5" />
+              <span>Withdrawn</span>
+            </div>
           )}
         </div>
       )
