@@ -2,8 +2,11 @@ import type { MarketDashboardInfo } from '../../types'
 import { useMemo } from 'react'
 import { formatEther } from 'viem'
 import { useReadContracts } from 'wagmi'
+import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent } from '@/components/ui/card'
 import { CryptoScoreMarketABI } from '../../config/contracts'
+import { config } from '../../config/wagmi'
+import { getPublicClient } from '@wagmi/core'
 
 interface PortfolioSummaryProps {
   userAddress?: string
@@ -41,6 +44,60 @@ export default function PortfolioSummary({ userAddress, joinedMarkets = [] }: Po
     },
   })
 
+  // Fetch withdrawn rewards by listening to Withdrawn events
+  const { data: withdrawnRewards = {} } = useQuery({
+    queryKey: ['withdrawnRewards', userAddress, joinedMarkets.map(m => m.marketAddress).join(',')],
+    queryFn: async () => {
+      if (!userAddress || joinedMarkets.length === 0)
+        return {}
+
+      const publicClient = getPublicClient(config)
+      if (!publicClient)
+        return {}
+
+      const withdrawnByMarket: Record<string, bigint> = {}
+
+      // Fetch Withdrawn events for each market
+      await Promise.all(
+        joinedMarkets.map(async (market) => {
+          try {
+            const logs = await publicClient.getLogs({
+              address: market.marketAddress,
+              event: {
+                type: 'event',
+                name: 'Withdrawn',
+                inputs: [
+                  { type: 'address', indexed: true, name: 'user' },
+                  { type: 'uint256', indexed: false, name: 'amount' },
+                ],
+              },
+              args: {
+                user: userAddress as `0x${string}`,
+              },
+              fromBlock: 0n,
+              toBlock: 'latest',
+            })
+
+            // Sum all withdrawal amounts for this market
+            const totalWithdrawn = logs.reduce((sum, log) => {
+              return sum + (log.args.amount || 0n)
+            }, 0n)
+
+            withdrawnByMarket[market.marketAddress] = totalWithdrawn
+          }
+          catch (error) {
+            console.error(`Error fetching withdrawals for market ${market.marketAddress}:`, error)
+            withdrawnByMarket[market.marketAddress] = 0n
+          }
+        }),
+      )
+
+      return withdrawnByMarket
+    },
+    enabled: !!userAddress && joinedMarkets.length > 0,
+    staleTime: 30000, // Cache for 30 seconds
+  })
+
   const stats = useMemo(() => {
     if (!userAddress) {
       return {
@@ -75,20 +132,24 @@ export default function PortfolioSummary({ userAddress, joinedMarkets = [] }: Po
       return sum + Number(formatEther(m.entryFee))
     }, 0)
 
-    // Calculate total claimable rewards
+    // Calculate total claimable rewards (not yet withdrawn)
     const totalClaimableRewards = userMarketData.reduce((sum, data) => {
       return sum + Number(formatEther(data.reward))
+    }, 0)
+
+    // Calculate total withdrawn rewards (already claimed)
+    const totalWithdrawnRewards = Object.values(withdrawnRewards).reduce((sum, amount) => {
+      return sum + Number(formatEther(amount))
     }, 0)
 
     // Calculate wins and losses based on actual predictions
     let totalWins = 0
     let totalLosses = 0
-    let totalActualWinnings = 0
 
     const resolvedMarkets = userMarketData.filter(data => data.market.resolved)
 
     resolvedMarkets.forEach((data) => {
-      const { market, prediction, reward } = data
+      const { market, prediction } = data
       const winner = market.winner // 1=HOME, 2=AWAY, 3=DRAW, 0=NONE
 
       // If market is resolved and has a winner
@@ -96,7 +157,6 @@ export default function PortfolioSummary({ userAddress, joinedMarkets = [] }: Po
         // Check if user's prediction matches the winner
         if (prediction === winner) {
           totalWins++
-          totalActualWinnings += Number(formatEther(reward))
         }
         else {
           totalLosses++
@@ -106,8 +166,9 @@ export default function PortfolioSummary({ userAddress, joinedMarkets = [] }: Po
 
     const winRate = resolvedMarkets.length > 0 ? (totalWins / resolvedMarkets.length) * 100 : 0
 
-    // P&L = Total winnings (claimed + claimable) - Total invested
-    const totalPnL = totalActualWinnings + totalClaimableRewards - totalInvested
+    // P&L = (Withdrawn rewards + Claimable rewards) - Total invested
+    // This gives the true profit/loss including both claimed and unclaimed winnings
+    const totalPnL = (totalWithdrawnRewards + totalClaimableRewards) - totalInvested
 
     // Portfolio Value = Value in active positions + Claimable rewards
     // Active positions value = entry fees for unresolved markets

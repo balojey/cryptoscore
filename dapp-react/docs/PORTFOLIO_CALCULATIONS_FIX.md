@@ -71,7 +71,7 @@ const totalPnL = totalActualWinnings - totalInvested
 
 **After (Correct):**
 ```typescript
-// Fetch actual rewards from smart contract
+// 1. Fetch claimable rewards from smart contract
 const { data: contractData } = useReadContracts({
   contracts: joinedMarkets.flatMap(market => [
     {
@@ -82,16 +82,47 @@ const { data: contractData } = useReadContracts({
   ]),
 })
 
-// Calculate total claimable rewards
 const totalClaimableRewards = userMarketData.reduce((sum, data) => {
   return sum + Number(formatEther(data.reward))
 }, 0)
 
-// P&L = Total winnings (claimed + claimable) - Total invested
-const totalPnL = totalActualWinnings + totalClaimableRewards - totalInvested
+// 2. Fetch withdrawn rewards from Withdrawn events
+const { data: withdrawnRewards } = useQuery({
+  queryFn: async () => {
+    const publicClient = getPublicClient(config)
+    const withdrawnByMarket: Record<string, bigint> = {}
+
+    await Promise.all(
+      joinedMarkets.map(async (market) => {
+        const logs = await publicClient.getLogs({
+          address: market.marketAddress,
+          event: { name: 'Withdrawn', ... },
+          args: { user: userAddress },
+          fromBlock: 0n,
+          toBlock: 'latest',
+        })
+
+        withdrawnByMarket[market.marketAddress] = logs.reduce(
+          (sum, log) => sum + (log.args.amount || 0n), 
+          0n
+        )
+      })
+    )
+
+    return withdrawnByMarket
+  },
+})
+
+const totalWithdrawnRewards = Object.values(withdrawnRewards).reduce(
+  (sum, amount) => sum + Number(formatEther(amount)), 
+  0
+)
+
+// 3. Calculate complete P&L
+const totalPnL = (totalWithdrawnRewards + totalClaimableRewards) - totalInvested
 ```
 
-**Why:** P&L must reflect actual rewards assigned by the smart contract, not estimates.
+**Why:** P&L must include BOTH withdrawn and claimable rewards to show the complete profit/loss picture. Without tracking withdrawals, P&L would reset to zero after claiming rewards, which is incorrect.
 
 ### 4. Performance Overview ❌ → ✅
 
@@ -194,15 +225,55 @@ Display in UI
 - **Optimization**: All calls batched into single multicall transaction
 - **Typical load**: ~10-20 markets = 20-40 calls = <100ms response time
 
+## Withdrawn Rewards Tracking
+
+### Implementation Details
+
+The system tracks withdrawn rewards by querying `Withdrawn` events from each market contract:
+
+```typescript
+event Withdrawn(address indexed user, uint256 amount)
+```
+
+**Process:**
+1. For each market the user joined, query all `Withdrawn` events where `user` matches
+2. Sum all withdrawal amounts per market
+3. Cache results for 30 seconds to avoid excessive RPC calls
+4. Include in P&L calculation alongside claimable rewards
+
+**Performance:**
+- Uses `getLogs` with indexed user parameter for efficient filtering
+- Queries from block 0 to latest (full history)
+- Cached with React Query to minimize RPC calls
+- Parallel fetching for all markets
+
+### Example Scenario
+
+**User Activity:**
+- Joined 5 markets with 1 PAS entry fee each = **5 PAS invested**
+- Won 3 markets, each assigned 1.96 PAS reward = **5.88 PAS total rewards**
+- Withdrew 3.92 PAS from 2 markets
+- Still has 1.96 PAS claimable in 1 market
+
+**P&L Calculation:**
+```
+totalInvested = 5 PAS
+totalWithdrawnRewards = 3.92 PAS (from events)
+totalClaimableRewards = 1.96 PAS (from rewards mapping)
+
+P&L = (3.92 + 1.96) - 5 = +0.88 PAS profit ✅
+```
+
 ## Future Improvements
 
-1. **Caching**: Cache prediction/reward data with React Query
-2. **Incremental Updates**: Only fetch new markets, not all markets
+1. **Incremental Event Fetching**: Only fetch events from last known block
+2. **Event Caching**: Store withdrawal history in localStorage
 3. **Optimistic UI**: Show estimated values while loading actual data
 4. **Historical Tracking**: Store win/loss history for trend analysis
+5. **Block Range Optimization**: Use market creation block as starting point
 
 ---
 
-**Status**: ✅ Complete  
+**Status**: ✅ Complete (with withdrawal tracking)  
 **Date**: 2024-11-24  
-**Impact**: Critical - Fixes incorrect financial calculations
+**Impact**: Critical - Fixes incorrect financial calculations and tracks complete reward history
