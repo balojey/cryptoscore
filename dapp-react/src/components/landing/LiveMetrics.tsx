@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { memo, useEffect, useMemo, useState } from 'react'
 import { useReadContract } from 'wagmi'
 import { formatEther } from 'viem'
 import { CRYPTO_SCORE_DASHBOARD_ADDRESS, CryptoScoreDashboardABI } from '../../config/contracts'
@@ -17,7 +17,7 @@ interface MetricCardProps {
   isLoading?: boolean
 }
 
-function MetricCard({ label, value, suffix = '', icon, color, decimals = 0, isLoading }: MetricCardProps) {
+const MetricCard = memo(function MetricCard({ label, value, suffix = '', icon, color, decimals = 0, isLoading }: MetricCardProps) {
   if (isLoading) {
     return (
       <div
@@ -57,7 +57,7 @@ function MetricCard({ label, value, suffix = '', icon, color, decimals = 0, isLo
       </div>
     </div>
   )
-}
+})
 
 export default function LiveMetrics() {
   const [showError, setShowError] = useState(true)
@@ -140,7 +140,7 @@ export default function LiveMetrics() {
 
   return (
     <section className="py-16 md:py-24">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mb-12">
           <h2

@@ -11,4 +11,18 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Separate vendor chunks for better caching
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'wagmi-vendor': ['wagmi', 'viem', '@tanstack/react-query'],
+          'recharts-vendor': ['recharts'],
+        },
+      },
+    },
+    // Increase chunk size warning limit to 600 kB
+    chunkSizeWarningLimit: 600,
+  },
 })

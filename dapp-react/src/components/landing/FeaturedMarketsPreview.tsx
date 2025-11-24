@@ -190,7 +190,7 @@ export default function FeaturedMarketsPreview() {
   if (isLoading) {
     return (
       <section className="py-16 md:py-24" style={{ background: 'var(--bg-primary)' }}>
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Section Header */}
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>
@@ -216,7 +216,7 @@ export default function FeaturedMarketsPreview() {
   if (!isLoading && !isError && featuredMarkets.length === 0) {
     return (
       <section className="py-16 md:py-24" style={{ background: 'var(--bg-primary)' }}>
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Section Header */}
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>
@@ -247,7 +247,7 @@ export default function FeaturedMarketsPreview() {
   if (isError && !cachedMarkets && !isLoading) {
     return (
       <section className="py-16 md:py-24" style={{ background: 'var(--bg-primary)' }}>
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Section Header */}
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>
@@ -281,7 +281,7 @@ export default function FeaturedMarketsPreview() {
 
   return (
     <section className="py-16 md:py-24" style={{ background: 'var(--bg-primary)' }}>
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mb-12 animate-fade-in">
           <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>

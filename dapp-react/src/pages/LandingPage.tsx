@@ -1,11 +1,13 @@
-import { useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import HeroSection from '../components/landing/HeroSection'
 import LiveMetrics from '../components/landing/LiveMetrics'
 import HowItWorks from '../components/landing/HowItWorks'
 import KeyFeatures from '../components/landing/KeyFeatures'
-import FeaturedMarketsPreview from '../components/landing/FeaturedMarketsPreview'
 import WhyCryptoScore from '../components/landing/WhyCryptoScore'
 import FinalCTA from '../components/landing/FinalCTA'
+
+// Lazy load FeaturedMarketsPreview (below the fold)
+const FeaturedMarketsPreview = lazy(() => import('../components/landing/FeaturedMarketsPreview'))
 
 /**
  * LandingPage Component
@@ -21,6 +23,7 @@ import FinalCTA from '../components/landing/FinalCTA'
 export function LandingPage() {
   const [visibleSections, setVisibleSections] = useState<Set<string>>(() => new Set())
   const observerRef = useRef<IntersectionObserver | null>(null)
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
     // Check if user prefers reduced motion
@@ -31,17 +34,24 @@ export function LandingPage() {
       document.documentElement.style.scrollBehavior = 'smooth'
     }
 
-    // Create Intersection Observer for scroll-triggered animations
+    // Create Intersection Observer for scroll-triggered animations with debouncing
     observerRef.current = new IntersectionObserver(
       (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const sectionId = entry.target.getAttribute('data-section')
-            if (sectionId) {
-              setVisibleSections(prev => new Set(prev).add(sectionId))
+        // Debounce the visibility updates to avoid excessive re-renders
+        if (debounceTimerRef.current) {
+          clearTimeout(debounceTimerRef.current)
+        }
+
+        debounceTimerRef.current = setTimeout(() => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              const sectionId = entry.target.getAttribute('data-section')
+              if (sectionId) {
+                setVisibleSections(prev => new Set(prev).add(sectionId))
+              }
             }
-          }
-        })
+          })
+        }, 100) // 100ms debounce
       },
       {
         threshold: 0.1, // Trigger when 10% of section is visible
@@ -81,6 +91,9 @@ export function LandingPage() {
     return () => {
       document.documentElement.style.scrollBehavior = 'auto'
       document.removeEventListener('click', handleAnchorClick)
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current)
+      }
       if (observerRef.current) {
         observerRef.current.disconnect()
       }
@@ -141,7 +154,25 @@ export function LandingPage() {
           visibleSections.has('featured-markets') ? 'opacity-100 animate-fade-in' : 'opacity-0'
         }`}
       >
-        <FeaturedMarketsPreview />
+        <Suspense
+          fallback={
+            <div className="py-16 md:py-24">
+              <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="text-center mb-12">
+                  <div className="skeleton h-10 w-64 mx-auto mb-4 rounded-lg" />
+                  <div className="skeleton h-6 w-96 mx-auto rounded-lg" />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[...Array.from({ length: 3 })].map((_, i) => (
+                    <div key={i} className="skeleton h-64 rounded-[16px]" />
+                  ))}
+                </div>
+              </div>
+            </div>
+          }
+        >
+          <FeaturedMarketsPreview />
+        </Suspense>
       </section>
 
       {/* Why CryptoScore Section - Below the fold, lazy loaded */}

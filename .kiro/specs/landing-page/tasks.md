@@ -174,14 +174,14 @@
   - Perform comprehensive accessibility audit
   - _Requirements: 10.4_
 
-- [ ] 16. Performance optimization and code splitting
-- [ ] 16.1 Basic performance optimizations
+- [x] 16. Performance optimization and code splitting
+- [x] 16.1 Basic performance optimizations
   - Configure lazy loading for LandingPage component in App.tsx
   - Lazy load FeaturedMarketsPreview (below the fold)
   - Memoize MetricCard components with React.memo
   - _Requirements: 11.2, 11.3_
 
-- [ ]* 16.2 Advanced performance optimizations
+- [x] 16.2 Advanced performance optimizations
   - Optimize images (WebP format, compression, responsive srcset)
   - Implement debouncing for scroll animations (100ms)
   - Profile component rendering and optimize re-renders

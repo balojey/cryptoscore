@@ -24,7 +24,7 @@ export default function FinalCTA() {
       </div>
 
       {/* Content container */}
-      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="relative z-10 max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Glassmorphism card */}
         <div
           className="p-8 md:p-12 lg:p-16 rounded-3xl text-center"

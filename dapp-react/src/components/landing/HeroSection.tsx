@@ -50,7 +50,7 @@ export default function HeroSection() {
       </div>
 
       {/* Content container */}
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 text-center">
+      <div className="relative z-10 max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 text-center">
         {/* Headline with gradient text effect */}
         <h1 
           className="font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold mb-6 animate-fade-in"
