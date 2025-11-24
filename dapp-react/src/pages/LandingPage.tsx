@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import HeroSection from '../components/landing/HeroSection'
 import LiveMetrics from '../components/landing/LiveMetrics'
 import HowItWorks from '../components/landing/HowItWorks'
+import KeyFeatures from '../components/landing/KeyFeatures'
 
 /**
  * LandingPage Component
@@ -77,25 +78,7 @@ export function LandingPage() {
       <HowItWorks />
 
       {/* Key Features Section - Below the fold, lazy loaded */}
-      <section
-        data-section="features"
-        className={`landing-section features-section ${visibleSections.has('features') ? 'section-visible' : ''}`}
-      >
-        <div className="section-container">
-          <h2
-            className="text-3xl md:text-4xl font-bold text-center mb-12"
-            style={{ color: 'var(--text-primary)' }}
-          >
-            Key Features Placeholder
-          </h2>
-          <p
-            className="text-center"
-            style={{ color: 'var(--text-secondary)' }}
-          >
-            This will be replaced with the KeyFeatures component
-          </p>
-        </div>
-      </section>
+      <KeyFeatures />
 
       {/* Featured Markets Section - Below the fold, lazy loaded */}
       <section
