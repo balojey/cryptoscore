@@ -49,7 +49,7 @@
   - Implement real-time updates with polling mechanism
   - _Requirements: 4.2, 4.3, 4.4, 11.4_
 
-- [ ] 5. Build HowItWorks component
+- [x] 5. Build HowItWorks component
   - Create `src/components/landing/HowItWorks.tsx`
   - Define 3 steps: Browse Markets, Make Prediction, Win Rewards
   - Create step cards with icons, titles, and descriptions

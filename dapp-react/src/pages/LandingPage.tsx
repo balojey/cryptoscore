@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import HeroSection from '../components/landing/HeroSection'
 import LiveMetrics from '../components/landing/LiveMetrics'
+import HowItWorks from '../components/landing/HowItWorks'
 
 /**
  * LandingPage Component
@@ -73,25 +74,7 @@ export function LandingPage() {
       </section>
 
       {/* How It Works Section - Below the fold, lazy loaded */}
-      <section
-        data-section="how-it-works"
-        className={`landing-section how-it-works-section ${visibleSections.has('how-it-works') ? 'section-visible' : ''}`}
-      >
-        <div className="section-container">
-          <h2
-            className="text-3xl md:text-4xl font-bold text-center mb-12"
-            style={{ color: 'var(--text-primary)' }}
-          >
-            How It Works Placeholder
-          </h2>
-          <p
-            className="text-center"
-            style={{ color: 'var(--text-secondary)' }}
-          >
-            This will be replaced with the HowItWorks component
-          </p>
-        </div>
-      </section>
+      <HowItWorks />
 
       {/* Key Features Section - Below the fold, lazy loaded */}
       <section
