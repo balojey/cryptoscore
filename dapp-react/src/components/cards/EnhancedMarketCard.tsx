@@ -87,7 +87,7 @@ function usePredictionDistribution(marketAddress: string): PredictionDistributio
 }
 
 // Status badge component
-function StatusBadge({ market, matchDate }: { market: Market, matchDate: Date }) {
+function StatusBadge({ market, matchDate, matchStatus }: { market: Market, matchDate: Date, matchStatus?: string }) {
   if (market.resolved) {
     return <Badge variant="success">Resolved</Badge>
   }
@@ -95,6 +95,11 @@ function StatusBadge({ market, matchDate }: { market: Market, matchDate: Date })
   const now = new Date()
   const timeUntilStart = matchDate.getTime() - now.getTime()
   const hoursUntilStart = timeUntilStart / (1000 * 60 * 60)
+
+  // Check if match has ended but market is not resolved
+  if (matchStatus === 'FINISHED') {
+    return <Badge variant="warning">Unresolved</Badge>
+  }
 
   if (now > matchDate) {
     return <Badge variant="warning">Live</Badge>
@@ -252,7 +257,7 @@ export default function EnhancedMarketCard({ market }: EnhancedMarketCardProps) 
           </p>
         </div>
         <div className="flex gap-2">
-          <StatusBadge market={market} matchDate={matchDate} />
+          <StatusBadge market={market} matchDate={matchDate} matchStatus={matchData.status} />
           {market.isPublic
             ? (
                 <Badge variant="info">Public</Badge>

@@ -85,6 +85,9 @@ function MarketStats({ marketInfo, poolSize, participantsCount, marketStatus, is
   const getStatusBadge = () => {
     if (marketStatus)
       return <Badge variant="success">Resolved</Badge>
+    // Check if match has ended but market is not resolved
+    if ((matchData as any)?.status === 'FINISHED')
+      return <Badge variant="warning">Unresolved</Badge>
     if (isMatchStarted)
       return <Badge variant="warning">Live</Badge>
     return <Badge variant="info">Open</Badge>
@@ -588,10 +591,17 @@ export function MarketDetail() {
 
   const renderButtons = () => {
     if (marketStatus) { // Resolved
+      // Check if user is a winner (their prediction matches the winning outcome)
+      const userIsWinner = isUserParticipant && predictionName !== 'NONE' && (
+        (winningTeam === 1 && predictionName === 'HOME') ||
+        (winningTeam === 2 && predictionName === 'AWAY') ||
+        (winningTeam === 3 && predictionName === 'DRAW')
+      )
+
       return (
         <div className="flex items-center gap-4">
           <Button variant="secondary" disabled>Resolved</Button>
-          {isUserParticipant && (
+          {userIsWinner && (
             <Button variant="success" onClick={handleWithdraw} className="gap-2">
               <span className="icon-[mdi--cash-multiple] w-5 h-5" />
               Withdraw
