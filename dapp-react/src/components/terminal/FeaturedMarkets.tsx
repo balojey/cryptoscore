@@ -1,10 +1,10 @@
+import type { Market } from '../../types'
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { formatEther } from 'viem'
-import type { Market } from '../../types'
-import { useMatchData } from '../../hooks/useMatchData'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
+import { useMatchData } from '../../hooks/useMatchData'
 
 type BadgeType = 'hot' | 'ending-soon' | 'popular'
 
@@ -48,7 +48,7 @@ function selectFeaturedMarkets(markets: Market[]): FeaturedMarket[] {
 
   // 2. Top 2 ending soon (< 24 hours)
   const endingSoon = activeMarkets
-    .filter(m => {
+    .filter((m) => {
       const startTime = Number(m.startTime) * 1000
       const timeUntilStart = startTime - now
       const hoursUntilStart = timeUntilStart / (1000 * 60 * 60)
@@ -182,11 +182,19 @@ function FeaturedMarketCard({ market }: { market: FeaturedMarket }) {
         <div className="flex items-center justify-between text-xs">
           <div className="flex items-center gap-1" style={{ color: 'var(--text-tertiary)' }}>
             <span className="icon-[mdi--database-outline] w-3.5 h-3.5" />
-            <span className="font-mono">{market.poolSize.toFixed(2)} PAS</span>
+            <span className="font-mono">
+              {market.poolSize.toFixed(2)}
+              {' '}
+              PAS
+            </span>
           </div>
           <div className="flex items-center gap-1" style={{ color: 'var(--text-tertiary)' }}>
             <span className="icon-[mdi--account-group-outline] w-3.5 h-3.5" />
-            <span>{Number(market.participantsCount)} players</span>
+            <span>
+              {Number(market.participantsCount)}
+              {' '}
+              players
+            </span>
           </div>
           <div style={{ color: 'var(--text-tertiary)' }}>
             {matchDate.toLocaleString('en-US', {
@@ -319,7 +327,7 @@ export default function FeaturedMarkets({ markets, isLoading, error, onRetry }: 
         {!isLoading && !error && featuredMarkets.length > 0 && (
           <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--border-default)' }}>
             <Link
-              to="/"
+              to="/markets"
               className="flex items-center justify-center gap-2 py-2 px-4 rounded-lg transition-all hover-lift font-medium"
               style={{
                 background: 'var(--bg-secondary)',

@@ -1,13 +1,13 @@
 # Implementation Plan
 
-- [ ] 1. Set up routing infrastructure and migrate existing homepage
+- [x] 1. Set up routing infrastructure and migrate existing homepage
   - Move Content component from `/` to `/markets` route in App.tsx
   - Update Header component to include "Home" and "Markets" navigation links
   - Update all internal links pointing to `/` to point to `/markets` where appropriate
   - Test that all existing routes continue to work correctly
   - _Requirements: 8.1, 8.2, 8.3, 8.4, 14.1, 14.2, 14.3, 14.4_
 
-- [ ] 2. Create LandingPage component with base structure
+- [x] 2. Create LandingPage component with base structure
   - Create `src/pages/LandingPage.tsx` as main container component
   - Set up section containers with proper spacing and max-width
   - Implement smooth scroll behavior between sections

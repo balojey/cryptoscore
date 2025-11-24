@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { formatEther } from 'viem'
 import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import PoolTrendChart from '../components/charts/PoolTrendChart'
 import PredictionDistributionChart from '../components/charts/PredictionDistributionChart'
 import MarketComments from '../components/MarketComments'
@@ -13,8 +15,6 @@ import { CRYPTO_SCORE_FACTORY_ADDRESS, CryptoScoreFactoryABI, CryptoScoreMarketA
 import { useMatchData } from '../hooks/useMatchData'
 import { useUserPrediction } from '../hooks/useUserPrediction'
 import { shortenAddress } from '../utils/formatters'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 
 // --- SUB-COMPONENTS ---
 
@@ -158,36 +158,46 @@ function MarketStats({ marketInfo, poolSize, participantsCount, marketStatus, is
           <h4 className="font-sans text-sm font-semibold mb-3" style={{ color: 'var(--text-secondary)' }}>
             Your Prediction
           </h4>
-          <div 
+          <div
             className="p-4 rounded-xl border-2 text-center"
             style={{
-              borderColor: userPrediction === 'HOME' ? 'var(--accent-green)' : 
-                          userPrediction === 'AWAY' ? 'var(--accent-red)' : 
-                          'var(--accent-amber)',
-              background: userPrediction === 'HOME' ? 'rgba(0, 255, 136, 0.1)' : 
-                         userPrediction === 'AWAY' ? 'rgba(255, 51, 102, 0.1)' : 
-                         'rgba(255, 184, 0, 0.1)',
+              borderColor: userPrediction === 'HOME'
+                ? 'var(--accent-green)'
+                : userPrediction === 'AWAY'
+                  ? 'var(--accent-red)'
+                  : 'var(--accent-amber)',
+              background: userPrediction === 'HOME'
+                ? 'rgba(0, 255, 136, 0.1)'
+                : userPrediction === 'AWAY'
+                  ? 'rgba(255, 51, 102, 0.1)'
+                  : 'rgba(255, 184, 0, 0.1)',
             }}
           >
             <div className="flex items-center justify-center gap-2 mb-2">
-              <span 
+              <span
                 className={`icon-[${
-                  userPrediction === 'HOME' ? 'mdi--home' : 
-                  userPrediction === 'AWAY' ? 'mdi--airplane-takeoff' : 
-                  'mdi--equal'
+                  userPrediction === 'HOME'
+                    ? 'mdi--home'
+                    : userPrediction === 'AWAY'
+                      ? 'mdi--airplane-takeoff'
+                      : 'mdi--equal'
                 }] w-5 h-5`}
                 style={{
-                  color: userPrediction === 'HOME' ? 'var(--accent-green)' : 
-                         userPrediction === 'AWAY' ? 'var(--accent-red)' : 
-                         'var(--accent-amber)',
+                  color: userPrediction === 'HOME'
+                    ? 'var(--accent-green)'
+                    : userPrediction === 'AWAY'
+                      ? 'var(--accent-red)'
+                      : 'var(--accent-amber)',
                 }}
               />
-              <span 
+              <span
                 className="font-sans text-lg font-bold"
                 style={{
-                  color: userPrediction === 'HOME' ? 'var(--accent-green)' : 
-                         userPrediction === 'AWAY' ? 'var(--accent-red)' : 
-                         'var(--accent-amber)',
+                  color: userPrediction === 'HOME'
+                    ? 'var(--accent-green)'
+                    : userPrediction === 'AWAY'
+                      ? 'var(--accent-red)'
+                      : 'var(--accent-amber)',
                 }}
               >
                 {userPrediction}
@@ -214,16 +224,20 @@ function MarketStats({ marketInfo, poolSize, participantsCount, marketStatus, is
                   <span className="icon-[mdi--home] w-4 h-4 inline-block mr-1" style={{ color: 'var(--accent-green)' }} />
                   HOME
                   {userPrediction === 'HOME' && (
-                    <span className="ml-2 px-2 py-0.5 text-xs rounded-full font-bold" style={{ 
-                      background: 'var(--accent-green)', 
-                      color: 'var(--bg-primary)' 
-                    }}>
+                    <span
+                      className="ml-2 px-2 py-0.5 text-xs rounded-full font-bold"
+                      style={{
+                        background: 'var(--accent-green)',
+                        color: 'var(--bg-primary)',
+                      }}
+                    >
                       YOU
                     </span>
                   )}
                 </span>
                 <span className="font-mono text-xs font-bold" style={{ color: 'var(--accent-green)' }}>
-                  {homePercentage}%
+                  {homePercentage}
+                  %
                 </span>
               </div>
               <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--bg-secondary)' }}>
@@ -237,7 +251,10 @@ function MarketStats({ marketInfo, poolSize, participantsCount, marketStatus, is
                 />
               </div>
               <div className="text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>
-                {Number(homeCount || 0)} prediction{Number(homeCount || 0) !== 1 ? 's' : ''}
+                {Number(homeCount || 0)}
+                {' '}
+                prediction
+                {Number(homeCount || 0) !== 1 ? 's' : ''}
               </div>
             </div>
 
@@ -248,16 +265,20 @@ function MarketStats({ marketInfo, poolSize, participantsCount, marketStatus, is
                   <span className="icon-[mdi--airplane-takeoff] w-4 h-4 inline-block mr-1" style={{ color: 'var(--accent-red)' }} />
                   AWAY
                   {userPrediction === 'AWAY' && (
-                    <span className="ml-2 px-2 py-0.5 text-xs rounded-full font-bold" style={{ 
-                      background: 'var(--accent-red)', 
-                      color: 'var(--bg-primary)' 
-                    }}>
+                    <span
+                      className="ml-2 px-2 py-0.5 text-xs rounded-full font-bold"
+                      style={{
+                        background: 'var(--accent-red)',
+                        color: 'var(--bg-primary)',
+                      }}
+                    >
                       YOU
                     </span>
                   )}
                 </span>
                 <span className="font-mono text-xs font-bold" style={{ color: 'var(--accent-red)' }}>
-                  {awayPercentage}%
+                  {awayPercentage}
+                  %
                 </span>
               </div>
               <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--bg-secondary)' }}>
@@ -271,7 +292,10 @@ function MarketStats({ marketInfo, poolSize, participantsCount, marketStatus, is
                 />
               </div>
               <div className="text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>
-                {Number(awayCount || 0)} prediction{Number(awayCount || 0) !== 1 ? 's' : ''}
+                {Number(awayCount || 0)}
+                {' '}
+                prediction
+                {Number(awayCount || 0) !== 1 ? 's' : ''}
               </div>
             </div>
 
@@ -282,16 +306,20 @@ function MarketStats({ marketInfo, poolSize, participantsCount, marketStatus, is
                   <span className="icon-[mdi--equal] w-4 h-4 inline-block mr-1" style={{ color: 'var(--accent-amber)' }} />
                   DRAW
                   {userPrediction === 'DRAW' && (
-                    <span className="ml-2 px-2 py-0.5 text-xs rounded-full font-bold" style={{ 
-                      background: 'var(--accent-amber)', 
-                      color: 'var(--bg-primary)' 
-                    }}>
+                    <span
+                      className="ml-2 px-2 py-0.5 text-xs rounded-full font-bold"
+                      style={{
+                        background: 'var(--accent-amber)',
+                        color: 'var(--bg-primary)',
+                      }}
+                    >
                       YOU
                     </span>
                   )}
                 </span>
                 <span className="font-mono text-xs font-bold" style={{ color: 'var(--accent-amber)' }}>
-                  {drawPercentage}%
+                  {drawPercentage}
+                  %
                 </span>
               </div>
               <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--bg-secondary)' }}>
@@ -305,7 +333,10 @@ function MarketStats({ marketInfo, poolSize, participantsCount, marketStatus, is
                 />
               </div>
               <div className="text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>
-                {Number(drawCount || 0)} prediction{Number(drawCount || 0) !== 1 ? 's' : ''}
+                {Number(drawCount || 0)}
+                {' '}
+                prediction
+                {Number(drawCount || 0) !== 1 ? 's' : ''}
               </div>
             </div>
           </div>
@@ -602,9 +633,9 @@ export function MarketDetail() {
     if (marketStatus) { // Resolved
       // Check if user is a winner (their prediction matches the winning outcome)
       const userIsWinner = isUserParticipant && predictionName !== 'NONE' && (
-        (winningTeam === 1 && predictionName === 'HOME') ||
-        (winningTeam === 2 && predictionName === 'AWAY') ||
-        (winningTeam === 3 && predictionName === 'DRAW')
+        (winningTeam === 1 && predictionName === 'HOME')
+        || (winningTeam === 2 && predictionName === 'AWAY')
+        || (winningTeam === 3 && predictionName === 'DRAW')
       )
 
       // Check if user has already withdrawn (reward balance is 0)
@@ -661,7 +692,7 @@ export function MarketDetail() {
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <Link
-            to="/"
+            to="/markets"
             className="text-sm font-medium flex items-center gap-2 hover:underline"
             style={{ color: 'var(--text-secondary)' }}
             onMouseEnter={e => e.currentTarget.style.color = 'var(--accent-cyan)'}

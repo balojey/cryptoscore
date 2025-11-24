@@ -3,12 +3,11 @@
  * Visual testing page for all 6 theme presets on Trading Terminal components
  */
 
-import { useState, useEffect } from 'react'
-import { useTheme } from '../contexts/ThemeContext'
 import type { ThemePreset } from '../contexts/ThemeContext'
-import { themePresets } from '../contexts/ThemeContext'
-import { verifyAllThemes, generateVerificationReport } from '../utils/themeVerification'
 import type { ThemeVerificationResult } from '../utils/themeVerification'
+import { useEffect, useState } from 'react'
+import { themePresets, useTheme } from '../contexts/ThemeContext'
+import { generateVerificationReport, verifyAllThemes } from '../utils/themeVerification'
 
 export function ThemeVerification() {
   const { theme, setTheme } = useTheme()
@@ -157,7 +156,10 @@ export function ThemeVerification() {
                         </p>
                         <ul className="text-xs space-y-1" style={{ color: 'var(--text-secondary)' }}>
                           {result.errors.map((error, i) => (
-                            <li key={i}>• {error}</li>
+                            <li key={i}>
+                              •
+                              {error}
+                            </li>
                           ))}
                         </ul>
                       </div>
@@ -170,7 +172,10 @@ export function ThemeVerification() {
                         </p>
                         <ul className="text-xs space-y-1" style={{ color: 'var(--text-secondary)' }}>
                           {result.warnings.map((warning, i) => (
-                            <li key={i}>• {warning}</li>
+                            <li key={i}>
+                              •
+                              {warning}
+                            </li>
                           ))}
                         </ul>
                       </div>
@@ -182,7 +187,12 @@ export function ThemeVerification() {
                           CSS Variables
                         </p>
                         <p style={{ color: 'var(--text-secondary)' }}>
-                          {result.cssVariables.defined.length} / {result.cssVariables.defined.length + result.cssVariables.missing.length} defined
+                          {result.cssVariables.defined.length}
+                          {' '}
+                          /
+                          {result.cssVariables.defined.length + result.cssVariables.missing.length}
+                          {' '}
+                          defined
                         </p>
                       </div>
                       <div>

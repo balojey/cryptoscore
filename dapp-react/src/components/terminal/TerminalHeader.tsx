@@ -82,7 +82,7 @@ export default function TerminalHeader({
 
           {/* View All Markets CTA */}
           <Link
-            to="/"
+            to="/markets"
             className="px-4 py-1.5 text-sm font-medium rounded transition-all hover-lift hover-glow"
             style={{
               background: 'var(--accent-cyan)',

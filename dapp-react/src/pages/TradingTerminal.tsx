@@ -1,17 +1,17 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import type { Market } from '../types'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useReadContract } from 'wagmi'
-import { useRealtimeMarkets } from '../hooks/useRealtimeMarkets'
-import { CRYPTO_SCORE_DASHBOARD_ADDRESS, CryptoScoreDashboardABI } from '../config/contracts'
+import { ErrorBoundary } from '../components/ErrorBoundary'
+import RecentActivity from '../components/RecentActivity'
+import CachedDataBanner from '../components/terminal/CachedDataBanner'
+import ErrorBanner from '../components/terminal/ErrorBanner'
+import FeaturedMarkets from '../components/terminal/FeaturedMarkets'
+import MarketOverviewChart from '../components/terminal/MarketOverviewChart'
 import MetricsBar from '../components/terminal/MetricsBar'
 import TerminalHeader from '../components/terminal/TerminalHeader'
-import MarketOverviewChart from '../components/terminal/MarketOverviewChart'
-import FeaturedMarkets from '../components/terminal/FeaturedMarkets'
 import TopMovers from '../components/terminal/TopMovers'
-import RecentActivity from '../components/RecentActivity'
-import ErrorBanner from '../components/terminal/ErrorBanner'
-import CachedDataBanner from '../components/terminal/CachedDataBanner'
-import { ErrorBoundary } from '../components/ErrorBoundary'
-import type { Market } from '../types'
+import { CRYPTO_SCORE_DASHBOARD_ADDRESS, CryptoScoreDashboardABI } from '../config/contracts'
+import { useRealtimeMarkets } from '../hooks/useRealtimeMarkets'
 
 type Timeframe = '24h' | '7d' | '30d' | 'all'
 type MetricType = 'tvl' | 'volume' | 'participants'
@@ -38,7 +38,7 @@ export function TradingTerminal() {
     if (!marketsData || !Array.isArray(marketsData)) {
       return []
     }
-    
+
     return marketsData.map((market: any) => ({
       marketAddress: market.marketAddress,
       matchId: market.matchId,

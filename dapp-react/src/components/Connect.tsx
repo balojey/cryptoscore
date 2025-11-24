@@ -1,9 +1,9 @@
 import type { Chain } from 'wagmi/chains'
 import { useMemo, useRef } from 'react'
 import { useAccount, useChainId, useChains, useConnect, useConnectorClient } from 'wagmi'
+import { Button } from '@/components/ui/button'
 import { ensurePaseoTestnet } from '../utils/chain'
 import Account from './Account'
-import { Button } from '@/components/ui/button'
 
 // Popular wallets for when no connectors are available
 const popularWallets = [

@@ -1,8 +1,8 @@
+import type { Market } from '../../types'
 import { useMemo, useState } from 'react'
-import { AreaChart, Area, BarChart, Bar, CartesianGrid, LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { formatEther } from 'viem'
 import { ErrorBoundary } from '../ErrorBoundary'
-import type { Market } from '../../types'
 
 type ChartType = 'tvl' | 'volume' | 'participants'
 type Timeframe = '24h' | '7d' | '30d' | 'all'
@@ -202,7 +202,7 @@ export default function MarketOverviewChart({
     // For TVL, make it cumulative
     if (selectedMetric === 'tvl') {
       let cumulative = 0
-      return chartDataArray.map(point => {
+      return chartDataArray.map((point) => {
         cumulative += point.value
         return {
           ...point,
@@ -483,7 +483,7 @@ export default function MarketOverviewChart({
 
       {/* Chart Container */}
       <ErrorBoundary
-        fallback={
+        fallback={(
           <div
             className="h-64 md:h-80 flex flex-col items-center justify-center rounded"
             style={{
@@ -508,7 +508,7 @@ export default function MarketOverviewChart({
               Unable to display chart data
             </p>
           </div>
-        }
+        )}
       >
         <ResponsiveContainer width="100%" height={window.innerWidth < 768 ? 300 : 400}>
           {renderChart()}

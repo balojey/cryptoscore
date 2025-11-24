@@ -1,7 +1,7 @@
+import type { Market } from '../types'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef } from 'react'
 import { toast } from 'sonner'
-import type { Market } from '../types'
 
 interface RealtimeOptions {
   enabled?: boolean
@@ -62,7 +62,7 @@ export function useRealtimeMarkets(options: RealtimeOptions = {}) {
       if (previous) {
         const prevParticipants = Number(previous.participantsCount)
         const currParticipants = Number(current.participantsCount)
-        
+
         // New participant joined
         if (currParticipants > prevParticipants) {
           const cooldownKey = `join-${current.marketAddress}-${currParticipants}`

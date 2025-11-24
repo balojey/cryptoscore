@@ -1,9 +1,9 @@
+import type { Market } from '../../types'
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { formatEther } from 'viem'
-import type { Market } from '../../types'
-import { useMatchData } from '../../hooks/useMatchData'
 import { Card, CardContent } from '@/components/ui/card'
+import { useMatchData } from '../../hooks/useMatchData'
 
 type ChangeMetric = 'pool' | 'participants' | 'distribution'
 type ChangeDirection = 'up' | 'down'
@@ -36,11 +36,11 @@ function calculateTopMovers(markets: Market[]): TopMover[] {
   // 1. Markets with largest pool size increase (recent markets with high pools)
   const recentHighPoolMarkets = activeMarkets
     .filter(m => Number(m.startTime) >= oneDayAgo)
-    .map(market => {
+    .map((market) => {
       const poolSize = Number(formatEther(market.entryFee)) * Number(market.participantsCount)
       // Simulate change percentage based on pool size and participants
       const changePercent = Math.min(100, (Number(market.participantsCount) * 10))
-      
+
       return {
         market,
         change: changePercent,
@@ -58,9 +58,9 @@ function calculateTopMovers(markets: Market[]): TopMover[] {
   const highParticipantMarkets = activeMarkets
     .filter(m => !movers.some(mover => mover.market.marketAddress === m.marketAddress))
     .filter(m => Number(m.participantsCount) > 0)
-    .map(market => {
+    .map((market) => {
       const participantChange = Number(market.participantsCount)
-      
+
       return {
         market,
         change: participantChange,
@@ -77,24 +77,24 @@ function calculateTopMovers(markets: Market[]): TopMover[] {
   // 3. Markets with interesting prediction distribution shifts
   const distributionShiftMarkets = activeMarkets
     .filter(m => !movers.some(mover => mover.market.marketAddress === m.marketAddress))
-    .filter(m => {
+    .filter((m) => {
       const total = Number(m.homeCount || 0n) + Number(m.awayCount || 0n) + Number(m.drawCount || 0n)
       return total > 0
     })
-    .map(market => {
+    .map((market) => {
       const home = Number(market.homeCount || 0n)
       const away = Number(market.awayCount || 0n)
       const draw = Number(market.drawCount || 0n)
       const total = home + away + draw
-      
+
       // Calculate distribution variance (higher = more interesting)
       const homePercent = (home / total) * 100
       const awayPercent = (away / total) * 100
       const drawPercent = (draw / total) * 100
-      
+
       // Calculate how "shifted" the distribution is (deviation from 33/33/33)
       const variance = Math.abs(homePercent - 33.33) + Math.abs(awayPercent - 33.33) + Math.abs(drawPercent - 33.33)
-      
+
       return {
         market,
         change: variance,
@@ -209,7 +209,11 @@ function MoverCard({ mover }: { mover: TopMover }) {
         <div className="flex items-center gap-3 text-xs mb-2" style={{ color: 'var(--text-tertiary)' }}>
           <div className="flex items-center gap-1">
             <span className="icon-[mdi--database-outline] w-3 h-3" />
-            <span className="font-mono">{mover.poolSize.toFixed(2)} PAS</span>
+            <span className="font-mono">
+              {mover.poolSize.toFixed(2)}
+              {' '}
+              PAS
+            </span>
           </div>
           <div className="flex items-center gap-1">
             <span className="icon-[mdi--account-group-outline] w-3 h-3" />
@@ -253,9 +257,18 @@ function MoverCard({ mover }: { mover: TopMover }) {
               )}
             </div>
             <div className="flex justify-between text-[10px] font-mono" style={{ color: 'var(--text-tertiary)' }}>
-              <span>{homePercent.toFixed(0)}%</span>
-              <span>{drawPercent.toFixed(0)}%</span>
-              <span>{awayPercent.toFixed(0)}%</span>
+              <span>
+                {homePercent.toFixed(0)}
+                %
+              </span>
+              <span>
+                {drawPercent.toFixed(0)}
+                %
+              </span>
+              <span>
+                {awayPercent.toFixed(0)}
+                %
+              </span>
             </div>
           </div>
         )}

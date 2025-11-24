@@ -7,6 +7,7 @@ import ToastProvider from './components/ui/ToastProvider'
 import { ThemeProvider } from './contexts/ThemeContext'
 
 // Lazy load pages for better performance
+const LandingPage = lazy(() => import('./pages/LandingPage').then(m => ({ default: m.LandingPage })))
 const TradingTerminal = lazy(() => import('./pages/TradingTerminal').then(m => ({ default: m.TradingTerminal })))
 const MarketDetail = lazy(() => import('./pages/MarketDetail').then(m => ({ default: m.MarketDetail })))
 const Dashboard = lazy(() => import('./pages/Dashboard').then(m => ({ default: m.Dashboard })))
@@ -48,7 +49,8 @@ function App() {
           <main id="main-content" className="flex-grow" role="main">
             <Suspense fallback={<PageLoader />}>
               <Routes>
-                <Route path="/" element={<Content />} />
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/markets" element={<Content />} />
                 <Route path="/terminal" element={<TradingTerminal />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/markets/:marketAddress" element={<MarketDetail />} />

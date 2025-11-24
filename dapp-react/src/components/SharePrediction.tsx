@@ -62,24 +62,24 @@ export default function SharePrediction({ marketAddress, matchInfo, prediction }
           <span>Share</span>
         </Button>
       </DropdownMenuTrigger>
-      
+
       <DropdownMenuContent align="end" className="w-64">
         <DropdownMenuLabel>Share this market</DropdownMenuLabel>
-        
+
         <DropdownMenuSeparator />
-        
+
         <DropdownMenuItem onClick={shareToTwitter} className="gap-3 cursor-pointer">
           <span className="icon-[mdi--twitter] w-5 h-5" />
           <span>Share on Twitter</span>
         </DropdownMenuItem>
-        
+
         <DropdownMenuItem onClick={shareToFarcaster} className="gap-3 cursor-pointer">
           <span className="icon-[mdi--cast] w-5 h-5" />
           <span>Share on Farcaster</span>
         </DropdownMenuItem>
-        
+
         <DropdownMenuSeparator />
-        
+
         <DropdownMenuItem onClick={copyLink} className="gap-3 cursor-pointer">
           <span className="icon-[mdi--link-variant] w-5 h-5" />
           <span>Copy Link</span>

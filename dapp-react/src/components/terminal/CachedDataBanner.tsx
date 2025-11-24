@@ -50,7 +50,9 @@ export default function CachedDataBanner({
             className="text-xs"
             style={{ color: 'var(--text-tertiary)' }}
           >
-            Last updated {getTimeAgo(lastUpdated)}
+            Last updated
+            {' '}
+            {getTimeAgo(lastUpdated)}
           </p>
         </div>
       </div>

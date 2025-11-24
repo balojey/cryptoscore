@@ -31,54 +31,58 @@ export default function PortfolioSummary({ markets, userAddress, joinedMarkets =
     // joinedMarkets should contain ALL markets where user participated (regardless of who created them)
     // This is what getUserMarketsDashboardPaginated(createdOnly: false) returns
     const participatedMarkets = joinedMarkets
-    
+
     const totalInvested = participatedMarkets.reduce((sum, m) => {
       return sum + Number(formatEther(m.entryFee))
     }, 0)
 
     // Calculate win/loss statistics from available market data
     // We have: market.winner, prediction counts, but need user's actual predictions
-    
+
     let totalActualWinnings = 0
     let totalWins = 0
     let totalLosses = 0
 
     const resolvedParticipatedMarkets = participatedMarkets.filter(m => m.resolved)
-    
+
     // TODO: For 100% accuracy, we need to implement a batch prediction fetcher
     // that calls getUserPrediction() for each market and compares with market.winner
-    
+
     // Current approach: Statistical estimation based on market outcomes
-    resolvedParticipatedMarkets.forEach(market => {
+    resolvedParticipatedMarkets.forEach((market) => {
       const winner = market.winner // 1=HOME, 2=AWAY, 3=DRAW
-      
+
       if (winner > 0) {
         const homeCount = Number(market.homeCount || 0)
-        const awayCount = Number(market.awayCount || 0) 
+        const awayCount = Number(market.awayCount || 0)
         const drawCount = Number(market.drawCount || 0)
         const totalPredictions = homeCount + awayCount + drawCount
-        
+
         if (totalPredictions > 0) {
           // Calculate actual winners based on market outcome
           let winnersCount = 0
-          if (winner === 1) winnersCount = homeCount      // HOME won
-          else if (winner === 2) winnersCount = awayCount // AWAY won  
-          else if (winner === 3) winnersCount = drawCount // DRAW won
-          
+          if (winner === 1)
+            winnersCount = homeCount // HOME won
+          else if (winner === 2)
+            winnersCount = awayCount // AWAY won
+          else if (winner === 3)
+            winnersCount = drawCount // DRAW won
+
           // Statistical estimation: assume user's win rate matches market average
           const marketWinRate = winnersCount / totalPredictions
-          
+
           // For consistent results, use market address as seed
-          const addressNum = parseInt(market.marketAddress.slice(-4), 16)
+          const addressNum = Number.parseInt(market.marketAddress.slice(-4), 16)
           const isWin = (addressNum % 100) < (marketWinRate * 100)
-          
+
           if (isWin && winnersCount > 0) {
             totalWins++
             // Calculate user's estimated share of winning pool
             const poolSize = Number(formatEther(market.entryFee)) * Number(market.participantsCount)
             const userShare = (poolSize * 0.98) / winnersCount // 98% after 2% fees
             totalActualWinnings += userShare
-          } else {
+          }
+          else {
             totalLosses++
           }
         }

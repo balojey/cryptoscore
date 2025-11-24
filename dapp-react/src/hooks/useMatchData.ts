@@ -49,7 +49,7 @@ export function useMatchData(matchId: number) {
         const errorMessage = e.message || 'Failed to fetch match data'
         console.error('Match data fetch error:', errorMessage)
         setError(errorMessage)
-        
+
         // For rate limit errors, don't set data to null to preserve any cached data
         if (!errorMessage.includes('rate limit')) {
           setData(null)

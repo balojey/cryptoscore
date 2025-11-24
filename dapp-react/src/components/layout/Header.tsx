@@ -1,9 +1,6 @@
+import type { ThemePreset } from '@/contexts/ThemeContext'
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import Connect from '../Connect'
-import SearchBar from '../SearchBar'
-import ThemeSwitcher from '../ThemeSwitcher'
-import { ThemePreset, themePresets, useTheme } from '@/contexts/ThemeContext'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -12,11 +9,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { themePresets, useTheme } from '@/contexts/ThemeContext'
+import Connect from '../Connect'
+import SearchBar from '../SearchBar'
+import ThemeSwitcher from '../ThemeSwitcher'
 
 export default function Header() {
   const [showSearch, setShowSearch] = useState(false)
   const location = useLocation()
-  const isHomePage = location.pathname === '/'
+  const isMarketsPage = location.pathname === '/markets' || location.pathname.startsWith('/markets/')
   const { theme, setTheme } = useTheme()
   return (
     <header
@@ -78,8 +79,8 @@ export default function Header() {
             </Link>
           </div>
 
-          {/* Center - Search (Desktop only, on home page) */}
-          {isHomePage && (
+          {/* Center - Search (Desktop only, on markets page) */}
+          {isMarketsPage && (
             <div className="hidden md:block flex-1 max-w-md mx-8">
               <SearchBar placeholder="Search markets by team, competition..." />
             </div>
@@ -87,6 +88,28 @@ export default function Header() {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              asChild
+            >
+              <Link to="/">
+                <span className="icon-[mdi--home] w-4 h-4" />
+                <span>Home</span>
+              </Link>
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              asChild
+            >
+              <Link to="/markets">
+                <span className="icon-[mdi--chart-box-outline] w-4 h-4" />
+                <span>Markets</span>
+              </Link>
+            </Button>
+
             <Button
               variant="outline"
               size="sm"
@@ -138,7 +161,7 @@ export default function Header() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              {isHomePage && (
+              {isMarketsPage && (
                 <>
                   <DropdownMenuItem
                     onClick={() => setShowSearch(!showSearch)}
@@ -150,33 +173,49 @@ export default function Header() {
                   <DropdownMenuSeparator />
                 </>
               )}
-              
+
+              <DropdownMenuItem asChild>
+                <Link to="/" className="flex items-center gap-2 cursor-pointer">
+                  <span className="icon-[mdi--home] w-4 h-4" />
+                  <span>Home</span>
+                </Link>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem asChild>
+                <Link to="/markets" className="flex items-center gap-2 cursor-pointer">
+                  <span className="icon-[mdi--chart-box-outline] w-4 h-4" />
+                  <span>Markets</span>
+                </Link>
+              </DropdownMenuItem>
+
               <DropdownMenuItem asChild>
                 <Link to="/terminal" className="flex items-center gap-2 cursor-pointer">
                   <span className="icon-[mdi--monitor-dashboard] w-4 h-4" />
                   <span>Terminal</span>
                 </Link>
               </DropdownMenuItem>
-              
+
               <DropdownMenuItem asChild>
                 <Link to="/dashboard" className="flex items-center gap-2 cursor-pointer">
                   <span className="icon-[mdi--view-dashboard-outline] w-4 h-4" />
                   <span>Dashboard</span>
                 </Link>
               </DropdownMenuItem>
-              
+
               <DropdownMenuItem asChild>
                 <Link to="/leaderboard" className="flex items-center gap-2 cursor-pointer">
                   <span className="icon-[mdi--trophy] w-4 h-4" />
                   <span>Leaderboard</span>
                 </Link>
               </DropdownMenuItem>
-              
+
               <DropdownMenuSeparator />
-              
+
               <div className="px-2 py-2">
                 <div className="text-xs font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
-                  Theme: {themePresets[theme].name}
+                  Theme:
+                  {' '}
+                  {themePresets[theme].name}
                 </div>
                 {(Object.keys(themePresets) as ThemePreset[]).map((presetKey) => {
                   const preset = themePresets[presetKey]
@@ -201,9 +240,9 @@ export default function Header() {
                   )
                 })}
               </div>
-              
+
               <DropdownMenuSeparator />
-              
+
               <div className="px-2 py-2">
                 <Connect />
               </div>
@@ -212,7 +251,7 @@ export default function Header() {
         </div>
 
         {/* Mobile Search Bar */}
-        {isHomePage && showSearch && (
+        {isMarketsPage && showSearch && (
           <div className="md:hidden pb-4">
             <SearchBar placeholder="Search markets..." />
           </div>

@@ -1,9 +1,9 @@
 import type { Market } from '../types'
+import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { formatEther } from 'viem'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { useEffect, useRef } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 interface RecentActivityProps {
   markets: Market[]
@@ -67,13 +67,16 @@ export default function RecentActivity({ markets, limit = 10, isLoading = false,
 
   // Determine activity type based on market state
   const getActivityType = (market: Market): ActivityType => {
-    if (market.resolved) return 'resolve'
-    
+    if (market.resolved)
+      return 'resolve'
+
     const now = Date.now()
     const startTime = Number(market.startTime) * 1000
-    
-    if (now > startTime) return 'live'
-    if (Number(market.participantsCount) > 1) return 'join'
+
+    if (now > startTime)
+      return 'live'
+    if (Number(market.participantsCount) > 1)
+      return 'join'
     return 'create'
   }
 
@@ -260,12 +263,15 @@ export default function RecentActivity({ markets, limit = 10, isLoading = false,
                           Match #
                           {market.matchId.toString()}
                         </span>
-                        <Badge 
+                        <Badge
                           variant={
-                            type === 'resolve' ? 'success' : 
-                            type === 'live' ? 'warning' : 
-                            type === 'join' ? 'info' :
-                            'default'
+                            type === 'resolve'
+                              ? 'success'
+                              : type === 'live'
+                                ? 'warning'
+                                : type === 'join'
+                                  ? 'info'
+                                  : 'default'
                           }
                           className="text-[10px] px-2 py-0"
                         >

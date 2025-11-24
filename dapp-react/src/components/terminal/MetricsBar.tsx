@@ -35,18 +35,20 @@ function MetricCard({ label, value, suffix = '', icon, trend, isLoading }: Metri
         className="text-2xl font-bold font-mono mb-1 transition-opacity duration-300"
         style={{ color: 'var(--text-primary)' }}
       >
-        {isLoading ? (
-          <div className="h-8 w-24 skeleton rounded" />
-        ) : (
-          <>
-            <AnimatedNumber
-              value={value}
-              duration={500}
-              decimals={suffix.includes('PAS') ? 2 : 0}
-            />
-            {suffix && <span className="text-lg ml-1">{suffix}</span>}
-          </>
-        )}
+        {isLoading
+          ? (
+              <div className="h-8 w-24 skeleton rounded" />
+            )
+          : (
+              <>
+                <AnimatedNumber
+                  value={value}
+                  duration={500}
+                  decimals={suffix.includes('PAS') ? 2 : 0}
+                />
+                {suffix && <span className="text-lg ml-1">{suffix}</span>}
+              </>
+            )}
       </div>
       {trend && !isLoading && (
         <div

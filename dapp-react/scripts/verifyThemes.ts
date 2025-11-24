@@ -4,8 +4,8 @@
  * Usage: npx tsx scripts/verifyThemes.ts
  */
 
-import { themePresets } from '../src/contexts/ThemeContext'
 import type { ThemePreset } from '../src/contexts/ThemeContext'
+import { themePresets } from '../src/contexts/ThemeContext'
 
 // Required CSS variables
 const REQUIRED_CSS_VARIABLES = [
@@ -102,7 +102,7 @@ function verifyTheme(theme: ThemePreset): VerificationResult {
 
 function main() {
   console.log('🎨 Theme Verification Script\n')
-  console.log('=' .repeat(60))
+  console.log('='.repeat(60))
   console.log()
 
   const themes: ThemePreset[] = [
@@ -142,7 +142,7 @@ function main() {
     console.log()
   })
 
-  console.log('=' .repeat(60))
+  console.log('='.repeat(60))
   console.log()
   console.log('📊 Summary:')
   console.log(`  Total Themes: ${themes.length}`)
