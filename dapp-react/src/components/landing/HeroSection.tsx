@@ -1,22 +1,50 @@
 import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
 
 export default function HeroSection() {
+  const [scrollY, setScrollY] = useState(0)
+
+  useEffect(() => {
+    // Check if user prefers reduced motion
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    
+    if (prefersReducedMotion) {
+      return
+    }
+
+    // Parallax scroll effect
+    const handleScroll = () => {
+      setScrollY(window.scrollY)
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+    }
+  }, [])
+
+  // Calculate parallax offset (subtle effect - 0.3 multiplier)
+  const parallaxOffset = scrollY * 0.3
+
   return (
     <section className="hero-section relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Background with glassmorphism overlay */}
+      {/* Background with glassmorphism overlay and parallax effect */}
       <div 
-        className="absolute inset-0 z-0"
+        className="absolute inset-0 z-0 transition-transform duration-100 ease-out"
         style={{
           background: `linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%)`,
+          transform: `translateY(${parallaxOffset}px)`,
         }}
       >
-        {/* Animated gradient overlay */}
+        {/* Animated gradient overlay with parallax */}
         <div 
           className="absolute inset-0 opacity-30"
           style={{
             background: `radial-gradient(circle at 20% 50%, var(--accent-cyan) 0%, transparent 50%),
                          radial-gradient(circle at 80% 50%, var(--accent-purple) 0%, transparent 50%)`,
             animation: 'pulse-glow 8s ease-in-out infinite',
+            transform: `translateY(${parallaxOffset * 0.5}px)`,
           }}
         />
       </div>
@@ -87,33 +115,33 @@ export default function HeroSection() {
           className="mt-16 relative animate-fade-in" 
           style={{ animationDelay: '0.6s' }}
         >
-          {/* Floating prediction cards animation */}
+          {/* Floating prediction cards animation with parallax */}
           <div className="absolute inset-0 pointer-events-none">
             {/* Floating card 1 */}
             <div 
-              className="absolute top-0 left-1/4 w-32 h-20 rounded-lg opacity-20 animate-float"
+              className="absolute top-0 left-1/4 w-32 h-20 rounded-lg opacity-20 animate-parallax-float hover-scale"
               style={{
                 background: 'var(--accent-cyan)',
-                animation: 'float 6s ease-in-out infinite',
                 animationDelay: '0s',
+                transform: `translateY(${parallaxOffset * -0.2}px)`,
               }}
             />
             {/* Floating card 2 */}
             <div 
-              className="absolute top-1/4 right-1/4 w-28 h-16 rounded-lg opacity-20 animate-float"
+              className="absolute top-1/4 right-1/4 w-28 h-16 rounded-lg opacity-20 animate-parallax-float hover-scale"
               style={{
                 background: 'var(--accent-green)',
-                animation: 'float 7s ease-in-out infinite',
-                animationDelay: '1s',
+                animationDelay: '1.5s',
+                transform: `translateY(${parallaxOffset * -0.15}px)`,
               }}
             />
             {/* Floating card 3 */}
             <div 
-              className="absolute bottom-1/4 left-1/3 w-24 h-14 rounded-lg opacity-20 animate-float"
+              className="absolute bottom-1/4 left-1/3 w-24 h-14 rounded-lg opacity-20 animate-parallax-float hover-scale"
               style={{
                 background: 'var(--accent-purple)',
-                animation: 'float 8s ease-in-out infinite',
-                animationDelay: '2s',
+                animationDelay: '3s',
+                transform: `translateY(${parallaxOffset * -0.25}px)`,
               }}
             />
           </div>

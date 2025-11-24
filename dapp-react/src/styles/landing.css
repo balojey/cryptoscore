@@ -19,9 +19,7 @@
 .landing-section {
   width: 100%;
   padding: 4rem 1rem; /* py-16 px-4 */
-  opacity: 0;
-  transform: translateY(30px);
-  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+  scroll-margin-top: 80px; /* Offset for fixed header when using anchor links */
 }
 
 /* Hero section is always visible on load */
@@ -30,10 +28,14 @@
   transform: translateY(0);
 }
 
-/* Visible state for sections (triggered by Intersection Observer) */
-.landing-section.section-visible {
-  opacity: 1;
-  transform: translateY(0);
+/* Smooth scroll behavior for anchor links */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Scroll padding for anchor navigation */
+html {
+  scroll-padding-top: 80px;
 }
 
 /* Section Container - Max width and centering */
@@ -163,13 +165,18 @@ html.smooth-scroll {
 /* Reduced Motion Support */
 @media (prefers-reduced-motion: reduce) {
   .landing-section {
-    transition: none;
-    opacity: 1;
-    transform: none;
+    transition: none !important;
   }
   
-  html.smooth-scroll {
-    scroll-behavior: auto;
+  html {
+    scroll-behavior: auto !important;
+  }
+  
+  /* Disable all animations for users who prefer reduced motion */
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 
