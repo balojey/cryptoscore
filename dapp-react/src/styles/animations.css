@@ -62,6 +62,22 @@
   animation: slideInDown 0.3s ease-out;
 }
 
+/* Slide In From Bottom - Works with Hero sections */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-in-up {
+  animation: slideInUp 0.6s ease-out;
+}
+
 /* Scale In - Works with Modals, Tooltips */
 @keyframes scaleIn {
   from {
@@ -231,6 +247,26 @@
   height: 10px;
   animation: confetti-fall 3s linear;
   pointer-events: none;
+}
+
+/* Float Animation - Works with decorative elements */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px);
+  }
+  25% {
+    transform: translateY(-20px) translateX(10px);
+  }
+  50% {
+    transform: translateY(-10px) translateX(-10px);
+  }
+  75% {
+    transform: translateY(-15px) translateX(5px);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
 }
 
 /* ============================================

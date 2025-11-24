@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import HeroSection from '../components/landing/HeroSection'
 
 /**
  * LandingPage Component
@@ -60,33 +61,7 @@ export function LandingPage() {
       }}
     >
       {/* Hero Section - Above the fold, loads immediately */}
-      <section
-        data-section="hero"
-        className={`landing-section hero-section ${visibleSections.has('hero') ? 'section-visible' : ''}`}
-        style={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <div className="section-container">
-          <div className="text-center">
-            <h1
-              className="text-5xl md:text-6xl font-bold mb-6"
-              style={{ color: 'var(--text-primary)' }}
-            >
-              Hero Section Placeholder
-            </h1>
-            <p
-              className="text-lg md:text-xl mb-8"
-              style={{ color: 'var(--text-secondary)' }}
-            >
-              This will be replaced with the HeroSection component
-            </p>
-          </div>
-        </div>
-      </section>
+      <HeroSection />
 
       {/* Live Metrics Section - Below the fold, lazy loaded */}
       <section

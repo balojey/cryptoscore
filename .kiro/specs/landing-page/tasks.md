@@ -16,8 +16,8 @@
   - Configure lazy loading for below-the-fold sections
   - _Requirements: 1.1, 9.1, 9.2, 11.2, 12.1, 12.2_
 
-- [ ] 3. Build HeroSection component
-- [ ] 3.1 Create HeroSection structure and layout
+- [x] 3. Build HeroSection component
+- [x] 3.1 Create HeroSection structure and layout
   - Create `src/components/landing/HeroSection.tsx`
   - Implement responsive layout (centered content, full-width background)
   - Add headline with gradient text effect
@@ -25,7 +25,7 @@
   - Apply theme-aware colors and glassmorphism effects
   - _Requirements: 1.1, 1.2, 9.1, 12.1_
 
-- [ ] 3.2 Implement hero CTAs and visual elements
+- [x] 3.2 Implement hero CTAs and visual elements
   - Add primary CTA button linking to `/markets`
   - Add secondary CTA button linking to `/terminal`
   - Create animated background or illustration (sports theme)

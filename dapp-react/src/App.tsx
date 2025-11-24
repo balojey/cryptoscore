@@ -4,6 +4,7 @@ import Content from './components/Content'
 import Footer from './components/layout/Footer'
 import Header from './components/layout/Header'
 import ToastProvider from './components/ui/ToastProvider'
+import { TooltipProvider } from './components/ui/tooltip'
 import { ThemeProvider } from './contexts/ThemeContext'
 
 // Lazy load pages for better performance
@@ -40,29 +41,31 @@ function PageLoader() {
 function App() {
   return (
     <ThemeProvider>
-      <BrowserRouter>
-        <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg-primary)' }}>
-          <a href="#main-content" className="skip-to-main">
-            Skip to main content
-          </a>
-          <Header />
-          <main id="main-content" className="flex-grow" role="main">
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
-                <Route path="/" element={<LandingPage />} />
-                <Route path="/markets" element={<Content />} />
-                <Route path="/terminal" element={<TradingTerminal />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/markets/:marketAddress" element={<MarketDetail />} />
-                <Route path="/leaderboard" element={<Leaderboard />} />
-                <Route path="/shadcn-test" element={<ShadcnTest />} />
-              </Routes>
-            </Suspense>
-          </main>
-          <Footer />
-          <ToastProvider />
-        </div>
-      </BrowserRouter>
+      <TooltipProvider>
+        <BrowserRouter>
+          <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg-primary)' }}>
+            <a href="#main-content" className="skip-to-main">
+              Skip to main content
+            </a>
+            <Header />
+            <main id="main-content" className="flex-grow" role="main">
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
+                  <Route path="/" element={<LandingPage />} />
+                  <Route path="/markets" element={<Content />} />
+                  <Route path="/terminal" element={<TradingTerminal />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/markets/:marketAddress" element={<MarketDetail />} />
+                  <Route path="/leaderboard" element={<Leaderboard />} />
+                  <Route path="/shadcn-test" element={<ShadcnTest />} />
+                </Routes>
+              </Suspense>
+            </main>
+            <Footer />
+            <ToastProvider />
+          </div>
+        </BrowserRouter>
+      </TooltipProvider>
     </ThemeProvider>
   )
 }
