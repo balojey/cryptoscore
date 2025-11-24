@@ -130,7 +130,7 @@
   - Handle empty states for featured markets
   - _Requirements: 11.4_
 
-- [ ] 12. Update Header navigation
+- [x] 12. Update Header navigation
   - Add "Home" link pointing to `/` in Header component
   - Update "Markets" link to point to `/markets`
   - Ensure "Terminal" link points to `/terminal`

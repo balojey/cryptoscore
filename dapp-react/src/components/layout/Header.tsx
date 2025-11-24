@@ -92,6 +92,11 @@ export default function Header() {
               variant="outline"
               size="sm"
               asChild
+              style={{
+                background: location.pathname === '/' ? 'var(--accent-cyan)' : undefined,
+                color: location.pathname === '/' ? 'var(--text-inverse)' : undefined,
+                borderColor: location.pathname === '/' ? 'var(--accent-cyan)' : undefined,
+              }}
             >
               <Link to="/">
                 <span className="icon-[mdi--home] w-4 h-4" />
@@ -103,6 +108,11 @@ export default function Header() {
               variant="outline"
               size="sm"
               asChild
+              style={{
+                background: location.pathname === '/markets' || location.pathname.startsWith('/markets/') ? 'var(--accent-cyan)' : undefined,
+                color: location.pathname === '/markets' || location.pathname.startsWith('/markets/') ? 'var(--text-inverse)' : undefined,
+                borderColor: location.pathname === '/markets' || location.pathname.startsWith('/markets/') ? 'var(--accent-cyan)' : undefined,
+              }}
             >
               <Link to="/markets">
                 <span className="icon-[mdi--chart-box-outline] w-4 h-4" />
@@ -114,6 +124,11 @@ export default function Header() {
               variant="outline"
               size="sm"
               asChild
+              style={{
+                background: location.pathname === '/terminal' ? 'var(--accent-cyan)' : undefined,
+                color: location.pathname === '/terminal' ? 'var(--text-inverse)' : undefined,
+                borderColor: location.pathname === '/terminal' ? 'var(--accent-cyan)' : undefined,
+              }}
             >
               <Link to="/terminal">
                 <span className="icon-[mdi--monitor-dashboard] w-4 h-4" />
@@ -125,6 +140,11 @@ export default function Header() {
               variant="outline"
               size="sm"
               asChild
+              style={{
+                background: location.pathname === '/dashboard' ? 'var(--accent-cyan)' : undefined,
+                color: location.pathname === '/dashboard' ? 'var(--text-inverse)' : undefined,
+                borderColor: location.pathname === '/dashboard' ? 'var(--accent-cyan)' : undefined,
+              }}
             >
               <Link to="/dashboard">
                 <span className="icon-[mdi--view-dashboard-outline] w-4 h-4" />
@@ -136,6 +156,11 @@ export default function Header() {
               variant="outline"
               size="sm"
               asChild
+              style={{
+                background: location.pathname === '/leaderboard' ? 'var(--accent-cyan)' : undefined,
+                color: location.pathname === '/leaderboard' ? 'var(--text-inverse)' : undefined,
+                borderColor: location.pathname === '/leaderboard' ? 'var(--accent-cyan)' : undefined,
+              }}
             >
               <Link to="/leaderboard">
                 <span className="icon-[mdi--trophy] w-4 h-4" />
@@ -175,37 +200,87 @@ export default function Header() {
               )}
 
               <DropdownMenuItem asChild>
-                <Link to="/" className="flex items-center gap-2 cursor-pointer">
+                <Link
+                  to="/"
+                  className="flex items-center gap-2 cursor-pointer"
+                  style={{
+                    color: location.pathname === '/' ? 'var(--accent-cyan)' : undefined,
+                    background: location.pathname === '/' ? 'var(--bg-hover)' : undefined,
+                  }}
+                >
                   <span className="icon-[mdi--home] w-4 h-4" />
                   <span>Home</span>
+                  {location.pathname === '/' && (
+                    <span className="icon-[mdi--check] w-4 h-4 ml-auto" />
+                  )}
                 </Link>
               </DropdownMenuItem>
 
               <DropdownMenuItem asChild>
-                <Link to="/markets" className="flex items-center gap-2 cursor-pointer">
+                <Link
+                  to="/markets"
+                  className="flex items-center gap-2 cursor-pointer"
+                  style={{
+                    color: location.pathname === '/markets' || location.pathname.startsWith('/markets/') ? 'var(--accent-cyan)' : undefined,
+                    background: location.pathname === '/markets' || location.pathname.startsWith('/markets/') ? 'var(--bg-hover)' : undefined,
+                  }}
+                >
                   <span className="icon-[mdi--chart-box-outline] w-4 h-4" />
                   <span>Markets</span>
+                  {(location.pathname === '/markets' || location.pathname.startsWith('/markets/')) && (
+                    <span className="icon-[mdi--check] w-4 h-4 ml-auto" />
+                  )}
                 </Link>
               </DropdownMenuItem>
 
               <DropdownMenuItem asChild>
-                <Link to="/terminal" className="flex items-center gap-2 cursor-pointer">
+                <Link
+                  to="/terminal"
+                  className="flex items-center gap-2 cursor-pointer"
+                  style={{
+                    color: location.pathname === '/terminal' ? 'var(--accent-cyan)' : undefined,
+                    background: location.pathname === '/terminal' ? 'var(--bg-hover)' : undefined,
+                  }}
+                >
                   <span className="icon-[mdi--monitor-dashboard] w-4 h-4" />
                   <span>Terminal</span>
+                  {location.pathname === '/terminal' && (
+                    <span className="icon-[mdi--check] w-4 h-4 ml-auto" />
+                  )}
                 </Link>
               </DropdownMenuItem>
 
               <DropdownMenuItem asChild>
-                <Link to="/dashboard" className="flex items-center gap-2 cursor-pointer">
+                <Link
+                  to="/dashboard"
+                  className="flex items-center gap-2 cursor-pointer"
+                  style={{
+                    color: location.pathname === '/dashboard' ? 'var(--accent-cyan)' : undefined,
+                    background: location.pathname === '/dashboard' ? 'var(--bg-hover)' : undefined,
+                  }}
+                >
                   <span className="icon-[mdi--view-dashboard-outline] w-4 h-4" />
                   <span>Dashboard</span>
+                  {location.pathname === '/dashboard' && (
+                    <span className="icon-[mdi--check] w-4 h-4 ml-auto" />
+                  )}
                 </Link>
               </DropdownMenuItem>
 
               <DropdownMenuItem asChild>
-                <Link to="/leaderboard" className="flex items-center gap-2 cursor-pointer">
+                <Link
+                  to="/leaderboard"
+                  className="flex items-center gap-2 cursor-pointer"
+                  style={{
+                    color: location.pathname === '/leaderboard' ? 'var(--accent-cyan)' : undefined,
+                    background: location.pathname === '/leaderboard' ? 'var(--bg-hover)' : undefined,
+                  }}
+                >
                   <span className="icon-[mdi--trophy] w-4 h-4" />
                   <span>Leaderboard</span>
+                  {location.pathname === '/leaderboard' && (
+                    <span className="icon-[mdi--check] w-4 h-4 ml-auto" />
+                  )}
                 </Link>
               </DropdownMenuItem>
 
