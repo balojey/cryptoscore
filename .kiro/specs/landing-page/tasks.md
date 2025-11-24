@@ -70,8 +70,8 @@
   - Add scroll-triggered entrance animations
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 9.1, 12.1_
 
-- [ ] 7. Build FeaturedMarketsPreview component
-- [ ] 7.1 Create FeaturedMarketsPreview structure
+- [x] 7. Build FeaturedMarketsPreview component
+- [x] 7.1 Create FeaturedMarketsPreview structure
   - Create `src/components/landing/FeaturedMarketsPreview.tsx`
   - Create CompactMarketCard sub-component for market display
   - Implement responsive grid layout (3 → 2 → horizontal scroll)
@@ -79,7 +79,7 @@
   - Add "View All Markets" CTA linking to `/markets`
   - _Requirements: 5.1, 5.4, 7.3, 9.1_
 
-- [ ] 7.2 Implement featured markets selection logic
+- [x] 7.2 Implement featured markets selection logic
   - Fetch markets data using useReadContract hook
   - Create algorithm to select top 3 markets by pool size
   - Add logic to identify markets ending soon (< 24 hours, top 2)

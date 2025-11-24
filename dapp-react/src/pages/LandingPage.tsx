@@ -3,6 +3,7 @@ import HeroSection from '../components/landing/HeroSection'
 import LiveMetrics from '../components/landing/LiveMetrics'
 import HowItWorks from '../components/landing/HowItWorks'
 import KeyFeatures from '../components/landing/KeyFeatures'
+import FeaturedMarketsPreview from '../components/landing/FeaturedMarketsPreview'
 
 /**
  * LandingPage Component
@@ -85,20 +86,7 @@ export function LandingPage() {
         data-section="featured-markets"
         className={`landing-section featured-markets-section ${visibleSections.has('featured-markets') ? 'section-visible' : ''}`}
       >
-        <div className="section-container">
-          <h2
-            className="text-3xl md:text-4xl font-bold text-center mb-12"
-            style={{ color: 'var(--text-primary)' }}
-          >
-            Featured Markets Placeholder
-          </h2>
-          <p
-            className="text-center"
-            style={{ color: 'var(--text-secondary)' }}
-          >
-            This will be replaced with the FeaturedMarketsPreview component
-          </p>
-        </div>
+        <FeaturedMarketsPreview />
       </section>
 
       {/* Why CryptoScore Section - Below the fold, lazy loaded */}
