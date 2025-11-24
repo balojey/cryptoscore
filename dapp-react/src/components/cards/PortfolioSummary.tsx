@@ -1,15 +1,46 @@
 import type { MarketDashboardInfo } from '../../types'
 import { useMemo } from 'react'
 import { formatEther } from 'viem'
+import { useReadContracts } from 'wagmi'
 import { Card, CardContent } from '@/components/ui/card'
+import { CryptoScoreMarketABI } from '../../config/contracts'
 
 interface PortfolioSummaryProps {
-  markets: MarketDashboardInfo[]
   userAddress?: string
   joinedMarkets?: MarketDashboardInfo[]
 }
 
-export default function PortfolioSummary({ markets, userAddress, joinedMarkets = [] }: PortfolioSummaryProps) {
+export default function PortfolioSummary({ userAddress, joinedMarkets = [] }: PortfolioSummaryProps) {
+  // Fetch user predictions and rewards for all joined markets
+  const contractCalls = useMemo(() => {
+    if (!userAddress || joinedMarkets.length === 0)
+      return []
+
+    const calls = joinedMarkets.flatMap(market => [
+      {
+        address: market.marketAddress,
+        abi: CryptoScoreMarketABI as any,
+        functionName: 'getUserPrediction' as const,
+        args: [userAddress] as const,
+      },
+      {
+        address: market.marketAddress,
+        abi: CryptoScoreMarketABI as any,
+        functionName: 'rewards' as const,
+        args: [userAddress] as const,
+      },
+    ])
+
+    return calls
+  }, [userAddress, joinedMarkets])
+
+  const { data: contractData } = useReadContracts({
+    contracts: contractCalls,
+    query: {
+      enabled: contractCalls.length > 0,
+    },
+  })
+
   const stats = useMemo(() => {
     if (!userAddress) {
       return {
@@ -27,75 +58,64 @@ export default function PortfolioSummary({ markets, userAddress, joinedMarkets =
     const activePositions = joinedMarkets.filter(m => !m.resolved).length
     const resolvedPositions = joinedMarkets.filter(m => m.resolved).length
 
-    // Total amount invested = Entry fees from markets where user placed predictions
-    // joinedMarkets should contain ALL markets where user participated (regardless of who created them)
-    // This is what getUserMarketsDashboardPaginated(createdOnly: false) returns
-    const participatedMarkets = joinedMarkets
+    // Parse contract data to get predictions and rewards
+    const userMarketData = joinedMarkets.map((market, index) => {
+      const predictionResult = contractData?.[index * 2]
+      const rewardResult = contractData?.[index * 2 + 1]
 
-    const totalInvested = participatedMarkets.reduce((sum, m) => {
+      return {
+        market,
+        prediction: predictionResult?.status === 'success' ? Number(predictionResult.result) : 0,
+        reward: rewardResult?.status === 'success' ? rewardResult.result as bigint : 0n,
+      }
+    })
+
+    // Calculate total invested (entry fees for all participated markets)
+    const totalInvested = joinedMarkets.reduce((sum, m) => {
       return sum + Number(formatEther(m.entryFee))
     }, 0)
 
-    // Calculate win/loss statistics from available market data
-    // We have: market.winner, prediction counts, but need user's actual predictions
+    // Calculate total claimable rewards
+    const totalClaimableRewards = userMarketData.reduce((sum, data) => {
+      return sum + Number(formatEther(data.reward))
+    }, 0)
 
-    let totalActualWinnings = 0
+    // Calculate wins and losses based on actual predictions
     let totalWins = 0
     let totalLosses = 0
+    let totalActualWinnings = 0
 
-    const resolvedParticipatedMarkets = participatedMarkets.filter(m => m.resolved)
+    const resolvedMarkets = userMarketData.filter(data => data.market.resolved)
 
-    // TODO: For 100% accuracy, we need to implement a batch prediction fetcher
-    // that calls getUserPrediction() for each market and compares with market.winner
+    resolvedMarkets.forEach((data) => {
+      const { market, prediction, reward } = data
+      const winner = market.winner // 1=HOME, 2=AWAY, 3=DRAW, 0=NONE
 
-    // Current approach: Statistical estimation based on market outcomes
-    resolvedParticipatedMarkets.forEach((market) => {
-      const winner = market.winner // 1=HOME, 2=AWAY, 3=DRAW
-
-      if (winner > 0) {
-        const homeCount = Number(market.homeCount || 0)
-        const awayCount = Number(market.awayCount || 0)
-        const drawCount = Number(market.drawCount || 0)
-        const totalPredictions = homeCount + awayCount + drawCount
-
-        if (totalPredictions > 0) {
-          // Calculate actual winners based on market outcome
-          let winnersCount = 0
-          if (winner === 1)
-            winnersCount = homeCount // HOME won
-          else if (winner === 2)
-            winnersCount = awayCount // AWAY won
-          else if (winner === 3)
-            winnersCount = drawCount // DRAW won
-
-          // Statistical estimation: assume user's win rate matches market average
-          const marketWinRate = winnersCount / totalPredictions
-
-          // For consistent results, use market address as seed
-          const addressNum = Number.parseInt(market.marketAddress.slice(-4), 16)
-          const isWin = (addressNum % 100) < (marketWinRate * 100)
-
-          if (isWin && winnersCount > 0) {
-            totalWins++
-            // Calculate user's estimated share of winning pool
-            const poolSize = Number(formatEther(market.entryFee)) * Number(market.participantsCount)
-            const userShare = (poolSize * 0.98) / winnersCount // 98% after 2% fees
-            totalActualWinnings += userShare
-          }
-          else {
-            totalLosses++
-          }
+      // If market is resolved and has a winner
+      if (winner > 0 && prediction > 0) {
+        // Check if user's prediction matches the winner
+        if (prediction === winner) {
+          totalWins++
+          totalActualWinnings += Number(formatEther(reward))
+        }
+        else {
+          totalLosses++
         }
       }
     })
 
-    const winRate = resolvedParticipatedMarkets.length > 0 ? (totalWins / resolvedParticipatedMarkets.length) * 100 : 0
+    const winRate = resolvedMarkets.length > 0 ? (totalWins / resolvedMarkets.length) * 100 : 0
 
-    // P&L = Actual winnings from resolved markets - Total amount invested
-    const totalPnL = totalActualWinnings - totalInvested
+    // P&L = Total winnings (claimed + claimable) - Total invested
+    const totalPnL = totalActualWinnings + totalClaimableRewards - totalInvested
 
-    // Portfolio Value = Total invested + Actual profit from resolved markets
-    const totalValue = totalInvested + Math.max(0, totalActualWinnings - totalInvested)
+    // Portfolio Value = Value in active positions + Claimable rewards
+    // Active positions value = entry fees for unresolved markets
+    const activePositionsValue = joinedMarkets
+      .filter(m => !m.resolved)
+      .reduce((sum, m) => sum + Number(formatEther(m.entryFee)), 0)
+
+    const totalValue = activePositionsValue + totalClaimableRewards
 
     return {
       totalValue,
@@ -106,7 +126,7 @@ export default function PortfolioSummary({ markets, userAddress, joinedMarkets =
       winRate,
       totalPnL,
     }
-  }, [markets, userAddress, joinedMarkets])
+  }, [userAddress, joinedMarkets, contractData])
 
   const StatCard = ({
     label,

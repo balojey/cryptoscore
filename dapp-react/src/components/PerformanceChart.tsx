@@ -1,32 +1,83 @@
-import type { Market } from '../types'
+import type { MarketDashboardInfo } from '../types'
 import { useMemo } from 'react'
+import { useAccount, useReadContracts } from 'wagmi'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { CryptoScoreMarketABI } from '../config/contracts'
 
 interface PerformanceChartProps {
-  markets: Market[]
+  markets: MarketDashboardInfo[]
 }
 
 export default function PerformanceChart({ markets }: PerformanceChartProps) {
+  const { address } = useAccount()
+
+  // Fetch user predictions for all markets
+  const contractCalls = useMemo(() => {
+    if (!address || markets.length === 0)
+      return []
+
+    return markets.map(market => ({
+      address: market.marketAddress,
+      abi: CryptoScoreMarketABI as any,
+      functionName: 'getUserPrediction' as const,
+      args: [address] as const,
+    }))
+  }, [address, markets])
+
+  const { data: predictionsData } = useReadContracts({
+    contracts: contractCalls,
+    query: {
+      enabled: contractCalls.length > 0,
+    },
+  })
+
   const chartData = useMemo(() => {
     const resolvedMarkets = markets.filter(m => m.resolved)
 
-    // For now, we'll create a simple visualization
-    // In a real implementation, you'd fetch actual win/loss data
-    const totalResolved = resolvedMarkets.length
-    const estimatedWins = Math.floor(totalResolved * 0.6) // Placeholder
-    const estimatedLosses = totalResolved - estimatedWins
+    if (resolvedMarkets.length === 0 || !predictionsData) {
+      return {
+        wins: 0,
+        losses: 0,
+        total: 0,
+        winPercentage: 0,
+        lossPercentage: 0,
+      }
+    }
 
-    const winPercentage = totalResolved > 0 ? (estimatedWins / totalResolved) * 100 : 0
-    const lossPercentage = totalResolved > 0 ? (estimatedLosses / totalResolved) * 100 : 0
+    // Calculate actual wins and losses
+    let wins = 0
+    let losses = 0
+
+    resolvedMarkets.forEach((market, index) => {
+      const predictionResult = predictionsData[markets.indexOf(market)]
+      if (predictionResult?.status === 'success') {
+        const prediction = Number(predictionResult.result)
+        const winner = market.winner
+
+        // Only count if user made a prediction and market has a winner
+        if (prediction > 0 && winner > 0) {
+          if (prediction === winner) {
+            wins++
+          }
+          else {
+            losses++
+          }
+        }
+      }
+    })
+
+    const total = wins + losses
+    const winPercentage = total > 0 ? (wins / total) * 100 : 0
+    const lossPercentage = total > 0 ? (losses / total) * 100 : 0
 
     return {
-      wins: estimatedWins,
-      losses: estimatedLosses,
-      total: totalResolved,
+      wins,
+      losses,
+      total,
       winPercentage,
       lossPercentage,
     }
-  }, [markets])
+  }, [markets, predictionsData])
 
   if (chartData.total === 0) {
     return (

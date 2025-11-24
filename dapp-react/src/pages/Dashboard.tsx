@@ -229,7 +229,6 @@ export function Dashboard() {
         {/* Portfolio Summary */}
         <div className="mb-8">
           <PortfolioSummary
-            markets={allInvolvedMarkets}
             userAddress={address}
             joinedMarkets={joinedMarkets}
           />
