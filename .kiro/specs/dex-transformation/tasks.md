@@ -1,6 +1,6 @@
 # Implementation Plan
 
-- [ ] 1. Set up USDC asset integration foundation
+- [x] 1. Set up USDC asset integration foundation
   - Update Polkadot Asset Hub configuration for USDC Asset ID 1337
   - Create USDC utility functions for 6-decimal precision handling
   - Update chain configuration in wagmi.ts for USDC asset support
@@ -27,7 +27,7 @@
   - Update aggregation functions for USDC-based calculations
   - _Requirements: 11.3, 11.4_
 
-- [ ]* 2.4 Write smart contract tests for USDC integration
+- [ ] 2.4 Write smart contract tests for USDC integration
   - Create unit tests for USDC asset transfer functions
   - Test pre-authorization mechanisms
   - Verify 6-decimal precision handling

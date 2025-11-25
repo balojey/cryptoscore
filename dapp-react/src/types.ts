@@ -99,3 +99,26 @@ export interface MarketProps {
   marketAddress?: `0x${string}`
   refetchMarkets: () => void
 }
+
+// USDC-related types
+export interface USDCBalance {
+  balance: bigint
+  formatted: string
+  symbol: string
+}
+
+export interface USDCTransaction {
+  hash: string
+  type: 'deposit' | 'withdraw' | 'trade' | 'reward'
+  amount: bigint
+  status: 'pending' | 'confirmed' | 'failed'
+  timestamp: Date
+  marketAddress?: `0x${string}`
+}
+
+export interface USDCAssetConfig {
+  assetId: number
+  decimals: number
+  symbol: string
+  name: string
+}

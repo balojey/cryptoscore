@@ -8,6 +8,14 @@ import '@parity/hardhat-polkadot'
 // Override with .env file if it exists
 dotenv.config({ path: ['.env.development', '.env'], override: true })
 
+// USDC Asset configuration for Polkadot Asset Hub
+export const USDC_ASSET_CONFIG = {
+  id: 1337,
+  decimals: 6,
+  symbol: 'USDC',
+  name: 'USD Coin'
+} as const
+
 // https://docs.polkadot.com/develop/smart-contracts/dev-environments/hardhat/
 const config: HardhatUserConfig = {
   solidity: '0.8.28',

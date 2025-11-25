@@ -36,3 +36,23 @@ export function formatTime(timestamp: Date): string {
     return `${hours}h ago`
   return `${days}d ago`
 }
+
+/**
+ * Formats a number with commas for thousands separator
+ * @param value - Number to format
+ * @returns Formatted number string
+ */
+export function formatNumber(value: number): string {
+  return new Intl.NumberFormat('en-US').format(value)
+}
+
+/**
+ * Formats a currency amount with proper decimal places
+ * @param amount - Amount to format
+ * @param currency - Currency symbol (default: '$')
+ * @param decimals - Number of decimal places (default: 2)
+ * @returns Formatted currency string
+ */
+export function formatCurrency(amount: number, currency: string = '$', decimals: number = 2): string {
+  return `${currency}${amount.toFixed(decimals)}`
+}
