@@ -26,12 +26,13 @@ npm run lint            # ESLint with @antfu/eslint-config
   - Wagmi 2.17 (React hooks for Ethereum)
   - Viem 2.37 (TypeScript Ethereum interface)
   - TanStack Query 5.90 (data fetching/caching)
-- **Styling**: Tailwind CSS 4.1 + DaisyUI 5.1
+- **Styling**: Tailwind CSS 4.1 with custom design system
 - **Theming**: Custom theme system with 6 presets (CSS variables + React Context)
 - **Routing**: React Router DOM 7.9
-- **Icons**: Iconify with MDI and Token Branded sets
+- **UI Components**: Radix UI primitives (Dialog, Dropdown, Select, Tabs, Tooltip, etc.)
+- **Icons**: Iconify with MDI and Token Branded sets, Lucide React
 - **Charts**: Recharts 3.4 (data visualizations)
-- **Notifications**: React Hot Toast 2.6
+- **Notifications**: React Hot Toast 2.6 + Sonner 2.0
 - **Virtual Scrolling**: @tanstack/react-virtual 3.13
 
 ### Design System

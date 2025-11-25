@@ -21,11 +21,16 @@ export default function PublicMarkets() {
     sortBy: 'newest',
   })
 
+
+  
   const { data, isLoading, isError, error, refetch } = useReadContract({
-    address: CRYPTO_SCORE_DASHBOARD_ADDRESS,
+    address: CRYPTO_SCORE_DASHBOARD_ADDRESS as `0x${string}`,
     abi: CryptoScoreDashboardABI,
     functionName: 'getMarketsDashboardPaginated',
     args: [BigInt(offset), BigInt(PAGE_SIZE), true], // Fetching only public markets
+    query: {
+      enabled: !!CRYPTO_SCORE_DASHBOARD_ADDRESS, // Only run if address is available
+    },
   })
 
   useEffect(() => {
@@ -92,18 +97,19 @@ export default function PublicMarkets() {
   }
 
   if (isError) {
+    console.error('Contract read error:', error)
     return (
       <div
         className="px-6 py-4 rounded-[16px] text-center"
         style={{
-          background: 'var(--error-bg)',
-          border: '1px solid var(--error-border)',
-          color: 'var(--error)',
+          background: 'var(--bg-elevated)',
+          border: '1px solid var(--accent-red)',
+          color: 'var(--accent-red)',
         }}
         role="alert"
       >
         <h4 className="font-bold mb-1">Error Loading Markets</h4>
-        <p className="text-sm">{(error as any)?.shortMessage || 'An unexpected error occurred.'}</p>
+        <p className="text-sm">{(error as any)?.shortMessage || (error as any)?.message || 'Failed to load markets. Please try again later.'}</p>
       </div>
     )
   }

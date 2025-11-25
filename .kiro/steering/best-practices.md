@@ -43,23 +43,33 @@
 
 ### Styling
 
-- **CSS Variables**: Use CSS variables for all colors to support theming
-- **Tailwind First**: Use utility classes over custom CSS (except for themed colors)
-- **Design Tokens**: Reference tokens from `styles/tokens.css`
-- **Component Classes**: Use predefined classes from `styles/components.css`
-- **Responsive**: Mobile-first approach with breakpoints
-- **Theme Support**: All components must work with all 6 theme presets
-- **No Hardcoded Colors**: Always use CSS variables (e.g., `var(--bg-primary)`) instead of hex/rgb values
+- **CSS Variables First**: ALWAYS use CSS variables for colors to support theming
+- **No Hardcoded Colors**: Never use hex/rgb values directly - use `var(--bg-primary)`, `var(--text-primary)`, etc.
+- **Design Tokens**: Reference tokens from `styles/tokens.css` (40+ theme-aware tokens)
+- **Component Classes**: Use predefined classes from `styles/components.css` (30+ reusable classes)
+- **Tailwind Utilities**: Use for layout, spacing, and non-color properties
+- **Responsive**: Mobile-first approach with breakpoints (sm, md, lg, xl)
+- **Theme Testing**: Test all components with all 6 theme presets
+- **Inline Styles**: When using inline styles, always use CSS variables:
+  ```tsx
+  // ✅ Good
+  <div style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)' }}>
+  
+  // ❌ Bad
+  <div style={{ background: '#252930', color: '#FFFFFF' }}>
+  ```
 
 ### Accessibility
 
-- **Semantic HTML**: Use proper HTML5 elements
-- **ARIA Labels**: Add labels for screen readers
-- **Keyboard Navigation**: Support Tab, Enter, Escape keys
-- **Focus Management**: Visible focus indicators
-- **Color Contrast**: Maintain WCAG AA standards (4.5:1 minimum) across all themes
-- **Reduced Motion**: Respect `prefers-reduced-motion`
-- **Theme Accessibility**: Test all themes for proper contrast and readability
+- **Semantic HTML**: Use proper HTML5 elements (header, nav, main, article, section)
+- **ARIA Labels**: Add labels for screen readers on interactive elements
+- **Keyboard Navigation**: Support Tab, Enter, Escape, Arrow keys
+- **Focus Management**: Visible focus indicators with proper contrast
+- **Color Contrast**: Maintain WCAG AA standards (4.5:1 minimum for text, 3:1 for UI components)
+- **Theme Contrast**: All 6 themes maintain WCAG AA compliance
+- **Reduced Motion**: Respect `prefers-reduced-motion` media query
+- **Skip Links**: Provide skip to main content functionality
+- **Screen Reader Text**: Use `.sr-only` class for screen reader only content
 
 ### Testing
 

@@ -1,15 +1,16 @@
-# Solidity Hardhat + Wagmi Template
+# CryptoScore Development Guide
 
-A comprehensive full-stack Web3 development template featuring Hardhat for smart contract development and modern frontend applications with Wagmi integration.
+A comprehensive guide for developing and deploying the CryptoScore prediction markets platform.
 
 ## Features
 
 - **Smart Contract Development**: Hardhat with TypeScript and Polkadot integration
-- **Dual Frontend Options**: React and Vue.js applications with Web3 connectivity
+- **React Frontend**: Modern Web3 application with Wagmi integration
 - **Modern Web3 Stack**: Wagmi, Viem, and TanStack Query for optimal DX
-- **UI Components**: DaisyUI + Tailwind CSS for beautiful, responsive interfaces
+- **Theme System**: 6 professionally designed themes with instant switching
+- **UI Components**: Tailwind CSS with custom design system
 - **Type Safety**: Full TypeScript support across all components
-- **Development Tools**: ESLint configuration and automated contract verification
+- **Development Tools**: ESLint configuration with @antfu/eslint-config
 
 ## Project Structure
 
@@ -28,14 +29,25 @@ A comprehensive full-stack Web3 development template featuring Hardhat for smart
         └── config/       # Contract configurations
 ```
 
-## Smart Contract
+## Smart Contracts
 
-The template includes a **MessageBoard** contract that demonstrates:
-- Message posting with sender tracking
-- Circular buffer storage (last 8 messages)
-- Message retrieval by sender or index
-- Event emission for frontend integration
-- Input validation and gas optimization
+CryptoScore includes three main contracts:
+
+### **CryptoScoreFactory.sol**
+- Deploys new market contracts
+- Tracks all markets system-wide
+- Emits indexed events for dashboard indexing
+
+### **CryptoScoreMarket.sol**
+- Self-contained prediction market contract
+- Stores creator, participants, entry fee, metadata, match ID
+- Tracks state (open, closed, resolved)
+- Distributes rewards on resolution
+
+### **CryptoScoreDashboard.sol**
+- Aggregates market information across contracts
+- Exposes public + private markets
+- Provides user-centric data queries
 
 ## Getting Started
 
@@ -109,13 +121,35 @@ The template is pre-configured for:
 
 ## Frontend Features
 
-Both React and Vue applications include:
+The React application includes:
 
-- **Wallet Connection**: Connect/disconnect Web3 wallets
-- **Account Balance**: Display native token balance
-- **Message Posting**: Submit messages to the smart contract
-- **Message Display**: View recent messages with sender information
-- **Responsive Design**: Mobile-friendly interface with DaisyUI components
+### **Theming System**
+- 6 professional themes with instant switching
+- Keyboard shortcut (Ctrl+Shift+T) for quick cycling
+- localStorage persistence
+- WCAG AA compliant
+
+### **Market Features**
+- Create and join prediction markets
+- Enhanced market cards with distribution visualization
+- Portfolio dashboard with performance tracking
+- Advanced filtering and sorting
+- Real-time updates with 10-second polling
+
+### **Data Visualizations**
+- Prediction distribution charts
+- Pool trend charts
+- Performance charts
+
+### **Social Features**
+- Leaderboard system
+- Market comments
+- Social sharing (Twitter, Farcaster)
+
+### **Performance**
+- Virtual scrolling for large lists
+- Code splitting for routes
+- PWA support with offline capability
 
 ## Available Scripts
 
@@ -128,15 +162,11 @@ You can run scripts from the root directory using the `-w` flag or navigate to t
 - `npm run accounts -w hardhat` - Show account information
 - `npm run lint -w hardhat` - Run ESLint
 
-### Frontend (React/Vue)
-- `npm run dev -w dapp-react` - Start React dev server
-- `npm run dev -w dapp-vue` - Start Vue dev server
+### Frontend (React)
+- `npm run dev -w dapp-react` - Start React dev server (localhost:5173)
 - `npm run build -w dapp-react` - Build React for production
-- `npm run build -w dapp-vue` - Build Vue for production
 - `npm run preview -w dapp-react` - Preview React production build
-- `npm run preview -w dapp-vue` - Preview Vue production build
-- `npm run lint -w dapp-react` - Run ESLint for React
-- `npm run lint -w dapp-vue` - Run ESLint for Vue
+- `npm run lint -w dapp-react` - Run ESLint with auto-fix
 
 ## Technology Stack
 
@@ -147,12 +177,14 @@ You can run scripts from the root directory using the `-w` flag or navigate to t
 - **TypeScript**: Type-safe development
 
 ### Frontend
-- **React 19** / **Vue 3**: Modern frontend frameworks
-- **Wagmi**: React/Vue hooks for Ethereum
+- **React 19**: Modern UI framework
+- **Wagmi**: React hooks for Ethereum
 - **Viem**: TypeScript interface for Ethereum
 - **TanStack Query**: Data fetching and caching
 - **Tailwind CSS**: Utility-first CSS framework
-- **DaisyUI**: Component library for Tailwind CSS
+- **Recharts**: Data visualization library
+- **React Router**: Client-side routing
+- **@tanstack/react-virtual**: Virtual scrolling
 
 ## Contributing
 

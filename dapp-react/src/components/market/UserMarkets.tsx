@@ -10,18 +10,18 @@ export function UserMarkets() {
 
   const { data: userCreatedMarkets, isLoading: isLoadingCreated } = useReadContract({
     abi: CryptoScoreDashboardABI,
-    address: CRYPTO_SCORE_DASHBOARD_ADDRESS,
+    address: CRYPTO_SCORE_DASHBOARD_ADDRESS as `0x${string}`,
     functionName: 'getUserMarketsDashboardPaginated',
     args: [address, 0, 10, true], // Fetch up to 10 of the user's most recent markets
-    query: { enabled: !!address },
+    query: { enabled: !!address && !!CRYPTO_SCORE_DASHBOARD_ADDRESS },
   }) as { data: Market[] | undefined, isLoading: boolean }
 
   const { data: userJoinedMarkets, isLoading: isLoadingJoined } = useReadContract({
     abi: CryptoScoreDashboardABI,
-    address: CRYPTO_SCORE_DASHBOARD_ADDRESS,
+    address: CRYPTO_SCORE_DASHBOARD_ADDRESS as `0x${string}`,
     functionName: 'getUserMarketsDashboardPaginated',
     args: [address, 0, 10, false], // Fetch up to 10 of the user's most recent markets
-    query: { enabled: !!address },
+    query: { enabled: !!address && !!CRYPTO_SCORE_DASHBOARD_ADDRESS },
   }) as { data: Market[] | undefined, isLoading: boolean }
 
   const userMarkets = useMemo(() => {

@@ -1,8 +1,8 @@
-# [CryptoScore — Decentralized Sports Predictive Markets ⚽📈](https://cryptoscore.vercel.app/)
+# [CryptoScore — Decentralized Sports Prediction Markets ⚽📈](https://cryptoscore.vercel.app/)
 
-A Polkadot-powered onchain predictive sports market platform
+A professional Web3 trading terminal for football prediction markets on Polkadot
 
-CryptoScore is a fully on-chain predictive markets dApp where users create, join, and resolve football-based prediction markets backed by live match data. Built on Polkadot and powered by a modular smart contract architecture, CryptoScore delivers an intuitive, fast, trustless way for communities to speculate on match outcomes.
+CryptoScore is a fully on-chain prediction markets platform where users create, join, and resolve football-based prediction markets backed by live match data. Built on Polkadot Asset Hub with a modular smart contract architecture, CryptoScore delivers a professional trading experience with advanced analytics, real-time updates, and customizable theming.
 
 This repository contains **two major codebases**:
 
@@ -13,26 +13,42 @@ This repository contains **two major codebases**:
 
 ## 🚀 Features
 
-### **For Users**
+### **Theming & Personalization**
+* **6 Professional Themes** - Dark Terminal (default), Ocean Blue, Forest Green, Sunset Orange, Purple Haze, Light Mode
+* **Instant Theme Switching** - Via UI dropdown or keyboard shortcut (Ctrl+Shift+T)
+* **Persistent Preferences** - Theme saved to localStorage
+* **WCAG AA Compliant** - All themes maintain accessibility standards
 
-* Create **public or private** prediction markets
-* Join open markets before match kickoff
+### **Market Operations**
+* Create **public or private** prediction markets for football matches
+* Join open markets before match kickoff with entry fees
 * Automatic match data enrichment using Football-Data.org API
-* Participate, resolve, and withdraw rewards transparently
-* Track personal activity: created markets, joined markets, resolved markets
+* Automatic resolution based on match outcomes
+* Reward distribution with 1% creator fee and 1% platform fee
+* Win celebrations with confetti animations
 
-### **For Community**
+### **Dashboard & Analytics**
+* **Portfolio Dashboard** - Track total value, P&L, win rate, active positions
+* **Performance Charts** - Visualize wins/losses over time
+* **Recent Activity Feed** - Latest market actions
+* **Advanced Filtering** - Status, time range, pool size, entry fee
+* **Real-Time Updates** - 10-second polling with toast notifications
 
-* View paginated public markets created across the ecosystem
-* Lightweight UI with smooth UX and clear data presentation
-* Zero-trust architecture: all rules and payouts handled on-chain
+### **Data Visualizations**
+* **Prediction Distribution** - Pie charts showing HOME/DRAW/AWAY split
+* **Pool Trends** - Line charts tracking pool size growth
+* **Market Analytics** - Comprehensive stats and metrics
 
-### **Developer Highlights**
+### **Social Features**
+* **Leaderboard** - Top 50 traders across 4 categories (win rate, earnings, activity, streak)
+* **Market Comments** - Discussion section with prediction tags
+* **Social Sharing** - Share predictions to Twitter and Farcaster
 
-* Multi-contract architecture (Factory → Dashboard → Market Contracts)
-* Fully typed ABIs
-* Custom hooks for match-data fetching
-* Clean file structure for scaling
+### **Performance & UX**
+* **Virtual Scrolling** - Smooth performance with 1000+ markets (auto-activates >20)
+* **Code Splitting** - Lazy loading for routes
+* **PWA Support** - Installable app with offline capability
+* **Full Accessibility** - WCAG AA compliant, keyboard navigation, screen reader support
 
 ---
 
@@ -93,28 +109,23 @@ A self-contained prediction market contract:
 ### **Frameworks & Core Tools**
 
 * React 19.1 + TypeScript 5.9
-* Wagmi 2.17 (Ethereum/Polkadot connector)
+* Wagmi 2.17 (React hooks for Ethereum)
 * Viem 2.37 (TypeScript Ethereum interface)
 * Vite 7.1 (Build tool)
-* TailwindCSS 4.1 + DaisyUI 5.1
+* Tailwind CSS 4.1 (Styling)
 * TanStack Query 5.90 (Data fetching/caching)
 * React Router 7.9 (Routing)
 * Recharts 3.4 (Data visualization)
 * @tanstack/react-virtual 3.13 (Virtual scrolling)
 
-### **Key UI Concepts**
+### **Design System**
 
-* **Dark Terminal Theme** - Professional trader-focused design
-* **Enhanced Market Cards** - Prediction distribution visualization
-* **Portfolio Dashboard** - Track performance, P&L, win rates
-* **Advanced Filtering** - Status, time range, pool size, entry fee
-* **Real-Time Updates** - 10-second polling with toast notifications
-* **Data Visualizations** - Charts for predictions, performance, trends
-* **Leaderboard System** - Top traders across 4 categories
-* **Social Features** - Comments and sharing to Twitter/Farcaster
-* **Virtual Scrolling** - Smooth performance with 1000+ markets
-* **PWA Support** - Installable app with offline capability
-* **Full Accessibility** - WCAG AA compliant, keyboard navigation
+* **6 Theme Presets** - Instant switching with CSS variables
+* **40+ Design Tokens** - Colors, spacing, shadows, typography (all theme-aware)
+* **30+ Component Classes** - Reusable styled components
+* **Comprehensive Animations** - Fade, slide, scale, pulse, shimmer effects
+* **Glassmorphism** - Backdrop blur effects with theme-appropriate overlays
+* **Typography** - System fonts with monospace code display
 
 ---
 
@@ -218,17 +229,35 @@ npm run interact
 
 ---
 
-## 🎨 UI/UX Design System
+## 🎨 Design System
 
-CryptoScore uses a professional dark terminal theme:
+### **Theme System**
 
-* **Colors**: Cyan primary (#00D4FF), Green success (#00FF88), Red danger (#FF3366)
-* **Design Tokens**: 40+ tokens for colors, spacing, shadows
-* **Components**: 30+ reusable component classes
-* **Animations**: Comprehensive library (fade, slide, scale, pulse, shimmer)
-* **Glassmorphism**: Modern glass effects throughout
-* **Typography**: System fonts with monospace for code
-* **Accessibility**: WCAG AA compliant with full keyboard navigation
+6 professionally designed themes with instant switching:
+
+| Theme | Description | Best For |
+|-------|-------------|----------|
+| **Dark Terminal** | Professional trader theme with neon accents | Default, extended trading sessions |
+| **Ocean Blue** | Deep blue oceanic palette | Cool color preference |
+| **Forest Green** | Nature-inspired green theme | Reduced eye strain |
+| **Sunset Orange** | Warm sunset colors | Evening use, warm preference |
+| **Purple Haze** | Vibrant purple and pink | Creative users, unique aesthetic |
+| **Light Mode** | Clean light theme with subtle shadows | Bright environments, daytime |
+
+**Features:**
+* Instant switching via UI or keyboard (Ctrl+Shift+T)
+* localStorage persistence
+* Theme-specific shadows and colors
+* WCAG AA compliant (4.5:1 contrast ratio)
+* All components use CSS variables for theming
+
+### **Design Tokens**
+
+* **40+ Tokens** - Colors, spacing, shadows, typography (all theme-aware)
+* **30+ Component Classes** - Buttons, cards, badges, stats, utilities
+* **Animation Library** - Fade, slide, scale, pulse, shimmer, bounce, shake
+* **Glassmorphism** - Backdrop blur effects with theme overlays
+* **Typography** - System fonts with monospace for addresses/code
 
 ---
 

@@ -57,11 +57,18 @@ dapp-react/
 │   │   │   ├── Markets.tsx               # Markets container
 │   │   │   ├── PublicMarkets.tsx         # Public markets view
 │   │   │   └── UserMarkets.tsx           # User-specific markets
-│   │   ├── ui/                       # Reusable UI components
+│   │   ├── ui/                       # Reusable UI components (Radix-based)
+│   │   │   ├── button.tsx                # Button component
+│   │   │   ├── dialog.tsx                # Dialog/modal component
+│   │   │   ├── dropdown-menu.tsx         # Dropdown menu component
+│   │   │   ├── select.tsx                # Select component
+│   │   │   ├── tabs.tsx                  # Tabs component
+│   │   │   ├── tooltip.tsx               # Tooltip component
 │   │   │   ├── AnimatedNumber.tsx        # Number transitions
 │   │   │   ├── Confetti.tsx              # Win celebration
 │   │   │   └── ToastProvider.tsx         # Toast notifications
 │   │   ├── VirtualMarketList.tsx     # Virtual scrolling list
+│   │   ├── ThemeSwitcher.tsx         # Theme selection dropdown
 │   │   ├── Account.tsx               # Wallet account display
 │   │   ├── Balance.tsx               # Token balance display
 │   │   ├── Connect.tsx               # Wallet connection button
@@ -80,14 +87,18 @@ dapp-react/
 │   ├── config/                   # Configuration files
 │   │   ├── wagmi.ts                  # Wagmi/chain config
 │   │   └── contracts.ts              # Contract addresses + ABIs
+│   ├── contexts/                 # React contexts
+│   │   └── ThemeContext.tsx          # Theme management (6 presets)
 │   ├── hooks/                    # Custom React hooks
 │   │   ├── useMatchData.ts           # Football-Data.org API hook
 │   │   ├── useFilteredMarkets.ts     # Market filtering logic
 │   │   └── useRealtimeMarkets.ts     # Real-time polling
 │   ├── styles/                   # Design system
-│   │   ├── tokens.css                # Design tokens (40+)
+│   │   ├── tokens.css                # Design tokens (40+ theme-aware)
 │   │   ├── components.css            # Component classes (30+)
 │   │   └── animations.css            # Animation library
+│   ├── lib/                      # Utility libraries
+│   │   └── utils.ts                  # Utility functions (cn, etc.)
 │   ├── utils/                    # Helper functions
 │   │   ├── accessibility.ts          # A11y utilities
 │   │   ├── apiKey.ts                 # API key rotation logic
@@ -120,10 +131,13 @@ dapp-react/
 
 - **Component Organization**: Organized by type (cards/, charts/, layout/, market/, ui/)
 - **Config Centralization**: All contract addresses and ABIs in config/
+- **Context Management**: Theme context for global theme state
 - **Custom Hooks**: Domain-specific hooks in hooks/ (useMatchData, useFilteredMarkets, useRealtimeMarkets)
 - **Type Safety**: Shared types in types.ts, strict TypeScript enabled
 - **ABI Management**: JSON ABIs in abi/, imported in config/contracts.ts
 - **Design System**: Centralized tokens, components, and animations in styles/
+- **Theme System**: CSS variables + React Context for 6 theme presets
+- **UI Components**: Radix UI primitives with custom styling
 - **Code Splitting**: Lazy loading for routes (MarketDetail, MyMarkets, Leaderboard)
 - **Virtual Scrolling**: Auto-activates for >20 markets using @tanstack/react-virtual
 - **Real-Time Updates**: 10-second polling with React Query invalidation

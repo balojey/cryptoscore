@@ -177,28 +177,38 @@ Deploy to any static hosting service:
 
 6 professionally designed themes with instant switching:
 
-| Theme | Description | Best For |
-|-------|-------------|----------|
-| **Dark Terminal** | Professional trader theme with neon accents | Default, extended trading sessions |
-| **Ocean Blue** | Deep blue oceanic palette | Cool color preference |
-| **Forest Green** | Nature-inspired green theme | Reduced eye strain |
-| **Sunset Orange** | Warm sunset colors | Evening use, warm preference |
-| **Purple Haze** | Vibrant purple and pink | Creative users, unique aesthetic |
-| **Light Mode** | Clean light theme with subtle shadows | Bright environments, daytime |
+| Theme | Icon | Description | Best For |
+|-------|------|-------------|----------|
+| **Dark Terminal** | 🖥️ | Professional trader theme with neon accents | Default, extended trading sessions |
+| **Ocean Blue** | 🌊 | Deep blue oceanic palette | Cool color preference |
+| **Forest Green** | 🌲 | Nature-inspired green theme | Reduced eye strain |
+| **Sunset Orange** | 🌅 | Warm sunset colors | Evening use, warm preference |
+| **Purple Haze** | ✨ | Vibrant purple and pink | Creative users, unique aesthetic |
+| **Light Mode** | ☀️ | Clean light theme with subtle shadows | Bright environments, daytime |
 
 **Features:**
-- Instant switching via UI or keyboard (Ctrl+Shift+T)
-- localStorage persistence
-- Theme-specific shadows and colors
-- WCAG AA compliant (4.5:1 contrast ratio)
+- Instant switching via UI dropdown or keyboard shortcut (Ctrl+Shift+T)
+- localStorage persistence across sessions
+- Theme-specific shadows and colors via CSS variables
+- WCAG AA compliant (4.5:1 contrast ratio minimum)
+- All components use CSS variables for dynamic theming
 - Glassmorphism effects with backdrop blur
 
-See [Theme System Documentation](./docs/THEME_SYSTEM.md) for complete details.
+**Implementation:**
+- Context: `src/contexts/ThemeContext.tsx` - Theme management
+- Component: `src/components/ThemeSwitcher.tsx` - UI for theme selection
+- Tokens: `src/styles/tokens.css` - Base design tokens
+- Components: `src/styles/components.css` - Component styles
 
-### Typography
+See [Theme System Guide](./.kiro/steering/theme-system.md) for complete details.
 
-- System fonts for optimal performance
-- Monospace for code and addresses
+### Design Tokens
+
+- **40+ Design Tokens** - Colors, spacing, shadows, typography (all theme-aware)
+- **30+ Component Classes** - Buttons, cards, badges, stats, utilities
+- **Animation Library** - Fade, slide, scale, pulse, shimmer, bounce, shake
+- **Glassmorphism** - Backdrop blur effects with theme overlays
+- **Typography** - System fonts with monospace for addresses/code
 
 ## 📊 Performance
 

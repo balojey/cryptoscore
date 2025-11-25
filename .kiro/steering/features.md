@@ -2,30 +2,56 @@
 
 This document outlines all implemented features and their locations in the codebase.
 
-## Phase 0: Theme System (NEW)
+## Phase 0: Theme System
 
 ### Multi-Theme Support
 **Location:** `src/contexts/ThemeContext.tsx`, `src/components/ThemeSwitcher.tsx`
-- 6 professionally designed themes with instant switching
-- Theme-aware CSS variables for all colors and shadows
+
+**Implementation:**
+- React Context API for global theme state management
+- CSS variables for dynamic color switching (zero re-renders)
 - localStorage persistence across sessions
-- Keyboard shortcut (Ctrl+Shift+T) for quick cycling
-- WCAG AA compliant color contrast in all themes
+- Keyboard shortcut (Ctrl+Shift+T) for quick theme cycling
+- Dropdown UI with theme preview colors
 
 **Available Themes:**
-1. **Dark Terminal** (Default) - Professional trader theme with neon accents
-2. **Ocean Blue** - Deep blue oceanic palette
-3. **Forest Green** - Nature-inspired green theme
-4. **Sunset Orange** - Warm sunset colors
-5. **Purple Haze** - Vibrant purple and pink
+1. **Dark Terminal** (Default) - Professional trader theme with cyan/green/red neon accents
+2. **Ocean Blue** - Deep blue oceanic palette with bright cyan accents
+3. **Forest Green** - Nature-inspired green theme with mint accents
+4. **Sunset Orange** - Warm sunset colors with orange/amber accents
+5. **Purple Haze** - Vibrant purple and pink with magenta accents
 6. **Light Mode** - Clean light theme with subtle shadows
 
+**Features:**
+- Instant switching (no page reload, no flicker)
+- All 6 themes maintain WCAG AA compliance (4.5:1 contrast minimum)
+- Theme-specific shadow intensities (strong for dark, subtle for light)
+- Glassmorphism effects with theme-appropriate overlays
+- All components automatically adapt to theme changes
+
 ### Design System
-**Location:** `src/styles/tokens.css`, `src/styles/components.css`
-- 40+ design tokens for colors, spacing, shadows, typography
-- All tokens are theme-aware via CSS variables
-- Consistent styling across all components
-- Theme-specific shadow intensities
+**Location:** `src/styles/tokens.css`, `src/styles/components.css`, `src/styles/animations.css`
+
+**Design Tokens (40+):**
+- Background colors (primary, secondary, elevated, hover, overlay)
+- Accent colors (cyan, green, red, amber, purple) with hover and glow variants
+- Text colors (primary, secondary, tertiary, disabled, inverse)
+- Border colors (default, hover)
+- Shadow tokens (sm, md, lg, xl, 2xl) - theme-specific
+
+**Component Classes (30+):**
+- Buttons (primary, success, danger, secondary, sizes)
+- Cards (base, glass, header, body, title)
+- Badges (success, error, warning, info, neutral)
+- Stats (card, label, value)
+- Utilities (skeleton, spinner, glow effects, text gradients, hover effects)
+
+**Animation Library:**
+- Entrance animations (fade-in, slide-in, scale-in)
+- State animations (pulse-glow, shimmer, bounce, shake)
+- Interaction animations (hover-lift, hover-glow)
+- Loading animations (skeleton, spinner, dots)
+- Stagger children for sequential animations
 
 ## Phase 1: Foundation
 
