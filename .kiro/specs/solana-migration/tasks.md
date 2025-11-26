@@ -8,22 +8,22 @@
   - Create .env template with Solana configuration
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
 
-- [ ] 2. Copy and adapt frontend from dapp-react
-  - [ ] 2.1 Copy complete dapp-react structure to solana/app/
+- [x] 2. Copy and adapt frontend from dapp-react
+  - [x] 2.1 Copy complete dapp-react structure to solana/app/
     - Copy all src/ components, hooks, contexts, styles, and utilities
     - Copy public/ assets, PWA manifest, and service worker
     - Copy configuration files (vite.config.ts, tsconfig.json, index.html)
     - Copy documentation and README files
     - _Requirements: 12.1, 12.2_
 
-  - [ ] 2.2 Update package.json with Solana dependencies
+  - [x] 2.2 Update package.json with Solana dependencies
     - Remove Wagmi, Viem, and Polkadot-specific dependencies
     - Add @solana/wallet-adapter-react, @solana/wallet-adapter-wallets
     - Add @coral-xyz/anchor for program interaction
     - Keep all UI libraries (Radix, Tailwind, React Router, etc.)
     - _Requirements: 7.1, 7.2_
 
-  - [ ] 2.3 Replace blockchain configuration files
+  - [x] 2.3 Replace blockchain configuration files
     - Replace src/config/wagmi.ts with src/config/solana.ts for cluster configuration
     - Replace src/config/contracts.ts with src/config/programs.ts for program IDs
     - Update environment variable references from VITE_*_CONTRACT to VITE_*_PROGRAM_ID
