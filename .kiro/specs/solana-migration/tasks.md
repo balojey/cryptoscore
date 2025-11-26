@@ -29,27 +29,27 @@
     - Update environment variable references from VITE_*_CONTRACT to VITE_*_PROGRAM_ID
     - _Requirements: 7.4, 11.4_
 
-- [ ] 3. Implement Factory Program
-  - [ ] 3.1 Create Factory program structure and state accounts
+- [x] 3. Implement Factory Program
+  - [x] 3.1 Create Factory program structure and state accounts
     - Define Factory account structure with authority, market count, and platform fee
     - Define MarketRegistry account for tracking created markets
     - Implement initialize_factory instruction with proper validation
     - _Requirements: 2.1, 2.2_
 
-  - [ ] 3.2 Implement market creation functionality
+  - [x] 3.2 Implement market creation functionality
     - Create create_market instruction with match ID, entry fee, and visibility parameters
     - Generate Market PDA and initialize MarketRegistry entry
     - Emit MarketCreated event with indexed market address and creator
     - Add validation for non-zero entry fees and valid match identifiers
     - _Requirements: 2.3, 2.4, 2.5_
 
-  - [ ] 3.3 Add market querying capabilities
+  - [x] 3.3 Add market querying capabilities
     - Implement get_markets instruction for paginated market listing
     - Add filtering by creator, visibility (public/private), and status
     - Return market metadata including creation time and basic stats
     - _Requirements: 6.1, 6.5_
 
-  - [ ] 3.4 Write Factory program tests
+  - [x] 3.4 Write Factory program tests
     - Test factory initialization and authority validation
     - Test market creation with various parameters and edge cases
     - Test market registry updates and PDA generation
