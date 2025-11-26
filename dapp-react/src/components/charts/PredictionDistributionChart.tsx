@@ -1,9 +1,9 @@
-import type { Market } from '../../types'
+import type { Market, MarketDashboardInfo } from '../../types'
 import { useMemo } from 'react'
 import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
 
 interface PredictionDistributionChartProps {
-  markets: Market[]
+  markets: (Market | MarketDashboardInfo)[]
 }
 
 export default function PredictionDistributionChart({ markets }: PredictionDistributionChartProps) {

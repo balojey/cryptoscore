@@ -1,4 +1,4 @@
-import type { Market } from '../types'
+import type { Market, MarketDashboardInfo } from '../types'
 import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { formatEther } from 'viem'
@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 interface RecentActivityProps {
-  markets: Market[]
+  markets: (Market | MarketDashboardInfo)[]
   limit?: number
   isLoading?: boolean
   error?: string
@@ -14,10 +14,10 @@ interface RecentActivityProps {
 }
 
 // Activity types based on market state
-type ActivityType = 'create' | 'join' | 'resolve' | 'live'
+type ActivityType = 'create' | 'join' | 'resolve' | 'unresolved'
 
 interface ActivityItem {
-  market: Market
+  market: Market | MarketDashboardInfo
   type: ActivityType
   timestamp: bigint
 }
@@ -66,17 +66,23 @@ export default function RecentActivity({ markets, limit = 10, isLoading = false,
   }, [markets.length])
 
   // Determine activity type based on market state
-  const getActivityType = (market: Market): ActivityType => {
+  const getActivityType = (market: Market | MarketDashboardInfo): ActivityType => {
+    // First check if resolved - this takes priority
     if (market.resolved)
       return 'resolve'
 
     const now = Date.now()
     const startTime = Number(market.startTime) * 1000
 
+    // If match has started but not resolved yet, it's unresolved (needs resolution)
     if (now > startTime)
-      return 'live'
+      return 'unresolved'
+    
+    // If match hasn't started yet but has participants, show as joined
     if (Number(market.participantsCount) > 1)
       return 'join'
+    
+    // Otherwise it's just created
     return 'create'
   }
 
@@ -101,8 +107,8 @@ export default function RecentActivity({ markets, limit = 10, isLoading = false,
         return 'mdi--account-plus'
       case 'resolve':
         return 'mdi--check-circle'
-      case 'live':
-        return 'mdi--lightning-bolt'
+      case 'unresolved':
+        return 'mdi--alert-circle-outline'
       default:
         return 'mdi--clock-outline'
     }
@@ -117,8 +123,8 @@ export default function RecentActivity({ markets, limit = 10, isLoading = false,
         return 'var(--accent-purple)'
       case 'resolve':
         return 'var(--accent-green)'
-      case 'live':
-        return 'var(--accent-amber)'
+      case 'unresolved':
+        return 'var(--accent-red)'
       default:
         return 'var(--text-tertiary)'
     }
@@ -133,8 +139,8 @@ export default function RecentActivity({ markets, limit = 10, isLoading = false,
         return 'Joined'
       case 'resolve':
         return 'Resolved'
-      case 'live':
-        return 'Live'
+      case 'unresolved':
+        return 'Unresolved'
       default:
         return 'Activity'
     }
@@ -267,8 +273,8 @@ export default function RecentActivity({ markets, limit = 10, isLoading = false,
                           variant={
                             type === 'resolve'
                               ? 'success'
-                              : type === 'live'
-                                ? 'warning'
+                              : type === 'unresolved'
+                                ? 'error'
                                 : type === 'join'
                                   ? 'info'
                                   : 'default'
