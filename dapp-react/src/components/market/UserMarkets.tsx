@@ -1,50 +1,89 @@
 import type { Market } from '../../types'
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { useAccount, useReadContract } from 'wagmi'
-import { CRYPTO_SCORE_DASHBOARD_ADDRESS, CryptoScoreDashboardABI } from '../../config/contracts'
+import { useAccount, useReadContract, useReadContracts } from 'wagmi'
+import { CRYPTO_SCORE_FACTORY_ADDRESS, CryptoScoreFactoryABI, CryptoScoreMarketABI } from '../../config/contracts'
 import EnhancedMarketCard, { EnhancedMarketCardSkeleton } from '../cards/EnhancedMarketCard'
 
 export function UserMarkets() {
   const { address, isConnected } = useAccount()
 
-  const { data: userCreatedMarkets, isLoading: isLoadingCreated } = useReadContract({
-    abi: CryptoScoreDashboardABI,
-    address: CRYPTO_SCORE_DASHBOARD_ADDRESS as `0x${string}`,
-    functionName: 'getUserMarketsDashboardPaginated',
-    args: [address, 0, 10, true], // Fetch up to 10 of the user's most recent markets
-    query: { enabled: !!address && !!CRYPTO_SCORE_DASHBOARD_ADDRESS },
-  }) as { data: Market[] | undefined, isLoading: boolean }
+  // Fetch user's market addresses from factory
+  const { data: userMarketAddresses, isLoading: isLoadingAddresses } = useReadContract({
+    abi: CryptoScoreFactoryABI,
+    address: CRYPTO_SCORE_FACTORY_ADDRESS as `0x${string}`,
+    functionName: 'getUserMarkets',
+    args: [address],
+    query: { enabled: !!address && !!CRYPTO_SCORE_FACTORY_ADDRESS },
+  })
 
-  const { data: userJoinedMarkets, isLoading: isLoadingJoined } = useReadContract({
-    abi: CryptoScoreDashboardABI,
-    address: CRYPTO_SCORE_DASHBOARD_ADDRESS as `0x${string}`,
-    functionName: 'getUserMarketsDashboardPaginated',
-    args: [address, 0, 10, false], // Fetch up to 10 of the user's most recent markets
-    query: { enabled: !!address && !!CRYPTO_SCORE_DASHBOARD_ADDRESS },
-  }) as { data: Market[] | undefined, isLoading: boolean }
+  // Get market info from factory for each address
+  const marketAddresses = useMemo(() => {
+    if (!userMarketAddresses || !Array.isArray(userMarketAddresses)) return []
+    return userMarketAddresses.slice(0, 10) as `0x${string}`[] // Limit to 10 most recent
+  }, [userMarketAddresses])
+
+  // Fetch market info from factory
+  const { data: factoryMarketInfo, isLoading: isLoadingFactory } = useReadContracts({
+    contracts: marketAddresses.map(marketAddress => ({
+      address: CRYPTO_SCORE_FACTORY_ADDRESS as `0x${string}`,
+      abi: CryptoScoreFactoryABI as any,
+      functionName: 'getMarketInfo',
+      args: [marketAddress],
+    })),
+  })
+
+  // Fetch detailed data from individual market contracts
+  const { data: marketDetails, isLoading: isLoadingDetails } = useReadContracts({
+    contracts: marketAddresses.flatMap(marketAddress => [
+      {
+        address: marketAddress,
+        abi: CryptoScoreMarketABI as any,
+        functionName: 'getParticipantsCount',
+      },
+      {
+        address: marketAddress,
+        abi: CryptoScoreMarketABI as any,
+        functionName: 'getPredictionCounts',
+      },
+      {
+        address: marketAddress,
+        abi: CryptoScoreMarketABI as any,
+        functionName: 'resolved',
+      },
+    ]),
+  })
+
+  const isLoadingCreated = isLoadingAddresses || isLoadingFactory || isLoadingDetails
+  const isLoadingJoined = false // No longer needed
 
   const userMarkets = useMemo(() => {
-    if (!userCreatedMarkets && !userJoinedMarkets)
-      return []
+    if (!factoryMarketInfo || !marketDetails) return []
 
-    const combinedMarkets = [
-      ...(userCreatedMarkets || []),
-      ...(userJoinedMarkets || []),
-    ]
+    return marketAddresses.map((_, index) => {
+      const factoryInfo = factoryMarketInfo[index]?.result as any
+      const detailsIndex = index * 3
+      const participantsCount = marketDetails[detailsIndex]?.result as bigint | undefined
+      const predictionCounts = marketDetails[detailsIndex + 1]?.result as [bigint, bigint, bigint] | undefined
+      const resolved = marketDetails[detailsIndex + 2]?.result as boolean | undefined
 
-    // Remove duplicates based on marketAddress
-    const uniqueMarketsMap = new Map<string, Market>()
-    combinedMarkets.forEach((market) => {
-      uniqueMarketsMap.set(market.marketAddress, market)
-    })
+      if (!factoryInfo) return null
 
-    // Convert back to array and sort by creation date (assuming market has a creationDate property)
-    const uniqueMarkets = Array.from(uniqueMarketsMap.values())
-    uniqueMarkets.sort((a, b) => Number(b.startTime) - Number(a.startTime))
-
-    return uniqueMarkets
-  }, [userCreatedMarkets, userJoinedMarkets])
+      return {
+        marketAddress: factoryInfo.marketAddress,
+        matchId: factoryInfo.matchId,
+        entryFee: factoryInfo.entryFee,
+        creator: factoryInfo.creator,
+        participantsCount: participantsCount || BigInt(0),
+        resolved: resolved || false,
+        isPublic: factoryInfo.isPublic,
+        startTime: factoryInfo.startTime,
+        homeCount: predictionCounts?.[0] || BigInt(0),
+        awayCount: predictionCounts?.[1] || BigInt(0),
+        drawCount: predictionCounts?.[2] || BigInt(0),
+      } as Market
+    }).filter(Boolean) as Market[]
+  }, [marketAddresses, factoryMarketInfo, marketDetails])
 
   // Don't render the component if the user is not connected.
   // The homepage will just show the hero and public markets.

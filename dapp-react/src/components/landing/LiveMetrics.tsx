@@ -1,8 +1,8 @@
 import { memo, useEffect, useMemo, useState } from 'react'
-import { useReadContract } from 'wagmi'
+import { useReadContract, useReadContracts } from 'wagmi'
 import { formatEther } from 'viem'
-import { CRYPTO_SCORE_DASHBOARD_ADDRESS, CryptoScoreDashboardABI } from '../../config/contracts'
-import type { MarketDashboardInfo } from '../../types'
+import { CRYPTO_SCORE_FACTORY_ADDRESS, CryptoScoreFactoryABI, CryptoScoreMarketABI } from '../../config/contracts'
+import type { Market } from '../../types'
 import AnimatedNumber from '../ui/AnimatedNumber'
 import { useRealtimeMarkets } from '../../hooks/useRealtimeMarkets'
 import ErrorBanner from '../terminal/ErrorBanner'
@@ -61,20 +61,76 @@ const MetricCard = memo(function MetricCard({ label, value, suffix = '', icon, c
 
 export default function LiveMetrics() {
   const [showError, setShowError] = useState(true)
-  const [cachedData, setCachedData] = useState<MarketDashboardInfo[] | null>(null)
+  const [cachedData, setCachedData] = useState<Market[] | null>(null)
 
-  // Fetch all markets to calculate metrics
-  const { data: marketsData, isLoading, isError, refetch } = useReadContract({
-    address: CRYPTO_SCORE_DASHBOARD_ADDRESS,
-    abi: CryptoScoreDashboardABI,
-    functionName: 'getMarketsDashboardPaginated',
-    args: [BigInt(0), BigInt(1000), false], // Fetch up to 1000 markets (both public and private)
+  // Fetch all markets from factory
+  const { data: factoryMarkets, isLoading: isLoadingFactory, isError: isFactoryError, refetch: refetchFactory } = useReadContract({
+    address: CRYPTO_SCORE_FACTORY_ADDRESS,
+    abi: CryptoScoreFactoryABI,
+    functionName: 'getAllMarkets',
   })
+
+  // Get market addresses for detailed data
+  const marketAddresses = useMemo(() => {
+    if (!factoryMarkets || !Array.isArray(factoryMarkets)) return []
+    return factoryMarkets.map((market: any) => market.marketAddress as `0x${string}`)
+  }, [factoryMarkets])
+
+  // Fetch detailed data from individual market contracts
+  const { data: marketDetails, isLoading: isLoadingDetails, isError: isDetailsError } = useReadContracts({
+    contracts: marketAddresses.flatMap(address => [
+      {
+        address,
+        abi: CryptoScoreMarketABI as any,
+        functionName: 'getParticipantsCount',
+      },
+      {
+        address,
+        abi: CryptoScoreMarketABI as any,
+        functionName: 'getPredictionCounts',
+      },
+      {
+        address,
+        abi: CryptoScoreMarketABI as any,
+        functionName: 'resolved',
+      },
+    ]),
+  })
+
+  // Combine factory data with market details
+  const marketsData = useMemo(() => {
+    if (!factoryMarkets || !Array.isArray(factoryMarkets) || !marketDetails) return null
+
+    return factoryMarkets.map((factoryMarket: any, index: number) => {
+      const detailsIndex = index * 3
+      const participantsCount = marketDetails[detailsIndex]?.result as bigint | undefined
+      const predictionCounts = marketDetails[detailsIndex + 1]?.result as [bigint, bigint, bigint] | undefined
+      const resolved = marketDetails[detailsIndex + 2]?.result as boolean | undefined
+
+      return {
+        marketAddress: factoryMarket.marketAddress,
+        matchId: factoryMarket.matchId,
+        entryFee: factoryMarket.entryFee,
+        creator: factoryMarket.creator,
+        participantsCount: participantsCount || BigInt(0),
+        resolved: resolved || false,
+        isPublic: factoryMarket.isPublic,
+        startTime: factoryMarket.startTime,
+        homeCount: predictionCounts?.[0] || BigInt(0),
+        awayCount: predictionCounts?.[1] || BigInt(0),
+        drawCount: predictionCounts?.[2] || BigInt(0),
+      } as Market
+    })
+  }, [factoryMarkets, marketDetails])
+
+  const isLoading = isLoadingFactory || isLoadingDetails
+  const isError = isFactoryError || isDetailsError
+  const refetch = refetchFactory
 
   // Cache successful data fetches
   useEffect(() => {
     if (marketsData && Array.isArray(marketsData) && marketsData.length > 0) {
-      setCachedData(marketsData as MarketDashboardInfo[])
+      setCachedData(marketsData)
     }
   }, [marketsData])
 
@@ -88,7 +144,7 @@ export default function LiveMetrics() {
   })
 
   // Use cached data if available and current fetch failed
-  const dataToUse = (isError && cachedData) ? cachedData : (marketsData as MarketDashboardInfo[] | undefined)
+  const dataToUse = (isError && cachedData) ? cachedData : (marketsData as Market[] | undefined)
 
   const metrics = useMemo(() => {
     if (!dataToUse || !Array.isArray(dataToUse)) {
@@ -107,7 +163,7 @@ export default function LiveMetrics() {
 
     // Total Value Locked (sum of all pool sizes: entryFee * participantsCount)
     const totalValueLocked = markets.reduce((sum, market) => {
-      const poolSize = Number(formatEther(market.entryFee)) * Number(market.participantsCount)
+      const poolSize = Number(formatEther(BigInt(market.entryFee))) * Number(market.participantsCount)
       return sum + poolSize
     }, 0)
 

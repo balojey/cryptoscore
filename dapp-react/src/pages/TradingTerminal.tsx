@@ -1,6 +1,6 @@
 import type { Market } from '../types'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useReadContract } from 'wagmi'
+import { useReadContract, useReadContracts } from 'wagmi'
 import { ErrorBoundary } from '../components/ErrorBoundary'
 import RecentActivity from '../components/RecentActivity'
 import CachedDataBanner from '../components/terminal/CachedDataBanner'
@@ -10,7 +10,7 @@ import MarketOverviewChart from '../components/terminal/MarketOverviewChart'
 import MetricsBar from '../components/terminal/MetricsBar'
 import TerminalHeader from '../components/terminal/TerminalHeader'
 import TopMovers from '../components/terminal/TopMovers'
-import { CRYPTO_SCORE_DASHBOARD_ADDRESS, CryptoScoreDashboardABI } from '../config/contracts'
+import { CRYPTO_SCORE_FACTORY_ADDRESS, CryptoScoreFactoryABI, CryptoScoreMarketABI } from '../config/contracts'
 import { useRealtimeMarkets } from '../hooks/useRealtimeMarkets'
 
 type Timeframe = '24h' | '7d' | '30d' | 'all'
@@ -25,34 +25,71 @@ export function TradingTerminal() {
   const retryCountRef = useRef(0)
   const maxRetries = 3
 
-  // Fetch all markets for chart data
-  const { data: marketsData, isLoading: isLoadingMarkets, error: fetchError, refetch } = useReadContract({
-    address: CRYPTO_SCORE_DASHBOARD_ADDRESS,
-    abi: CryptoScoreDashboardABI,
-    functionName: 'getMarketsDashboardPaginated',
-    args: [BigInt(0), BigInt(1000), false], // Fetch up to 1000 markets
+  // Fetch all markets from factory
+  const { data: factoryMarkets, isLoading: isLoadingFactory, error: factoryError, refetch: refetchFactory } = useReadContract({
+    address: CRYPTO_SCORE_FACTORY_ADDRESS,
+    abi: CryptoScoreFactoryABI,
+    functionName: 'getAllMarkets',
   })
+
+  // Get market addresses for detailed data
+  const marketAddresses = useMemo(() => {
+    if (!factoryMarkets || !Array.isArray(factoryMarkets)) return []
+    return factoryMarkets.map((market: any) => market.marketAddress as `0x${string}`)
+  }, [factoryMarkets])
+
+  // Fetch detailed data from individual market contracts
+  const { data: marketDetails, isLoading: isLoadingDetails, error: detailsError } = useReadContracts({
+    contracts: marketAddresses.flatMap(address => [
+      {
+        address,
+        abi: CryptoScoreMarketABI as any,
+        functionName: 'getParticipantsCount',
+      },
+      {
+        address,
+        abi: CryptoScoreMarketABI as any,
+        functionName: 'getPredictionCounts',
+      },
+      {
+        address,
+        abi: CryptoScoreMarketABI as any,
+        functionName: 'resolved',
+      },
+    ]),
+  })
+
+  const isLoadingMarkets = isLoadingFactory || isLoadingDetails
+  const fetchError = factoryError || detailsError
+  const refetch = refetchFactory
 
   // Transform contract data to Market type - memoized to prevent infinite loops
   const markets: Market[] = useMemo(() => {
-    if (!marketsData || !Array.isArray(marketsData)) {
+    if (!factoryMarkets || !Array.isArray(factoryMarkets) || !marketDetails) {
       return []
     }
 
-    return marketsData.map((market: any) => ({
-      marketAddress: market.marketAddress,
-      matchId: market.matchId,
-      entryFee: market.entryFee,
-      creator: market.creator,
-      participantsCount: market.participantsCount,
-      resolved: market.resolved,
-      isPublic: market.isPublic,
-      startTime: market.startTime,
-      homeCount: market.homeCount,
-      awayCount: market.awayCount,
-      drawCount: market.drawCount,
-    }))
-  }, [marketsData])
+    return factoryMarkets.map((factoryMarket: any, index: number) => {
+      const detailsIndex = index * 3
+      const participantsCount = marketDetails[detailsIndex]?.result as bigint | undefined
+      const predictionCounts = marketDetails[detailsIndex + 1]?.result as [bigint, bigint, bigint] | undefined
+      const resolved = marketDetails[detailsIndex + 2]?.result as boolean | undefined
+
+      return {
+        marketAddress: factoryMarket.marketAddress,
+        matchId: factoryMarket.matchId,
+        entryFee: factoryMarket.entryFee,
+        creator: factoryMarket.creator,
+        participantsCount: participantsCount || BigInt(0),
+        resolved: resolved || false,
+        isPublic: factoryMarket.isPublic,
+        startTime: factoryMarket.startTime,
+        homeCount: predictionCounts?.[0] || BigInt(0),
+        awayCount: predictionCounts?.[1] || BigInt(0),
+        drawCount: predictionCounts?.[2] || BigInt(0),
+      } as Market
+    })
+  }, [factoryMarkets, marketDetails])
 
   // Cache successful data fetches
   useEffect(() => {
