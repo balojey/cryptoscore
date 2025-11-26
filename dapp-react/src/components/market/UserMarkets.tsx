@@ -8,82 +8,66 @@ import EnhancedMarketCard, { EnhancedMarketCardSkeleton } from '../cards/Enhance
 export function UserMarkets() {
   const { address, isConnected } = useAccount()
 
-  // Fetch user's market addresses from factory
-  const { data: userMarketAddresses, isLoading: isLoadingAddresses } = useReadContract({
-    abi: CryptoScoreFactoryABI,
+  // Fetch all markets from factory
+  const { data: factoryMarkets, isLoading: isLoadingFactory } = useReadContract({
     address: CRYPTO_SCORE_FACTORY_ADDRESS as `0x${string}`,
-    functionName: 'getUserMarkets',
-    args: [address],
+    abi: CryptoScoreFactoryABI,
+    functionName: 'getAllMarkets',
     query: { enabled: !!address && !!CRYPTO_SCORE_FACTORY_ADDRESS },
   })
 
-  // Get market info from factory for each address
+  // Get all market addresses to check participation
   const marketAddresses = useMemo(() => {
-    if (!userMarketAddresses || !Array.isArray(userMarketAddresses)) return []
-    return userMarketAddresses.slice(0, 10) as `0x${string}`[] // Limit to 10 most recent
-  }, [userMarketAddresses])
+    if (!factoryMarkets || !Array.isArray(factoryMarkets)) return []
+    return factoryMarkets.map((m: any) => m.marketAddress as `0x${string}`)
+  }, [factoryMarkets])
 
-  // Fetch market info from factory
-  const { data: factoryMarketInfo, isLoading: isLoadingFactory } = useReadContracts({
-    contracts: marketAddresses.map(marketAddress => ({
-      address: CRYPTO_SCORE_FACTORY_ADDRESS as `0x${string}`,
-      abi: CryptoScoreFactoryABI as any,
-      functionName: 'getMarketInfo',
-      args: [marketAddress],
-    })),
+  // Check if user is a participant in each market
+  const participantChecks = useMemo(() => {
+    return marketAddresses.map((addr) => ({
+      address: addr,
+      abi: CryptoScoreMarketABI as any,
+      functionName: 'isParticipant' as const,
+      args: [address],
+    }))
+  }, [marketAddresses, address])
+
+  const { data: participantResults, isLoading: isLoadingParticipants } = useReadContracts({
+    contracts: participantChecks,
+    query: {
+      enabled: marketAddresses.length > 0 && !!address,
+    },
   })
 
-  // Fetch detailed data from individual market contracts
-  const { data: marketDetails, isLoading: isLoadingDetails } = useReadContracts({
-    contracts: marketAddresses.flatMap(marketAddress => [
-      {
-        address: marketAddress,
-        abi: CryptoScoreMarketABI as any,
-        functionName: 'getParticipantsCount',
-      },
-      {
-        address: marketAddress,
-        abi: CryptoScoreMarketABI as any,
-        functionName: 'getPredictionCounts',
-      },
-      {
-        address: marketAddress,
-        abi: CryptoScoreMarketABI as any,
-        functionName: 'resolved',
-      },
-    ]),
-  })
-
-  const isLoadingCreated = isLoadingAddresses || isLoadingFactory || isLoadingDetails
-  const isLoadingJoined = false // No longer needed
+  const isLoading = isLoadingFactory || isLoadingParticipants
 
   const userMarkets = useMemo(() => {
-    if (!factoryMarketInfo || !marketDetails) return []
+    if (!factoryMarkets || !participantResults || !Array.isArray(factoryMarkets)) return []
 
-    return marketAddresses.map((_, index) => {
-      const factoryInfo = factoryMarketInfo[index]?.result as any
-      const detailsIndex = index * 3
-      const participantsCount = marketDetails[detailsIndex]?.result as bigint | undefined
-      const predictionCounts = marketDetails[detailsIndex + 1]?.result as [bigint, bigint, bigint] | undefined
-      const resolved = marketDetails[detailsIndex + 2]?.result as boolean | undefined
+    const now = Date.now() / 1000
 
-      if (!factoryInfo) return null
+    // Filter markets where user is a participant
+    const filtered = (factoryMarkets as any[])
+      .map((market, index) => {
+        const isParticipant = participantResults[index]?.result as boolean
+        if (!isParticipant) return null
 
-      return {
-        marketAddress: factoryInfo.marketAddress,
-        matchId: factoryInfo.matchId,
-        entryFee: factoryInfo.entryFee,
-        creator: factoryInfo.creator,
-        participantsCount: participantsCount || BigInt(0),
-        resolved: resolved || false,
-        isPublic: factoryInfo.isPublic,
-        startTime: factoryInfo.startTime,
-        homeCount: predictionCounts?.[0] || BigInt(0),
-        awayCount: predictionCounts?.[1] || BigInt(0),
-        drawCount: predictionCounts?.[2] || BigInt(0),
-      } as Market
-    }).filter(Boolean) as Market[]
-  }, [marketAddresses, factoryMarketInfo, marketDetails])
+        return {
+          marketAddress: market.marketAddress as `0x${string}`,
+          matchId: BigInt(market.matchId?.toString() || '0'),
+          entryFee: BigInt(market.entryFee?.toString() || '0'),
+          creator: market.creator,
+          participantsCount: BigInt(0), // Will be fetched by EnhancedMarketCard
+          resolved: false, // Will be fetched by EnhancedMarketCard
+          isPublic: market.isPublic,
+          startTime: BigInt(market.startTime?.toString() || '0'),
+        } as Market
+      })
+      .filter((m): m is Market => m !== null && Number(m.startTime) > now)
+      .sort((a, b) => Number(a.startTime) - Number(b.startTime))
+
+    return filtered
+  }, [factoryMarkets, participantResults])
 
   // Don't render the component if the user is not connected.
   // The homepage will just show the hero and public markets.
@@ -92,7 +76,7 @@ export function UserMarkets() {
   }
 
   // Loading state
-  if (isLoadingCreated || isLoadingJoined) {
+  if (isLoading) {
     return (
       <div>
         <div className="flex justify-between items-center mb-4">

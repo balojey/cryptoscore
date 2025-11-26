@@ -2,7 +2,7 @@ import type { FilterOptions } from '../components/market/MarketFilters'
 import type { MarketDashboardInfo } from '../types'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useAccount, useReadContract } from 'wagmi'
+import { useAccount, useReadContract, useReadContracts } from 'wagmi'
 import EnhancedMarketCard, { EnhancedMarketCardSkeleton } from '../components/cards/EnhancedMarketCard'
 import PortfolioSummary from '../components/cards/PortfolioSummary'
 import PoolTrendChart from '../components/charts/PoolTrendChart'
@@ -11,7 +11,7 @@ import MarketFilters from '../components/market/MarketFilters'
 import PerformanceChart from '../components/PerformanceChart'
 import RecentActivity from '../components/RecentActivity'
 import VirtualMarketList from '../components/VirtualMarketList'
-import { CRYPTO_SCORE_DASHBOARD_ADDRESS, CryptoScoreDashboardABI } from '../config/contracts'
+import { CRYPTO_SCORE_FACTORY_ADDRESS, CryptoScoreFactoryABI, CryptoScoreMarketABI } from '../config/contracts'
 import { useFilteredMarkets } from '../hooks/useFilteredMarkets'
 
 function MarketList({ markets, isLoading, emptyMessage, emptyIcon }: {
@@ -71,54 +71,133 @@ export function Dashboard() {
     sortBy: 'newest',
   })
 
-  const { data: allInvolvedCreatedMarkets, isLoading: isLoadingCreated } = useReadContract({
-    abi: CryptoScoreDashboardABI,
-    address: CRYPTO_SCORE_DASHBOARD_ADDRESS,
-    functionName: 'getUserMarketsDashboardPaginated',
-    args: [address, 0, 100, true],
-    query: { enabled: !!address },
-  }) as { data: MarketDashboardInfo[] | undefined, isLoading: boolean }
+  // Fetch all markets from factory
+  const { data: factoryMarkets, isLoading: isLoadingFactory } = useReadContract({
+    address: CRYPTO_SCORE_FACTORY_ADDRESS as `0x${string}`,
+    abi: CryptoScoreFactoryABI,
+    functionName: 'getAllMarkets',
+    query: { enabled: !!address && !!CRYPTO_SCORE_FACTORY_ADDRESS },
+  })
 
-  const { data: allInvolvedJoinedMarkets, isLoading: isLoadingJoined } = useReadContract({
-    abi: CryptoScoreDashboardABI,
-    address: CRYPTO_SCORE_DASHBOARD_ADDRESS,
-    functionName: 'getUserMarketsDashboardPaginated',
-    args: [address, 0, 100, false],
-    query: { enabled: !!address },
-  }) as { data: MarketDashboardInfo[] | undefined, isLoading: boolean }
+  // Get all market addresses
+  const marketAddresses = useMemo(() => {
+    if (!factoryMarkets || !Array.isArray(factoryMarkets)) return []
+    return factoryMarkets.map((m: any) => m.marketAddress as `0x${string}`)
+  }, [factoryMarkets])
 
-  const allInvolvedMarkets = useMemo(() => {
-    if (!allInvolvedCreatedMarkets && !allInvolvedJoinedMarkets)
-      return []
+  // Check if user is a participant in each market
+  const participantChecks = useMemo(() => {
+    return marketAddresses.map((addr) => ({
+      address: addr,
+      abi: CryptoScoreMarketABI as any,
+      functionName: 'isParticipant' as const,
+      args: [address],
+    }))
+  }, [marketAddresses, address])
 
-    const combinedMarkets = [
-      ...(allInvolvedCreatedMarkets || []),
-      ...(allInvolvedJoinedMarkets || []),
-    ]
+  const { data: participantResults, isLoading: isLoadingParticipants } = useReadContracts({
+    contracts: participantChecks,
+    query: {
+      enabled: marketAddresses.length > 0 && !!address,
+    },
+  })
 
-    // Remove duplicates based on marketAddress
-    const uniqueMarketsMap = new Map<string, MarketDashboardInfo>()
-    combinedMarkets.forEach((market) => {
-      uniqueMarketsMap.set(market.marketAddress, market)
+  // Fetch detailed data for all markets
+  const marketContracts = useMemo(() => {
+    return marketAddresses.flatMap((addr: `0x${string}`) => [
+      {
+        address: addr,
+        abi: CryptoScoreMarketABI as any,
+        functionName: 'resolved' as const,
+      },
+      {
+        address: addr,
+        abi: CryptoScoreMarketABI as any,
+        functionName: 'winner' as const,
+      },
+      {
+        address: addr,
+        abi: CryptoScoreMarketABI as any,
+        functionName: 'getParticipantsCount' as const,
+      },
+      {
+        address: addr,
+        abi: CryptoScoreMarketABI as any,
+        functionName: 'getPredictionCounts' as const,
+      },
+    ])
+  }, [marketAddresses])
+
+  const { data: marketDetails, isLoading: isLoadingDetails } = useReadContracts({
+    contracts: marketContracts,
+    query: {
+      enabled: marketAddresses.length > 0,
+    },
+  })
+
+  const isLoading = isLoadingFactory || isLoadingParticipants || isLoadingDetails
+
+  // Combine factory data with market details and participation info
+  const { createdMarkets, joinedMarkets, allInvolvedMarkets } = useMemo(() => {
+    if (!factoryMarkets || !marketDetails || !participantResults || !Array.isArray(factoryMarkets)) {
+      return { createdMarkets: [], joinedMarkets: [], allInvolvedMarkets: [] }
+    }
+
+    const created: MarketDashboardInfo[] = []
+    const joined: MarketDashboardInfo[] = []
+    const allInvolved: MarketDashboardInfo[] = []
+    const seenAddresses = new Set<string>()
+
+    factoryMarkets.forEach((factoryInfo: any, idx: number) => {
+      const addr = factoryInfo.marketAddress as `0x${string}`
+      const baseIdx = idx * 4
+      const resolved = marketDetails[baseIdx]?.result as boolean
+      const winner = marketDetails[baseIdx + 1]?.result as number
+      const participantsCount = marketDetails[baseIdx + 2]?.result as bigint
+      const predictionCounts = marketDetails[baseIdx + 3]?.result as [bigint, bigint, bigint]
+      const isParticipant = participantResults[idx]?.result as boolean
+
+      const marketDashboard: MarketDashboardInfo = {
+        marketAddress: addr,
+        matchId: BigInt(factoryInfo.matchId?.toString() || '0'),
+        creator: factoryInfo.creator,
+        entryFee: BigInt(factoryInfo.entryFee?.toString() || '0'),
+        resolved: resolved ?? false,
+        winner: winner ?? 0,
+        participantsCount: participantsCount ? BigInt(participantsCount.toString()) : BigInt(0),
+        isPublic: factoryInfo.isPublic,
+        startTime: BigInt(factoryInfo.startTime?.toString() || '0'),
+        homeCount: predictionCounts ? BigInt(predictionCounts[0]?.toString() || '0') : BigInt(0),
+        awayCount: predictionCounts ? BigInt(predictionCounts[1]?.toString() || '0') : BigInt(0),
+        drawCount: predictionCounts ? BigInt(predictionCounts[2]?.toString() || '0') : BigInt(0),
+      }
+
+      // Check if user created this market
+      const isCreator = address && factoryInfo.creator.toLowerCase() === address.toLowerCase()
+
+      if (isCreator) {
+        created.push(marketDashboard)
+      }
+
+      if (isParticipant) {
+        joined.push(marketDashboard)
+      }
+
+      // Add to allInvolved if user is creator OR participant (deduplicated)
+      if ((isCreator || isParticipant) && !seenAddresses.has(addr)) {
+        allInvolved.push(marketDashboard)
+        seenAddresses.add(addr)
+      }
     })
 
-    // Convert back to array and sort by starting date
-    const uniqueMarkets = Array.from(uniqueMarketsMap.values())
-    uniqueMarkets.sort((a, b) => Number(b.startTime) - Number(a.startTime))
+    // Sort all arrays by startTime (newest first)
+    const sortByTime = (a: MarketDashboardInfo, b: MarketDashboardInfo) => Number(b.startTime) - Number(a.startTime)
+    created.sort(sortByTime)
+    joined.sort(sortByTime)
+    allInvolved.sort(sortByTime)
 
-    return uniqueMarkets
-  }, [allInvolvedCreatedMarkets, allInvolvedJoinedMarkets])
-
-  const { createdMarkets, joinedMarkets } = useMemo(() => {
-    // Use the original API responses directly:
-    // - allInvolvedCreatedMarkets: Markets user created
-    // - allInvolvedJoinedMarkets: Markets user participated in (placed predictions)
-    // Note: A market can appear in both if user created it AND participated in it
-    return {
-      createdMarkets: allInvolvedCreatedMarkets || [],
-      joinedMarkets: allInvolvedJoinedMarkets || [],
-    }
-  }, [allInvolvedCreatedMarkets, allInvolvedJoinedMarkets])
+    return { createdMarkets: created, joinedMarkets: joined, allInvolvedMarkets: allInvolved }
+  }, [factoryMarkets, marketDetails, participantResults, address])
 
   // Apply filters to markets
   const filteredCreatedMarkets = useFilteredMarkets<MarketDashboardInfo>(createdMarkets, filters)
@@ -291,7 +370,7 @@ export function Dashboard() {
           {activeTab === 'created' && (
             <MarketList
               markets={filteredCreatedMarkets}
-              isLoading={isLoadingCreated || isLoadingJoined}
+              isLoading={isLoading}
               emptyMessage={
                 filters.status !== 'all' || filters.timeRange || filters.minPoolSize || filters.minEntryFee
                   ? 'No markets match your filters'
@@ -307,7 +386,7 @@ export function Dashboard() {
           {activeTab === 'joined' && (
             <MarketList
               markets={filteredJoinedMarkets}
-              isLoading={isLoadingCreated || isLoadingJoined}
+              isLoading={isLoading}
               emptyMessage={
                 filters.status !== 'all' || filters.timeRange || filters.minPoolSize || filters.minEntryFee
                   ? 'No markets match your filters'
