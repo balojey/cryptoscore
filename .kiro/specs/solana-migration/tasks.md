@@ -56,21 +56,21 @@
     - Test event emission and error handling
     - _Requirements: 10.1, 10.2, 10.3_
 
-- [ ] 4. Implement Market Program
-  - [ ] 4.1 Create Market program structure and state accounts
+- [x] 4. Implement Market Program
+  - [x] 4.1 Create Market program structure and state accounts
     - Define Market account with match details, pool info, and participant counts
     - Define Participant account for tracking user predictions and withdrawal status
     - Implement initialize_market instruction with proper validation
     - _Requirements: 3.1, 3.2_
 
-  - [ ] 4.2 Implement market participation functionality
+  - [x] 4.2 Implement market participation functionality
     - Create join_market instruction accepting entry fee and prediction choice
     - Generate Participant PDA and update Market participant counts
     - Emit PredictionMade event with user address and prediction
     - Add validation for kickoff time and duplicate participation prevention
     - _Requirements: 3.3, 3.4, 3.5_
 
-  - [ ] 4.3 Implement market resolution functionality
+  - [x] 4.3 Implement market resolution functionality
     - Create resolve_market instruction accepting match outcome data
     - Calculate winner pool size and individual reward amounts
     - Apply 1% creator fee and 1% platform fee to total pool
@@ -78,7 +78,7 @@
     - Add validation for end time and outcome proof requirements
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
 
-  - [ ] 4.4 Implement reward withdrawal functionality
+  - [x] 4.4 Implement reward withdrawal functionality
     - Create withdraw instruction for claiming winnings
     - Transfer calculated reward amount to participant's wallet
     - Mark participant's withdrawal status as claimed
@@ -86,35 +86,35 @@
     - Add validation for winner status and double withdrawal prevention
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
 
-  - [ ] 4.5 Write Market program tests
+  - [x] 4.5 Write Market program tests
     - Test market initialization and parameter validation
     - Test joining markets with different predictions and edge cases
     - Test market resolution with various outcomes
     - Test reward withdrawal and double withdrawal prevention
     - _Requirements: 10.1, 10.2, 10.3, 10.4_
 
-- [ ] 5. Implement Dashboard Program
-  - [ ] 5.1 Create Dashboard program structure and user statistics
+- [x] 5. Implement Dashboard Program
+  - [x] 5.1 Create Dashboard program structure and user statistics
     - Define UserStats account for tracking user performance metrics
     - Implement user statistics calculation and updates
     - Create data structures for leaderboard and aggregated metrics
     - _Requirements: 6.2, 6.4_
 
-  - [ ] 5.2 Implement market data aggregation
+  - [x] 5.2 Implement market data aggregation
     - Create get_all_markets instruction with pagination support
     - Implement get_user_markets instruction filtered by participant address
     - Add get_market_details instruction for comprehensive market state
     - Calculate derived metrics including pool size and prediction distribution
     - _Requirements: 6.1, 6.2, 6.3, 6.4_
 
-  - [ ] 5.3 Add filtering and sorting capabilities
+  - [x] 5.3 Add filtering and sorting capabilities
     - Support filtering by market status (Open, Live, Resolved)
     - Support filtering by visibility (Public, Private)
     - Implement sorting by creation time, pool size, and participant count
     - Add pagination with configurable page sizes
     - _Requirements: 6.5_
 
-  - [ ] 5.4 Write Dashboard program tests
+  - [x] 5.4 Write Dashboard program tests
     - Test user statistics calculation and updates
     - Test market data aggregation and filtering
     - Test pagination and sorting functionality

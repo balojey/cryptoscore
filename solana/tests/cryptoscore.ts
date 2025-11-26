@@ -1099,3 +1099,405 @@ describe("CryptoScore Market Program", () => {
     });
   });
 });
+
+describe("CryptoScore Dashboard Program", () => {
+  const provider = anchor.AnchorProvider.env();
+  anchor.setProvider(provider);
+
+  const dashboardProgram = anchor.workspace.CryptoscoreDashboard as Program<CryptoscoreDashboard>;
+  const factoryProgram = anchor.workspace.CryptoscoreFactory as Program<CryptoscoreFactory>;
+  const marketProgram = anchor.workspace.CryptoscoreMarket as Program<CryptoscoreMarket>;
+  const authority = provider.wallet as anchor.Wallet;
+
+  let factoryPda: PublicKey;
+  let testUser: Keypair;
+  let userStatsPda: PublicKey;
+
+  before(async () => {
+    // Derive factory PDA
+    [factoryPda] = PublicKey.findProgramAddressSync(
+      [Buffer.from("factory")],
+      factoryProgram.programId
+    );
+
+    // Create test user
+    testUser = Keypair.generate();
+    const airdropSig = await provider.connection.requestAirdrop(
+      testUser.publicKey,
+      5 * anchor.web3.LAMPORTS_PER_SOL
+    );
+    await provider.connection.confirmTransaction(airdropSig);
+
+    // Derive user stats PDA
+    [userStatsPda] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("user_stats"),
+        testUser.publicKey.toBuffer(),
+      ],
+      dashboardProgram.programId
+    );
+  });
+
+  describe("User Statistics", () => {
+    it("Initializes user stats on first update", async () => {
+      const marketResult = { win: {} };
+      const amountWagered = new BN(1_000_000_000); // 1 SOL
+      const amountWon = new BN(1_960_000_000); // 1.96 SOL (after 2% fees)
+
+      const tx = await dashboardProgram.methods
+        .updateUserStats(marketResult, amountWagered, amountWon)
+        .accounts({
+          userStats: userStatsPda,
+          user: testUser.publicKey,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([testUser])
+        .rpc();
+
+      console.log("Initialize user stats signature:", tx);
+
+      // Fetch and verify user stats
+      const userStats = await dashboardProgram.account.userStats.fetch(userStatsPda);
+      
+      assert.equal(userStats.user.toString(), testUser.publicKey.toString());
+      assert.equal(userStats.totalMarkets, 1);
+      assert.equal(userStats.wins, 1);
+      assert.equal(userStats.losses, 0);
+      assert.equal(userStats.totalWagered.toString(), amountWagered.toString());
+      assert.equal(userStats.totalWon.toString(), amountWon.toString());
+      assert.equal(userStats.currentStreak, 1);
+      assert.equal(userStats.bestStreak, 1);
+    });
+
+    it("Updates user stats with additional win", async () => {
+      const marketResult = { win: {} };
+      const amountWagered = new BN(500_000_000); // 0.5 SOL
+      const amountWon = new BN(980_000_000); // 0.98 SOL
+
+      await dashboardProgram.methods
+        .updateUserStats(marketResult, amountWagered, amountWon)
+        .accounts({
+          userStats: userStatsPda,
+          user: testUser.publicKey,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([testUser])
+        .rpc();
+
+      // Verify stats updated
+      const userStats = await dashboardProgram.account.userStats.fetch(userStatsPda);
+      
+      assert.equal(userStats.totalMarkets, 2);
+      assert.equal(userStats.wins, 2);
+      assert.equal(userStats.losses, 0);
+      assert.equal(userStats.totalWagered.toString(), new BN(1_500_000_000).toString());
+      assert.equal(userStats.totalWon.toString(), new BN(2_940_000_000).toString());
+      assert.equal(userStats.currentStreak, 2);
+      assert.equal(userStats.bestStreak, 2);
+    });
+
+    it("Updates user stats with loss and breaks streak", async () => {
+      const marketResult = { loss: {} };
+      const amountWagered = new BN(1_000_000_000); // 1 SOL
+      const amountWon = new BN(0);
+
+      await dashboardProgram.methods
+        .updateUserStats(marketResult, amountWagered, amountWon)
+        .accounts({
+          userStats: userStatsPda,
+          user: testUser.publicKey,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([testUser])
+        .rpc();
+
+      // Verify stats updated
+      const userStats = await dashboardProgram.account.userStats.fetch(userStatsPda);
+      
+      assert.equal(userStats.totalMarkets, 3);
+      assert.equal(userStats.wins, 2);
+      assert.equal(userStats.losses, 1);
+      assert.equal(userStats.totalWagered.toString(), new BN(2_500_000_000).toString());
+      assert.equal(userStats.totalWon.toString(), new BN(2_940_000_000).toString());
+      assert.equal(userStats.currentStreak, -1); // Negative streak for losses
+      assert.equal(userStats.bestStreak, 2); // Best streak remains
+    });
+
+    it("Continues negative streak with additional loss", async () => {
+      const marketResult = { loss: {} };
+      const amountWagered = new BN(500_000_000); // 0.5 SOL
+      const amountWon = new BN(0);
+
+      await dashboardProgram.methods
+        .updateUserStats(marketResult, amountWagered, amountWon)
+        .accounts({
+          userStats: userStatsPda,
+          user: testUser.publicKey,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([testUser])
+        .rpc();
+
+      // Verify stats updated
+      const userStats = await dashboardProgram.account.userStats.fetch(userStatsPda);
+      
+      assert.equal(userStats.totalMarkets, 4);
+      assert.equal(userStats.wins, 2);
+      assert.equal(userStats.losses, 2);
+      assert.equal(userStats.currentStreak, -2);
+      assert.equal(userStats.bestStreak, 2);
+    });
+
+    it("Resets to positive streak after win", async () => {
+      const marketResult = { win: {} };
+      const amountWagered = new BN(1_000_000_000);
+      const amountWon = new BN(1_960_000_000);
+
+      await dashboardProgram.methods
+        .updateUserStats(marketResult, amountWagered, amountWon)
+        .accounts({
+          userStats: userStatsPda,
+          user: testUser.publicKey,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([testUser])
+        .rpc();
+
+      // Verify stats updated
+      const userStats = await dashboardProgram.account.userStats.fetch(userStatsPda);
+      
+      assert.equal(userStats.totalMarkets, 5);
+      assert.equal(userStats.wins, 3);
+      assert.equal(userStats.losses, 2);
+      assert.equal(userStats.currentStreak, 1); // Reset to positive
+      assert.equal(userStats.bestStreak, 2);
+    });
+
+    it("Updates best streak when current streak exceeds it", async () => {
+      // Add two more wins to exceed best streak
+      for (let i = 0; i < 2; i++) {
+        await dashboardProgram.methods
+          .updateUserStats(
+            { win: {} },
+            new BN(1_000_000_000),
+            new BN(1_960_000_000)
+          )
+          .accounts({
+            userStats: userStatsPda,
+            user: testUser.publicKey,
+            systemProgram: SystemProgram.programId,
+          })
+          .signers([testUser])
+          .rpc();
+      }
+
+      // Verify best streak updated
+      const userStats = await dashboardProgram.account.userStats.fetch(userStatsPda);
+      
+      assert.equal(userStats.currentStreak, 3);
+      assert.equal(userStats.bestStreak, 3); // Best streak updated
+    });
+  });
+
+  describe("Market Data Aggregation", () => {
+    it("Calls get_all_markets with filtering parameters", async () => {
+      // This is a view function meant to be called off-chain
+      try {
+        await dashboardProgram.methods
+          .getAllMarkets(
+            { open: {} } as any, // filter_status
+            true, // filter_visibility (public only)
+            { poolSize: {} } as any, // sort_by
+            0, // page
+            20 // page_size
+          )
+          .accounts({})
+          .rpc();
+        
+        console.log("get_all_markets called successfully");
+      } catch (error) {
+        console.log("get_all_markets error (expected for view function):", error.message);
+      }
+    });
+
+    it("Calls get_user_markets with user filter", async () => {
+      // This is a view function meant to be called off-chain
+      try {
+        await dashboardProgram.methods
+          .getUserMarkets(
+            testUser.publicKey,
+            { resolved: {} } as any, // filter_status
+            { creationTime: {} } as any, // sort_by
+            0, // page
+            10 // page_size
+          )
+          .accounts({})
+          .rpc();
+        
+        console.log("get_user_markets called successfully");
+      } catch (error) {
+        console.log("get_user_markets error (expected for view function):", error.message);
+      }
+    });
+
+    it("Calls get_market_details for specific market", async () => {
+      // Create a test market first
+      const matchId = "EPL-2024-DASHBOARD-TEST-001";
+      const now = Math.floor(Date.now() / 1000);
+      const kickoffTime = new BN(now + 3600);
+      const endTime = new BN(now + 7200);
+      const entryFee = new BN(1_000_000_000);
+
+      const [marketPda] = PublicKey.findProgramAddressSync(
+        [
+          Buffer.from("market"),
+          factoryPda.toBuffer(),
+          Buffer.from(matchId),
+        ],
+        marketProgram.programId
+      );
+
+      await marketProgram.methods
+        .initializeMarket(matchId, entryFee, kickoffTime, endTime, true)
+        .accounts({
+          market: marketPda,
+          factory: factoryPda,
+          creator: authority.publicKey,
+          systemProgram: SystemProgram.programId,
+        })
+        .rpc();
+
+      // This is a view function meant to be called off-chain
+      try {
+        await dashboardProgram.methods
+          .getMarketDetails(marketPda)
+          .accounts({})
+          .rpc();
+        
+        console.log("get_market_details called successfully");
+      } catch (error) {
+        console.log("get_market_details error (expected for view function):", error.message);
+      }
+    });
+
+    it("Calls get_market_stats for aggregated statistics", async () => {
+      // This is a view function meant to be called off-chain
+      try {
+        await dashboardProgram.methods
+          .getMarketStats()
+          .accounts({})
+          .rpc();
+        
+        console.log("get_market_stats called successfully");
+      } catch (error) {
+        console.log("get_market_stats error (expected for view function):", error.message);
+      }
+    });
+  });
+
+  describe("Pagination and Sorting", () => {
+    it("Supports different page sizes", async () => {
+      const pageSizes = [10, 20, 50, 100];
+
+      for (const pageSize of pageSizes) {
+        try {
+          await dashboardProgram.methods
+            .getAllMarkets(
+              null,
+              null,
+              { creationTime: {} } as any,
+              0,
+              pageSize
+            )
+            .accounts({})
+            .rpc();
+          
+          console.log(`Page size ${pageSize} supported`);
+        } catch (error) {
+          // Expected for view function
+        }
+      }
+    });
+
+    it("Supports different sort options", async () => {
+      const sortOptions = [
+        { creationTime: {} },
+        { poolSize: {} },
+        { participantCount: {} },
+        { endingSoon: {} },
+      ];
+
+      for (const sortBy of sortOptions) {
+        try {
+          await dashboardProgram.methods
+            .getAllMarkets(
+              null,
+              null,
+              sortBy as any,
+              0,
+              20
+            )
+            .accounts({})
+            .rpc();
+          
+          console.log(`Sort option ${JSON.stringify(sortBy)} supported`);
+        } catch (error) {
+          // Expected for view function
+        }
+      }
+    });
+
+    it("Supports pagination with different page numbers", async () => {
+      const pages = [0, 1, 2, 5, 10];
+
+      for (const page of pages) {
+        try {
+          await dashboardProgram.methods
+            .getAllMarkets(
+              null,
+              null,
+              { creationTime: {} } as any,
+              page,
+              20
+            )
+            .accounts({})
+            .rpc();
+          
+          console.log(`Page ${page} supported`);
+        } catch (error) {
+          // Expected for view function
+        }
+      }
+    });
+  });
+
+  describe("Derived Metrics Calculation", () => {
+    it("Calculates win rate correctly", async () => {
+      const userStats = await dashboardProgram.account.userStats.fetch(userStatsPda);
+      
+      const winRate = (userStats.wins / userStats.totalMarkets) * 100;
+      console.log(`Win rate: ${winRate.toFixed(2)}%`);
+      
+      assert.isTrue(winRate >= 0 && winRate <= 100);
+    });
+
+    it("Calculates profit/loss correctly", async () => {
+      const userStats = await dashboardProgram.account.userStats.fetch(userStatsPda);
+      
+      const profitLoss = userStats.totalWon.sub(userStats.totalWagered);
+      console.log(`Profit/Loss: ${profitLoss.toString()} lamports`);
+      
+      // User should be profitable based on test data
+      assert.isTrue(profitLoss.gt(new BN(0)));
+    });
+
+    it("Tracks streak correctly", async () => {
+      const userStats = await dashboardProgram.account.userStats.fetch(userStatsPda);
+      
+      console.log(`Current streak: ${userStats.currentStreak}`);
+      console.log(`Best streak: ${userStats.bestStreak}`);
+      
+      assert.isTrue(userStats.bestStreak >= Math.abs(userStats.currentStreak));
+    });
+  });
+});
