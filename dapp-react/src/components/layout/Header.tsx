@@ -1,6 +1,7 @@
 import type { ThemePreset } from '@/contexts/ThemeContext'
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { Menu } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -177,12 +178,16 @@ export default function Header() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
-                variant="ghost"
+                variant="outline"
                 size="icon"
                 className="md:hidden"
                 aria-label="Open menu"
+                style={{
+                  color: 'var(--text-primary)',
+                  borderColor: 'var(--border-default)',
+                }}
               >
-                <span className="icon-[mdi--menu] w-5 h-5" />
+                <Menu className="w-5 h-5" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
