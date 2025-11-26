@@ -211,7 +211,7 @@ export function Dashboard() {
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-8">
           <div>
             <Link
-              to="/"
+              to="/markets"
               className="text-sm font-medium flex items-center gap-2 mb-3 hover:underline"
               style={{ color: 'var(--text-tertiary)' }}
               onMouseEnter={e => e.currentTarget.style.color = 'var(--accent-cyan)'}
