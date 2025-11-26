@@ -24,5 +24,12 @@ export default defineConfig({
     },
     // Increase chunk size warning limit to 600 kB
     chunkSizeWarningLimit: 600,
+    commonjsOptions: {
+      include: [/node_modules/],
+      transformMixedEsModules: true,
+    },
+  },
+  optimizeDeps: {
+    include: ['tslib', 'react-remove-scroll'],
   },
 })

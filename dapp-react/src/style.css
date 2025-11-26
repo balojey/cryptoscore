@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@plugin "@iconify/tailwind4";
 
 /* Import Design System v2.0 */
 @import "./styles/tokens.css";
