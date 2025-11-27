@@ -121,22 +121,22 @@
     - Test derived metrics calculation accuracy
     - _Requirements: 10.1, 10.2, 10.3_
 
-- [ ] 6. Implement Solana wallet integration
-  - [ ] 6.1 Set up wallet adapter providers
+- [x] 6. Implement Solana wallet integration
+  - [x] 6.1 Set up wallet adapter providers
     - Configure ConnectionProvider with Solana RPC endpoint
     - Set up WalletProvider with multiple wallet adapters (Phantom, Solflare, Backpack)
     - Add WalletModalProvider for wallet selection UI
     - Wrap App component with all necessary providers
     - _Requirements: 7.1, 7.2, 7.3_
 
-  - [ ] 6.2 Replace wallet connection components
+  - [x] 6.2 Replace wallet connection components
     - Update Connect.tsx to use Solana wallet adapter hooks
     - Update Account.tsx to display Solana wallet address and SOL balance
     - Update Balance.tsx to show SOL balance instead of PAS tokens
     - Implement wallet disconnection and account change handling
     - _Requirements: 7.4, 7.5, 12.5_
 
-  - [ ] 6.3 Create Solana-specific custom hooks
+  - [x] 6.3 Create Solana-specific custom hooks
     - Implement useSolanaProgram hook for program instance management
     - Create useMarketData hook for fetching market information from Dashboard Program
     - Implement useMarketActions hook for creating, joining, and withdrawing from markets

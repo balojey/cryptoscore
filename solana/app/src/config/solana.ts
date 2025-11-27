@@ -1,5 +1,5 @@
-import { clusterApiUrl, Connection } from '@solana/web3.js'
 import type { WalletAdapterNetwork } from '@solana/wallet-adapter-base'
+import { clusterApiUrl, Connection } from '@solana/web3.js'
 
 // Solana network configuration
 export const SOLANA_NETWORK: WalletAdapterNetwork = (import.meta.env.VITE_SOLANA_NETWORK || 'devnet') as WalletAdapterNetwork
@@ -12,7 +12,7 @@ export const connection = new Connection(SOLANA_RPC_URL, 'confirmed')
 
 // Network display configuration
 export const networkConfig = {
-  devnet: {
+  'devnet': {
     name: 'Solana Devnet',
     explorer: 'https://explorer.solana.com',
     nativeCurrency: {
@@ -21,7 +21,7 @@ export const networkConfig = {
       decimals: 9,
     },
   },
-  testnet: {
+  'testnet': {
     name: 'Solana Testnet',
     explorer: 'https://explorer.solana.com',
     nativeCurrency: {

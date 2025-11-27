@@ -1,55 +1,117 @@
 import type { Market } from '../../types'
 import type { FilterOptions } from './MarketFilters'
-import { useEffect, useState } from 'react'
-import { useAccount, useReadContract } from 'wagmi'
-import { CRYPTO_SCORE_DASHBOARD_ADDRESS, CryptoScoreDashboardABI } from '../../config/contracts'
+import { useMemo, useState } from 'react'
+import { useAccount, useReadContract, useReadContracts } from 'wagmi'
+import { CRYPTO_SCORE_FACTORY_ADDRESS, CryptoScoreFactoryABI, CryptoScoreMarketABI } from '../../config/contracts'
 import { useFilteredMarkets } from '../../hooks/useFilteredMarkets'
 import { useRealtimeMarkets } from '../../hooks/useRealtimeMarkets'
 import EnhancedMarketCard, { EnhancedMarketCardSkeleton } from '../cards/EnhancedMarketCard'
 import VirtualMarketList from '../VirtualMarketList'
 import MarketFilters from './MarketFilters'
 
-const PAGE_SIZE = 6
+const PAGE_SIZE = 12 // Can increase now since we're not hitting gas limits
 
 export default function PublicMarkets() {
   const { address } = useAccount()
-  const [offset, setOffset] = useState(0)
-  const [markets, setMarkets] = useState<Market[]>([])
-  const [hasMore, setHasMore] = useState(true)
+  const [currentPage, setCurrentPage] = useState(0)
   const [filters, setFilters] = useState<FilterOptions>({
     status: 'all',
     sortBy: 'newest',
   })
 
+  // Get all markets from factory (lightweight call)
+  const { data: factoryMarkets, isLoading: isLoadingFactory, isError, error, refetch } = useReadContract({
+    address: CRYPTO_SCORE_FACTORY_ADDRESS as `0x${string}`,
+    abi: CryptoScoreFactoryABI,
+    functionName: 'getAllMarkets',
+  })
 
-  
-  const { data, isLoading, isError, error, refetch } = useReadContract({
-    address: CRYPTO_SCORE_DASHBOARD_ADDRESS as `0x${string}`,
-    abi: CryptoScoreDashboardABI,
-    functionName: 'getMarketsDashboardPaginated',
-    args: [BigInt(offset), BigInt(PAGE_SIZE), true], // Fetching only public markets
+  // Filter public markets and exclude user's own markets
+  const publicMarketAddresses = useMemo(() => {
+    if (!factoryMarkets || !Array.isArray(factoryMarkets))
+      return []
+
+    return factoryMarkets
+      .filter((m: any) => m.isPublic && (!address || m.creator.toLowerCase() !== address.toLowerCase()))
+      .map((m: any) => m.marketAddress)
+  }, [factoryMarkets, address])
+
+  // Paginate addresses
+  const paginatedAddresses = useMemo(() => {
+    const start = currentPage * PAGE_SIZE
+    const end = start + PAGE_SIZE
+    return publicMarketAddresses.slice(start, end)
+  }, [publicMarketAddresses, currentPage])
+
+  // Fetch detailed data for current page markets
+  const marketContracts = useMemo(() => {
+    return paginatedAddresses.flatMap((addr: string) => [
+      {
+        address: addr as `0x${string}`,
+        abi: CryptoScoreMarketABI as any,
+        functionName: 'resolved' as const,
+      },
+      {
+        address: addr as `0x${string}`,
+        abi: CryptoScoreMarketABI as any,
+        functionName: 'winner' as const,
+      },
+      {
+        address: addr as `0x${string}`,
+        abi: CryptoScoreMarketABI as any,
+        functionName: 'getParticipantsCount' as const,
+      },
+      {
+        address: addr as `0x${string}`,
+        abi: CryptoScoreMarketABI as any,
+        functionName: 'getPredictionCounts' as const,
+      },
+    ])
+  }, [paginatedAddresses])
+
+  const { data: marketDetails, isLoading: isLoadingDetails } = useReadContracts({
+    contracts: marketContracts,
     query: {
-      enabled: !!CRYPTO_SCORE_DASHBOARD_ADDRESS, // Only run if address is available
+      enabled: paginatedAddresses.length > 0,
     },
   })
 
-  useEffect(() => {
-    if (data && Array.isArray(data)) {
-      // The contract might return fewer than PAGE_SIZE on the last page
-      setHasMore(data.length === PAGE_SIZE)
+  // Combine factory data with market details
+  const markets = useMemo(() => {
+    if (!factoryMarkets || !marketDetails || !Array.isArray(factoryMarkets))
+      return []
 
-      // Filter out markets where the creator is the current user, if address is available
-      const filteredData = address
-        ? data.filter((market: any) => market.creator.toLowerCase() !== address.toLowerCase())
-        : data
+    const result: Market[] = []
 
-      setMarkets(filteredData as Market[])
-    }
-  }, [data, address])
+    paginatedAddresses.forEach((addr: string, idx: number) => {
+      const factoryInfo = (factoryMarkets as any[]).find((m: any) => m.marketAddress === addr)
+      if (!factoryInfo)
+        return
 
-  useEffect(() => {
-    refetch()
-  }, [offset, refetch])
+      const baseIdx = idx * 4
+      const resolved = marketDetails[baseIdx]?.result as boolean
+      const participantsCount = marketDetails[baseIdx + 2]?.result as bigint
+      const predictionCounts = marketDetails[baseIdx + 3]?.result as [bigint, bigint, bigint]
+
+      result.push({
+        marketAddress: addr as `0x${string}`,
+        matchId: BigInt(factoryInfo.matchId?.toString() || '0'),
+        creator: factoryInfo.creator,
+        entryFee: BigInt(factoryInfo.entryFee?.toString() || '0'),
+        resolved: resolved ?? false,
+        participantsCount: participantsCount ? BigInt(participantsCount.toString()) : BigInt(0),
+        isPublic: factoryInfo.isPublic,
+        startTime: BigInt(factoryInfo.startTime?.toString() || '0'),
+        homeCount: predictionCounts ? BigInt(predictionCounts[0]?.toString() || '0') : BigInt(0),
+        awayCount: predictionCounts ? BigInt(predictionCounts[1]?.toString() || '0') : BigInt(0),
+        drawCount: predictionCounts ? BigInt(predictionCounts[2]?.toString() || '0') : BigInt(0),
+      })
+    })
+
+    return result
+  }, [factoryMarkets, marketDetails, paginatedAddresses])
+
+  const isLoading = isLoadingFactory || isLoadingDetails
 
   // Enable real-time updates
   useRealtimeMarkets({
@@ -60,14 +122,20 @@ export default function PublicMarkets() {
     },
   })
 
+  const totalPages = Math.ceil(publicMarketAddresses.length / PAGE_SIZE)
+  const hasMore = currentPage < totalPages - 1
+  const hasPrev = currentPage > 0
+
   const handleNextPage = () => {
     if (hasMore) {
-      setOffset(prev => prev + PAGE_SIZE)
+      setCurrentPage(prev => prev + 1)
     }
   }
 
   const handlePrevPage = () => {
-    setOffset(prev => Math.max(0, prev - PAGE_SIZE))
+    if (hasPrev) {
+      setCurrentPage(prev => prev - 1)
+    }
   }
 
   // Apply filters and sorting - MUST be called before any conditional returns
@@ -91,7 +159,7 @@ export default function PublicMarkets() {
   if (isLoading && markets.length === 0) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {[...Array.from({ length: PAGE_SIZE })].map((_, i) => <EnhancedMarketCardSkeleton key={i} />)}
+        {[...Array.from({ length: 6 })].map((_, i) => <EnhancedMarketCardSkeleton key={i} />)}
       </div>
     )
   }
@@ -114,7 +182,7 @@ export default function PublicMarkets() {
     )
   }
 
-  if (!isLoading && markets.length === 0 && offset === 0) {
+  if (!isLoading && publicMarketAddresses.length === 0) {
     return (
       <div
         className="text-center py-16 border-2 border-dashed rounded-[16px]"
@@ -184,12 +252,21 @@ export default function PublicMarkets() {
       )}
 
       {/* Pagination */}
-      {filteredMarkets.length > 0 && (
+      {filteredMarkets.length > 0 && totalPages > 1 && (
         <div className="flex justify-center items-center gap-4 mt-12">
-          <PaginationButton onClick={handlePrevPage} disabled={offset === 0 || isLoading}>
+          <PaginationButton onClick={handlePrevPage} disabled={!hasPrev || isLoading}>
             <span className="icon-[mdi--arrow-left] w-5 h-5" />
             <span>Previous</span>
           </PaginationButton>
+          <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+            Page
+            {' '}
+            {currentPage + 1}
+            {' '}
+            of
+            {' '}
+            {totalPages}
+          </span>
           <PaginationButton onClick={handleNextPage} disabled={!hasMore || isLoading}>
             <span>Next</span>
             <span className="icon-[mdi--arrow-right] w-5 h-5" />

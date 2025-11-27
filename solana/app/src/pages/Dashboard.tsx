@@ -75,7 +75,7 @@ export function Dashboard() {
     abi: CryptoScoreDashboardABI,
     address: CRYPTO_SCORE_DASHBOARD_ADDRESS,
     functionName: 'getUserMarketsDashboardPaginated',
-    args: [address, 0, 100, true],
+    args: [address as `0x${string}`, 0, 100, true],
     query: { enabled: !!address },
   }) as { data: MarketDashboardInfo[] | undefined, isLoading: boolean }
 
@@ -83,7 +83,7 @@ export function Dashboard() {
     abi: CryptoScoreDashboardABI,
     address: CRYPTO_SCORE_DASHBOARD_ADDRESS,
     functionName: 'getUserMarketsDashboardPaginated',
-    args: [address, 0, 100, false],
+    args: [address as `0x${string}`, 0, 100, false],
     query: { enabled: !!address },
   }) as { data: MarketDashboardInfo[] | undefined, isLoading: boolean }
 

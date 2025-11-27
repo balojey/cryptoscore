@@ -1,10 +1,10 @@
-import type { Market } from '../../types'
+import type { Market, MarketDashboardInfo } from '../../types'
 import { useMemo } from 'react'
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { formatEther } from 'viem'
 
 interface PoolTrendChartProps {
-  markets: Market[]
+  markets: (Market | MarketDashboardInfo)[]
 }
 
 export default function PoolTrendChart({ markets }: PoolTrendChartProps) {

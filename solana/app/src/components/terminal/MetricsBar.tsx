@@ -1,6 +1,8 @@
+import type { Market } from '../../types'
+import { useMemo } from 'react'
 import { formatEther } from 'viem'
-import { useReadContract } from 'wagmi'
-import { CRYPTO_SCORE_DASHBOARD_ADDRESS, CryptoScoreDashboardABI } from '../../config/contracts'
+import { useReadContract, useReadContracts } from 'wagmi'
+import { CRYPTO_SCORE_FACTORY_ADDRESS, CryptoScoreFactoryABI, CryptoScoreMarketABI } from '../../config/contracts'
 import AnimatedNumber from '../ui/AnimatedNumber'
 
 interface MetricCardProps {
@@ -83,48 +85,106 @@ interface MetricsBarProps {
 }
 
 export default function MetricsBar({ error }: MetricsBarProps) {
-  // Fetch all markets to calculate metrics
-  const { data: marketsData, isLoading } = useReadContract({
-    address: CRYPTO_SCORE_DASHBOARD_ADDRESS,
-    abi: CryptoScoreDashboardABI,
-    functionName: 'getMarketsDashboardPaginated',
-    args: [BigInt(0), BigInt(1000), false], // Fetch up to 1000 markets (both public and private)
+  // Fetch all markets from factory (same approach as LiveMetrics)
+  const { data: factoryMarkets, isLoading: isLoadingFactory } = useReadContract({
+    address: CRYPTO_SCORE_FACTORY_ADDRESS,
+    abi: CryptoScoreFactoryABI,
+    functionName: 'getAllMarkets',
   })
 
-  // Calculate metrics from market data
-  const metrics: TerminalMetrics = {
-    totalMarkets: 0,
-    totalValueLocked: 0,
-    activeTraders: 0,
-    volume24h: 0,
-    trends: {
-      markets: '+0%',
-      tvl: '+0%',
-      traders: '+0%',
-      volume: '+0%',
-    },
-  }
+  // Get market addresses for detailed data
+  const marketAddresses = useMemo(() => {
+    if (!factoryMarkets || !Array.isArray(factoryMarkets))
+      return []
+    return factoryMarkets.map((market: any) => market.marketAddress as `0x${string}`)
+  }, [factoryMarkets])
 
-  if (marketsData && Array.isArray(marketsData)) {
+  // Fetch detailed data from individual market contracts
+  const { data: marketDetails, isLoading: isLoadingDetails } = useReadContracts({
+    contracts: marketAddresses.flatMap(address => [
+      {
+        address,
+        abi: CryptoScoreMarketABI as any,
+        functionName: 'getParticipantsCount',
+      },
+      {
+        address,
+        abi: CryptoScoreMarketABI as any,
+        functionName: 'getPredictionCounts',
+      },
+      {
+        address,
+        abi: CryptoScoreMarketABI as any,
+        functionName: 'resolved',
+      },
+    ]),
+  })
+
+  const isLoading = isLoadingFactory || isLoadingDetails
+
+  // Combine factory data with market details
+  const marketsData = useMemo(() => {
+    if (!factoryMarkets || !Array.isArray(factoryMarkets) || !marketDetails)
+      return null
+
+    return factoryMarkets.map((factoryMarket: any, index: number) => {
+      const detailsIndex = index * 3
+      const participantsCount = marketDetails[detailsIndex]?.result as bigint | undefined
+      const predictionCounts = marketDetails[detailsIndex + 1]?.result as [bigint, bigint, bigint] | undefined
+      const resolved = marketDetails[detailsIndex + 2]?.result as boolean | undefined
+
+      return {
+        marketAddress: factoryMarket.marketAddress,
+        matchId: factoryMarket.matchId,
+        entryFee: factoryMarket.entryFee,
+        creator: factoryMarket.creator,
+        participantsCount: participantsCount || BigInt(0),
+        resolved: resolved || false,
+        isPublic: factoryMarket.isPublic,
+        startTime: factoryMarket.startTime,
+        homeCount: predictionCounts?.[0] || BigInt(0),
+        awayCount: predictionCounts?.[1] || BigInt(0),
+        drawCount: predictionCounts?.[2] || BigInt(0),
+      } as Market
+    })
+  }, [factoryMarkets, marketDetails])
+
+  // Calculate metrics from market data
+  const metrics: TerminalMetrics = useMemo(() => {
+    if (!marketsData || !Array.isArray(marketsData)) {
+      return {
+        totalMarkets: 0,
+        totalValueLocked: 0,
+        activeTraders: 0,
+        volume24h: 0,
+        trends: {
+          markets: '+0%',
+          tvl: '+0%',
+          traders: '+0%',
+          volume: '+0%',
+        },
+      }
+    }
+
     const now = Math.floor(Date.now() / 1000)
     const oneDayAgo = now - 86400
     const twoDaysAgo = now - 172800
 
-    metrics.totalMarkets = marketsData.length
+    const totalMarkets = marketsData.length
 
     // Calculate TVL (sum of all pool sizes)
-    const tvlBigInt = marketsData.reduce((sum: bigint, market: any) => {
+    const tvlBigInt = marketsData.reduce((sum: bigint, market: Market) => {
       const poolSize = BigInt(market.entryFee) * BigInt(market.participantsCount)
       return sum + poolSize
     }, 0n)
-    metrics.totalValueLocked = Number.parseFloat(formatEther(tvlBigInt))
+    const totalValueLocked = Number.parseFloat(formatEther(tvlBigInt))
 
-    // Calculate unique active traders
+    // Calculate unique active traders (creators)
     const uniqueTraders = new Set<string>()
-    marketsData.forEach((market: any) => {
+    marketsData.forEach((market: Market) => {
       uniqueTraders.add(market.creator.toLowerCase())
     })
-    metrics.activeTraders = uniqueTraders.size
+    const activeTraders = uniqueTraders.size
 
     // Calculate 24h volume and trends
     let volume24h = 0n
@@ -134,7 +194,7 @@ export default function MetricsBar({ error }: MetricsBarProps) {
     let tvl24h = 0n
     let tvlPrevious24h = 0n
 
-    marketsData.forEach((market: any) => {
+    marketsData.forEach((market: Market) => {
       const poolSize = BigInt(market.entryFee) * BigInt(market.participantsCount)
       const startTime = Number(market.startTime)
 
@@ -150,37 +210,52 @@ export default function MetricsBar({ error }: MetricsBarProps) {
       }
     })
 
-    metrics.volume24h = Number.parseFloat(formatEther(volume24h))
+    const volume24hValue = Number.parseFloat(formatEther(volume24h))
 
     // Calculate trend percentages
+    let marketsTrend = '+0%'
     if (marketsPrevious24h > 0) {
-      const marketsTrend = ((markets24h - marketsPrevious24h) / marketsPrevious24h) * 100
-      metrics.trends.markets = `${marketsTrend >= 0 ? '+' : ''}${marketsTrend.toFixed(1)}%`
+      const trend = ((markets24h - marketsPrevious24h) / marketsPrevious24h) * 100
+      marketsTrend = `${trend >= 0 ? '+' : ''}${trend.toFixed(1)}%`
     }
     else if (markets24h > 0) {
-      metrics.trends.markets = '+100%'
+      marketsTrend = '+100%'
     }
 
+    let tvlTrend = '+0%'
     if (tvlPrevious24h > 0n) {
-      const tvlTrend = ((Number(tvl24h) - Number(tvlPrevious24h)) / Number(tvlPrevious24h)) * 100
-      metrics.trends.tvl = `${tvlTrend >= 0 ? '+' : ''}${tvlTrend.toFixed(1)}%`
+      const trend = ((Number(tvl24h) - Number(tvlPrevious24h)) / Number(tvlPrevious24h)) * 100
+      tvlTrend = `${trend >= 0 ? '+' : ''}${trend.toFixed(1)}%`
     }
     else if (tvl24h > 0n) {
-      metrics.trends.tvl = '+100%'
+      tvlTrend = '+100%'
     }
 
+    let volumeTrend = '+0%'
     if (volumePrevious24h > 0n) {
-      const volumeTrend = ((Number(volume24h) - Number(volumePrevious24h)) / Number(volumePrevious24h)) * 100
-      metrics.trends.volume = `${volumeTrend >= 0 ? '+' : ''}${volumeTrend.toFixed(1)}%`
+      const trend = ((Number(volume24h) - Number(volumePrevious24h)) / Number(volumePrevious24h)) * 100
+      volumeTrend = `${trend >= 0 ? '+' : ''}${trend.toFixed(1)}%`
     }
     else if (volume24h > 0n) {
-      metrics.trends.volume = '+100%'
+      volumeTrend = '+100%'
     }
 
     // Trader trend (simplified - based on recent market creation activity)
     const traderTrend = markets24h > marketsPrevious24h ? '+15%' : markets24h < marketsPrevious24h ? '-5%' : '+0%'
-    metrics.trends.traders = traderTrend
-  }
+
+    return {
+      totalMarkets,
+      totalValueLocked,
+      activeTraders,
+      volume24h: volume24hValue,
+      trends: {
+        markets: marketsTrend,
+        tvl: tvlTrend,
+        traders: traderTrend,
+        volume: volumeTrend,
+      },
+    }
+  }, [marketsData])
 
   // Show error state if there's an error and no data
   const showError = error && !marketsData

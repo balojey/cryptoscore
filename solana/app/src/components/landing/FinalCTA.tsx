@@ -81,23 +81,25 @@ export default function FinalCTA() {
             </Link>
 
             {/* Secondary CTA - Connect Wallet (conditional) */}
-            {!isConnected ? (
-              <Connect />
-            ) : (
-              <Link
-                to="/terminal"
-                className="px-8 py-4 text-lg font-semibold rounded-xl transition-all duration-300 hover-lift"
-                style={{
-                  background: 'var(--bg-secondary)',
-                  color: 'var(--accent-cyan)',
-                  border: '2px solid var(--accent-cyan)',
-                  boxShadow: 'var(--shadow-md)',
-                }}
-                aria-label="View trading terminal"
-              >
-                View Terminal
-              </Link>
-            )}
+            {!isConnected
+              ? (
+                  <Connect />
+                )
+              : (
+                  <Link
+                    to="/terminal"
+                    className="px-8 py-4 text-lg font-semibold rounded-xl transition-all duration-300 hover-lift"
+                    style={{
+                      background: 'var(--bg-secondary)',
+                      color: 'var(--accent-cyan)',
+                      border: '2px solid var(--accent-cyan)',
+                      boxShadow: 'var(--shadow-md)',
+                    }}
+                    aria-label="View trading terminal"
+                  >
+                    View Terminal
+                  </Link>
+                )}
           </div>
 
           {/* Additional trust indicators */}

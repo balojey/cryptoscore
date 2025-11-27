@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 interface HowItWorksStep {
   number: number
@@ -48,7 +48,7 @@ export default function HowItWorks() {
           setIsVisible(true)
         }
       },
-      { threshold: 0.2 }
+      { threshold: 0.2 },
     )
 
     if (sectionRef.current) {

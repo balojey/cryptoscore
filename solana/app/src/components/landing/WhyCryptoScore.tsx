@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 interface BenefitItem {
   icon: string
@@ -66,7 +66,7 @@ export default function WhyCryptoScore() {
           setIsVisible(true)
         }
       },
-      { threshold: 0.2 }
+      { threshold: 0.2 },
     )
 
     if (sectionRef.current) {
@@ -132,12 +132,12 @@ export default function WhyCryptoScore() {
                 style={{
                   background: 'var(--bg-elevated)',
                   border: `2px solid ${expandedBenefit === index ? benefit.color : 'var(--border-default)'}`,
-                  boxShadow: expandedBenefit === index 
-                    ? `0 0 30px ${benefit.color}40, var(--shadow-2xl)` 
+                  boxShadow: expandedBenefit === index
+                    ? `0 0 30px ${benefit.color}40, var(--shadow-2xl)`
                     : 'var(--shadow-md)',
                 }}
                 onClick={() => handleBenefitClick(index)}
-                onKeyDown={(e) => handleKeyDown(e, index)}
+                onKeyDown={e => handleKeyDown(e, index)}
                 role="button"
                 tabIndex={0}
                 aria-expanded={expandedBenefit === index}

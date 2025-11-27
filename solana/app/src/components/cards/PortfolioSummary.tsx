@@ -1,12 +1,11 @@
 import type { MarketDashboardInfo } from '../../types'
+import { useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { formatEther } from 'viem'
 import { useReadContracts } from 'wagmi'
-import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent } from '@/components/ui/card'
 import { CryptoScoreMarketABI } from '../../config/contracts'
-import { config } from '../../config/wagmi'
-import { getPublicClient } from '@wagmi/core'
+import { config, getPublicClient } from '../../config/wagmi'
 
 interface PortfolioSummaryProps {
   userAddress?: string
@@ -79,7 +78,7 @@ export default function PortfolioSummary({ userAddress, joinedMarkets = [] }: Po
             })
 
             // Sum all withdrawal amounts for this market
-            const totalWithdrawn = logs.reduce((sum, log) => {
+            const totalWithdrawn = logs.reduce((sum: bigint, log: any) => {
               return sum + (log.args.amount || 0n)
             }, 0n)
 

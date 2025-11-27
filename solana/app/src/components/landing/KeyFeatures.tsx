@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 interface FeatureItem {
   icon: string
@@ -58,7 +58,7 @@ export default function KeyFeatures() {
           setIsVisible(true)
         }
       },
-      { threshold: 0.2 }
+      { threshold: 0.2 },
     )
 
     if (sectionRef.current) {
@@ -115,8 +115,8 @@ export default function KeyFeatures() {
                 style={{
                   background: 'var(--bg-elevated)',
                   border: `2px solid ${hoveredFeature === index ? feature.color : 'var(--border-default)'}`,
-                  boxShadow: hoveredFeature === index 
-                    ? `0 0 30px ${feature.color}40, var(--shadow-2xl)` 
+                  boxShadow: hoveredFeature === index
+                    ? `0 0 30px ${feature.color}40, var(--shadow-2xl)`
                     : 'var(--shadow-lg)',
                 }}
               >

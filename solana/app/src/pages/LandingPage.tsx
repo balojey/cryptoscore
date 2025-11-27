@@ -1,10 +1,10 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
+import FinalCTA from '../components/landing/FinalCTA'
 import HeroSection from '../components/landing/HeroSection'
-import LiveMetrics from '../components/landing/LiveMetrics'
 import HowItWorks from '../components/landing/HowItWorks'
 import KeyFeatures from '../components/landing/KeyFeatures'
+import LiveMetrics from '../components/landing/LiveMetrics'
 import WhyCryptoScore from '../components/landing/WhyCryptoScore'
-import FinalCTA from '../components/landing/FinalCTA'
 
 // Lazy load FeaturedMarketsPreview (below the fold)
 const FeaturedMarketsPreview = lazy(() => import('../components/landing/FeaturedMarketsPreview'))
@@ -69,7 +69,7 @@ export function LandingPage() {
     const handleAnchorClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement
       const anchor = target.closest('a[href^="#"]')
-      
+
       if (anchor && !prefersReducedMotion) {
         const href = anchor.getAttribute('href')
         if (href && href.startsWith('#')) {
@@ -155,7 +155,7 @@ export function LandingPage() {
         }`}
       >
         <Suspense
-          fallback={
+          fallback={(
             <div className="py-16 md:py-24">
               <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="text-center mb-12">
@@ -169,7 +169,7 @@ export function LandingPage() {
                 </div>
               </div>
             </div>
-          }
+          )}
         >
           <FeaturedMarketsPreview />
         </Suspense>

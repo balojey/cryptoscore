@@ -1,8 +1,8 @@
 import type { Market } from '../../types'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useEffect, useState } from 'react'
-import { useReadContract } from 'wagmi'
-import { CRYPTO_SCORE_DASHBOARD_ADDRESS, CryptoScoreDashboardABI } from '../../config/contracts'
+import { useReadContract, useReadContracts } from 'wagmi'
+import { CRYPTO_SCORE_FACTORY_ADDRESS, CryptoScoreFactoryABI, CryptoScoreMarketABI } from '../../config/contracts'
 import EnhancedMarketCard, { EnhancedMarketCardSkeleton } from '../cards/EnhancedMarketCard'
 import ErrorBanner from '../terminal/ErrorBanner'
 
@@ -11,13 +11,76 @@ export default function FeaturedMarketsPreview() {
   const [showError, setShowError] = useState(true)
   const [cachedMarkets, setCachedMarkets] = useState<Market[] | null>(null)
 
-  // Fetch markets from dashboard contract
-  const { data: marketsData, isLoading, isError, refetch } = useReadContract({
-    address: CRYPTO_SCORE_DASHBOARD_ADDRESS,
-    abi: CryptoScoreDashboardABI,
-    functionName: 'getMarketsDashboardPaginated',
-    args: [BigInt(0), BigInt(50), true], // Fetch first 50 public markets
+  // Fetch all markets from factory contract
+  const { data: factoryMarkets, isLoading: isLoadingFactory, isError: isFactoryError, refetch: refetchFactory } = useReadContract({
+    address: CRYPTO_SCORE_FACTORY_ADDRESS as any,
+    abi: CryptoScoreFactoryABI,
+    functionName: 'getAllMarkets',
   })
+
+  // Filter public markets only
+  const publicMarketAddresses = useMemo(() => {
+    if (!factoryMarkets || !Array.isArray(factoryMarkets))
+      return []
+    return factoryMarkets
+      .filter((market: any) => market.isPublic)
+      .slice(0, 50) // Limit to 50 markets
+      .map((market: any) => market.marketAddress as `0x${string}`)
+  }, [factoryMarkets])
+
+  // Fetch detailed data from individual market contracts
+  const { data: marketDetails, isLoading: isLoadingDetails, isError: isDetailsError } = useReadContracts({
+    contracts: publicMarketAddresses.flatMap(address => [
+      {
+        address,
+        abi: CryptoScoreMarketABI as any,
+        functionName: 'getParticipantsCount',
+      },
+      {
+        address,
+        abi: CryptoScoreMarketABI as any,
+        functionName: 'getPredictionCounts',
+      },
+      {
+        address,
+        abi: CryptoScoreMarketABI as any,
+        functionName: 'resolved',
+      },
+    ]),
+  })
+
+  // Combine factory data with market details
+  const marketsData = useMemo(() => {
+    if (!factoryMarkets || !Array.isArray(factoryMarkets) || !marketDetails)
+      return null
+
+    const publicMarkets = factoryMarkets.filter((market: any) => market.isPublic).slice(0, 50)
+
+    return publicMarkets.map((factoryMarket: any, index: number) => {
+      const detailsIndex = index * 3
+      const participantsCount = marketDetails[detailsIndex]?.result as bigint | undefined
+      const predictionCounts = marketDetails[detailsIndex + 1]?.result as [bigint, bigint, bigint] | undefined
+      const resolved = marketDetails[detailsIndex + 2]?.result as boolean | undefined
+
+      return {
+        marketAddress: factoryMarket.marketAddress,
+        matchId: factoryMarket.matchId,
+        entryFee: factoryMarket.entryFee,
+        creator: factoryMarket.creator,
+        participantsCount: participantsCount || BigInt(0),
+        resolved: resolved || false,
+        isPublic: factoryMarket.isPublic,
+        startTime: factoryMarket.startTime,
+        homeCount: predictionCounts?.[0] || BigInt(0),
+        awayCount: predictionCounts?.[1] || BigInt(0),
+        drawCount: predictionCounts?.[2] || BigInt(0),
+      } as Market
+    })
+  }, [factoryMarkets, marketDetails])
+
+  const isLoading = isLoadingFactory || isLoadingDetails
+  const isError = isFactoryError || isDetailsError
+  const refetch = refetchFactory
 
   // Cache successful data fetches
   useEffect(() => {

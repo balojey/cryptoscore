@@ -1,5 +1,5 @@
+import { useWallet } from '@solana/wallet-adapter-react'
 import { useState } from 'react'
-import { useDisconnect } from 'wagmi'
 import {
   Dialog,
   DialogContent,
@@ -10,19 +10,18 @@ import { shortenAddress } from '../utils/formatters'
 import Balance from './Balance'
 
 interface AccountProps {
-  address: `0x${string}`
-  connectorName: string | undefined
-  connectorIcon: string | undefined
+  address: string
+  walletName: string | undefined
+  walletIcon: string | undefined
 }
 
-export default function Account({ address, connectorName, connectorIcon }: AccountProps) {
-  const { disconnect } = useDisconnect()
+export default function Account({ address, walletName, walletIcon }: AccountProps) {
+  const { disconnect } = useWallet()
   const [isOpen, setIsOpen] = useState(false)
   const [isCopied, setIsCopied] = useState(false)
 
   function handleDisconnect() {
     disconnect()
-    localStorage.clear()
     setIsOpen(false)
   }
 
@@ -53,11 +52,11 @@ export default function Account({ address, connectorName, connectorIcon }: Accou
         onClick={() => setIsOpen(true)}
       >
         <div className="flex items-center gap-2">
-          {connectorIcon
+          {walletIcon
             ? (
                 <img
-                  src={connectorIcon}
-                  alt={connectorName || 'Connector'}
+                  src={walletIcon}
+                  alt={walletName || 'Wallet'}
                   className="w-7 h-7 sm:w-8 sm:h-8 rounded-full"
                 />
               )
@@ -75,11 +74,11 @@ export default function Account({ address, connectorName, connectorIcon }: Accou
       <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center gap-2 sm:gap-3 mb-2">
-            {connectorIcon
+            {walletIcon
               ? (
                   <img
-                    src={connectorIcon}
-                    alt={connectorName || 'Connector'}
+                    src={walletIcon}
+                    alt={walletName || 'Wallet'}
                     className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex-shrink-0"
                   />
                 )
@@ -88,11 +87,11 @@ export default function Account({ address, connectorName, connectorIcon }: Accou
                 )}
             <div className="min-w-0">
               <DialogTitle className="font-jakarta text-lg sm:text-xl">Account</DialogTitle>
-              {connectorName && (
+              {walletName && (
                 <p className="text-xs sm:text-sm truncate" style={{ color: 'var(--text-tertiary)' }}>
                   Connected with
                   {' '}
-                  {connectorName}
+                  {walletName}
                 </p>
               )}
             </div>
@@ -136,12 +135,12 @@ export default function Account({ address, connectorName, connectorIcon }: Accou
             <p className="text-xs sm:text-sm mb-1.5 sm:mb-2 font-semibold" style={{ color: 'var(--text-tertiary)' }}>
               Your Balance
             </p>
-            <Balance address={address} />
+            <Balance />
           </div>
 
           {/* Faucet Link */}
           <a
-            href="https://faucet.polkadot.io/?parachain=1111"
+            href="https://faucet.solana.com/"
             target="_blank"
             rel="noreferrer"
             className="flex items-center gap-2 sm:gap-4 p-3 sm:p-4 rounded-[12px] transition-all hover-lift"
@@ -163,7 +162,7 @@ export default function Account({ address, connectorName, connectorIcon }: Accou
             <div className="flex flex-col flex-1 min-w-0">
               <span className="font-bold text-sm sm:text-base">Get Test Tokens</span>
               <span className="text-xs sm:text-sm truncate" style={{ color: 'var(--text-secondary)' }}>
-                Use the faucet for free PAS
+                Use the faucet for free SOL
               </span>
             </div>
             <span className="icon-[mdi--open-in-new] w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
