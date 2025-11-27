@@ -16,58 +16,93 @@ export function UserMarkets() {
     query: { enabled: !!address && !!CRYPTO_SCORE_FACTORY_ADDRESS },
   })
 
-  // Get all market addresses to check participation
+  // Get all market addresses to check participation and resolved status
   const marketAddresses = useMemo(() => {
     if (!factoryMarkets || !Array.isArray(factoryMarkets)) return []
     return factoryMarkets.map((m: any) => m.marketAddress as `0x${string}`)
   }, [factoryMarkets])
 
-  // Check if user is a participant in each market
-  const participantChecks = useMemo(() => {
-    return marketAddresses.map((addr) => ({
-      address: addr,
-      abi: CryptoScoreMarketABI as any,
-      functionName: 'isParticipant' as const,
-      args: [address],
-    }))
+  // Build contracts array for batch reading
+  const contractCalls = useMemo(() => {
+    const calls = []
+    for (const addr of marketAddresses) {
+      // Check if user is a participant
+      calls.push({
+        address: addr,
+        abi: CryptoScoreMarketABI as any,
+        functionName: 'isParticipant' as const,
+        args: [address],
+      })
+      // Check if market is resolved
+      calls.push({
+        address: addr,
+        abi: CryptoScoreMarketABI as any,
+        functionName: 'resolved' as const,
+      })
+      // Get participants count
+      calls.push({
+        address: addr,
+        abi: CryptoScoreMarketABI as any,
+        functionName: 'getParticipantsCount' as const,
+      })
+    }
+    return calls
   }, [marketAddresses, address])
 
-  const { data: participantResults, isLoading: isLoadingParticipants } = useReadContracts({
-    contracts: participantChecks,
+  const { data: contractResults, isLoading: isLoadingContracts } = useReadContracts({
+    contracts: contractCalls,
     query: {
       enabled: marketAddresses.length > 0 && !!address,
     },
   })
 
-  const isLoading = isLoadingFactory || isLoadingParticipants
+  const isLoading = isLoadingFactory || isLoadingContracts
 
   const userMarkets = useMemo(() => {
-    if (!factoryMarkets || !participantResults || !Array.isArray(factoryMarkets)) return []
+    if (!factoryMarkets || !contractResults || !Array.isArray(factoryMarkets)) return []
 
     const now = Date.now() / 1000
 
-    // Filter markets where user is a participant
+    // Filter markets where user is creator OR participant, and market is open/ending soon/unresolved
     const filtered = (factoryMarkets as any[])
       .map((market, index) => {
-        const isParticipant = participantResults[index]?.result as boolean
-        if (!isParticipant) return null
+        const resultIndex = index * 3
+        const isParticipant = contractResults[resultIndex]?.result as boolean
+        const isResolved = contractResults[resultIndex + 1]?.result as boolean
+        const participantsCount = contractResults[resultIndex + 2]?.result as bigint
+
+        const isCreator = address?.toLowerCase() === market.creator?.toLowerCase()
+        
+        // Include if user is creator OR participant
+        if (!isCreator && !isParticipant) return null
+        
+        // Exclude resolved markets
+        if (isResolved) return null
+
+        const startTime = BigInt(market.startTime?.toString() || '0')
+        const startTimeSeconds = Number(startTime)
+        
+        // Only include markets that haven't started yet or are within 2 hours of ending
+        // (Open, Ending Soon, or Live status)
+        if (startTimeSeconds < now - 7200) return null // Exclude if more than 2 hours past start
 
         return {
           marketAddress: market.marketAddress as `0x${string}`,
           matchId: BigInt(market.matchId?.toString() || '0'),
           entryFee: BigInt(market.entryFee?.toString() || '0'),
           creator: market.creator,
-          participantsCount: BigInt(0), // Will be fetched by EnhancedMarketCard
-          resolved: false, // Will be fetched by EnhancedMarketCard
+          participantsCount: participantsCount || BigInt(0),
+          resolved: isResolved || false,
           isPublic: market.isPublic,
-          startTime: BigInt(market.startTime?.toString() || '0'),
+          startTime,
         } as Market
       })
-      .filter((m): m is Market => m !== null && Number(m.startTime) > now)
+      .filter((m): m is Market => m !== null)
+      // Sort by start time (earliest first)
       .sort((a, b) => Number(a.startTime) - Number(b.startTime))
 
     return filtered
-  }, [factoryMarkets, participantResults])
+  }, [factoryMarkets, contractResults, address])
 
   // Don't render the component if the user is not connected.
   // The homepage will just show the hero and public markets.
