@@ -35,12 +35,56 @@ export interface ResolveMarketParams {
  * Hook for performing market actions (create, join, resolve, withdraw)
  * Handles transaction signing, confirmation, and loading states
  */
+export interface SimulationResult {
+  success: boolean
+  logs?: string[]
+  error?: string
+}
+
 export function useMarketActions() {
   const { connection, publicKey, signTransaction } = useSolanaConnection()
   const queryClient = useQueryClient()
   const [isLoading, setIsLoading] = useState(false)
   const [txSignature, setTxSignature] = useState<string | null>(null)
   const [estimatedFee, setEstimatedFee] = useState<FeeEstimate | null>(null)
+  const [simulationResult, setSimulationResult] = useState<SimulationResult | null>(null)
+
+  /**
+   * Simulate a transaction before sending
+   * Logs results and returns simulation outcome
+   */
+  const simulateBeforeSend = useCallback(async (
+    transaction: any,
+    operationName: string
+  ): Promise<boolean> => {
+    console.log(`Simulating ${operationName} transaction...`)
+    
+    const simulation = await SolanaUtils.simulateTransaction(connection, transaction)
+    setSimulationResult(simulation)
+
+    if (simulation.success) {
+      console.log(`✅ ${operationName} simulation successful`)
+      if (simulation.logs && simulation.logs.length > 0) {
+        console.log('Simulation logs:', simulation.logs)
+      }
+      return true
+    }
+    else {
+      console.error(`❌ ${operationName} simulation failed:`, simulation.error)
+      if (simulation.logs && simulation.logs.length > 0) {
+        console.error('Simulation logs:', simulation.logs)
+      }
+      
+      // Warn user about simulation failure
+      const shouldProceed = window.confirm(
+        `Transaction simulation failed: ${simulation.error}\n\n` +
+        'This transaction may fail on-chain. Do you want to proceed anyway?\n\n' +
+        'Click OK to proceed or Cancel to abort.'
+      )
+      
+      return shouldProceed
+    }
+  }, [connection])
 
   /**
    * Create a new prediction market
@@ -109,6 +153,13 @@ export function useMarketActions() {
       const transaction = await builder.build(connection)
       transaction.feePayer = publicKey
 
+      // Simulate transaction before sending
+      const shouldProceed = await simulateBeforeSend(transaction, 'createMarket')
+      if (!shouldProceed) {
+        toast.error('Transaction cancelled by user')
+        return null
+      }
+
       // Sign and send transaction using wallet adapter
       const signedTransaction = await signTransaction(transaction)
       const signature = await connection.sendRawTransaction(signedTransaction.serialize())
@@ -140,7 +191,7 @@ export function useMarketActions() {
     finally {
       setIsLoading(false)
     }
-  }, [connection, publicKey, signTransaction, queryClient])
+  }, [connection, publicKey, signTransaction, queryClient, simulateBeforeSend])
 
   /**
    * Join an existing market with a prediction
@@ -205,6 +256,13 @@ export function useMarketActions() {
       const transaction = await builder.build(connection)
       transaction.feePayer = publicKey
 
+      // Simulate transaction before sending
+      const shouldProceed = await simulateBeforeSend(transaction, 'joinMarket')
+      if (!shouldProceed) {
+        toast.error('Transaction cancelled by user')
+        return null
+      }
+
       const signedTransaction = await signTransaction(transaction)
       const signature = await connection.sendRawTransaction(signedTransaction.serialize())
 
@@ -234,7 +292,7 @@ export function useMarketActions() {
     finally {
       setIsLoading(false)
     }
-  }, [connection, publicKey, signTransaction, queryClient])
+  }, [connection, publicKey, signTransaction, queryClient, simulateBeforeSend])
 
   /**
    * Resolve a market with the match outcome
@@ -291,6 +349,13 @@ export function useMarketActions() {
       const transaction = await builder.build(connection)
       transaction.feePayer = publicKey
 
+      // Simulate transaction before sending
+      const shouldProceed = await simulateBeforeSend(transaction, 'resolveMarket')
+      if (!shouldProceed) {
+        toast.error('Transaction cancelled by user')
+        return null
+      }
+
       const signedTransaction = await signTransaction(transaction)
       const signature = await connection.sendRawTransaction(signedTransaction.serialize())
 
@@ -320,7 +385,7 @@ export function useMarketActions() {
     finally {
       setIsLoading(false)
     }
-  }, [connection, publicKey, signTransaction, queryClient])
+  }, [connection, publicKey, signTransaction, queryClient, simulateBeforeSend])
 
   /**
    * Withdraw rewards from a resolved market
@@ -375,6 +440,13 @@ export function useMarketActions() {
       const transaction = await builder.build(connection)
       transaction.feePayer = publicKey
 
+      // Simulate transaction before sending
+      const shouldProceed = await simulateBeforeSend(transaction, 'withdrawRewards')
+      if (!shouldProceed) {
+        toast.error('Transaction cancelled by user')
+        return null
+      }
+
       const signedTransaction = await signTransaction(transaction)
       const signature = await connection.sendRawTransaction(signedTransaction.serialize())
 
@@ -405,7 +477,7 @@ export function useMarketActions() {
     finally {
       setIsLoading(false)
     }
-  }, [connection, publicKey, signTransaction, queryClient])
+  }, [connection, publicKey, signTransaction, queryClient, simulateBeforeSend])
 
   /**
    * Get Solana Explorer link for a transaction
@@ -424,5 +496,6 @@ export function useMarketActions() {
     isLoading,
     txSignature,
     estimatedFee,
+    simulationResult,
   }
 }

@@ -173,8 +173,8 @@
     - Update estimates when network conditions change
     - _Requirements: 14.1, 14.2, 14.3, 14.4, 14.5_
 
-- [-] 6. Add transaction simulation before sending
-  - [ ] 6.1 Implement simulation in useMarketActions
+- [x] 6. Add transaction simulation before sending
+  - [x] 6.1 Implement simulation in useMarketActions
     - Simulate transactions before sending using SolanaUtils
     - Log simulation results for debugging
     - Warn users if simulation fails
