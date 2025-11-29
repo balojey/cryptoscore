@@ -17,12 +17,6 @@ interface EnhancedMarketCardProps {
   onQuickJoin?: (marketAddress: string, prediction: number) => void
 }
 
-interface Participant {
-  user: string
-  prediction: number
-  amount: number
-}
-
 interface PredictionDistribution {
   home: number
   draw: number
@@ -216,7 +210,7 @@ export default function EnhancedMarketCard({ market }: EnhancedMarketCardProps) 
   }
 
   const matchDate = new Date(matchData.utcDate)
-  const poolSize = (market.entryFee / 1_000_000_000) * Number(market.participantsCount) // Convert lamports to SOL
+  const poolSize = (Number(market.entryFee) / 1_000_000_000) * Number(market.participantsCount) // Convert lamports to SOL
   const isOwner = userAddress?.toString() === market.creator
 
   return (

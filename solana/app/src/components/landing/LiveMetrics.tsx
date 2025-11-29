@@ -1,4 +1,6 @@
-import { memo, useMemo, useState } from 'react'
+import { memo, useMemo } from 'react'
+import { useMarketStats } from '../../hooks/useMarketStats'
+import { LAMPORTS_PER_SOL } from '@solana/web3.js'
 import AnimatedNumber from '../ui/AnimatedNumber'
 
 interface MetricCardProps {
@@ -54,19 +56,27 @@ const MetricCard = memo(({ label, value, suffix = '', icon, color, decimals = 0,
 })
 
 export default function LiveMetrics() {
-  const [isLoading] = useState(false)
+  // Fetch market statistics from Dashboard program
+  const { data: stats, isLoading } = useMarketStats()
 
-  // TODO: Implement Solana program data fetching
-  // This will be implemented after the Solana programs are deployed
-  // For now, we'll show placeholder data
+  // Transform stats to display metrics
   const metrics = useMemo(() => {
-    return {
-      totalMarkets: 0,
-      totalValueLocked: 0,
-      activeTraders: 0,
-      marketsResolved: 0,
+    if (!stats) {
+      return {
+        totalMarkets: 0,
+        totalValueLocked: 0,
+        activeTraders: 0,
+        marketsResolved: 0,
+      }
     }
-  }, [])
+
+    return {
+      totalMarkets: stats.openMarkets + stats.liveMarkets,
+      totalValueLocked: stats.totalVolume / LAMPORTS_PER_SOL, // Convert lamports to SOL
+      activeTraders: stats.totalParticipants,
+      marketsResolved: stats.resolvedMarkets,
+    }
+  }, [stats])
 
   return (
     <section className="py-16 md:py-24">

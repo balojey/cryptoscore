@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-// import { PublicKey } from '@solana/web3.js'
+import { PublicKey } from '@solana/web3.js'
 import { useSolanaProgram } from './useSolanaProgram'
 
 export interface Participant {
@@ -26,6 +26,28 @@ export interface MarketData {
   participants?: Participant[]
 }
 
+// Helper to convert status enum from IDL
+function parseMarketStatus(status: number): 'Open' | 'Live' | 'Resolved' | 'Cancelled' {
+  switch (status) {
+    case 0: return 'Open'
+    case 1: return 'Live'
+    case 2: return 'Resolved'
+    case 3: return 'Cancelled'
+    default: return 'Open'
+  }
+}
+
+// Helper to convert outcome enum from IDL
+function parseOutcome(outcome: number | null): 'Home' | 'Draw' | 'Away' | null {
+  if (outcome === null || outcome === undefined) return null
+  switch (outcome) {
+    case 0: return 'Home'
+    case 1: return 'Draw'
+    case 2: return 'Away'
+    default: return null
+  }
+}
+
 /**
  * Hook for fetching detailed information for a specific market
  */
@@ -39,16 +61,34 @@ export function useMarketData(marketAddress?: string) {
         return null
       }
 
-      // TODO: Implement after Dashboard Program is deployed
-      // Call get_market_details instruction
-      // const marketPubkey = new PublicKey(marketAddress)
-      // const market = await dashboardProgram.methods
-      //   .getMarketDetails(marketPubkey)
-      //   .accounts({})
-      //   .view()
+      try {
+        const marketPubkey = new PublicKey(marketAddress)
+        
+        // Call getMarketDetails view function from Dashboard IDL
+        const marketDetails = await dashboardProgram.methods
+          .getMarketDetails(marketPubkey)
+          .view()
 
-      // For now, return null
-      return null
+        return {
+          marketAddress: marketDetails.marketAddress.toString(),
+          creator: marketDetails.creator.toString(),
+          matchId: marketDetails.matchId,
+          entryFee: marketDetails.entryFee.toNumber(),
+          kickoffTime: marketDetails.kickoffTime.toNumber(),
+          endTime: marketDetails.endTime.toNumber(),
+          status: parseMarketStatus(marketDetails.status),
+          outcome: parseOutcome(marketDetails.outcome),
+          totalPool: marketDetails.totalPool.toNumber(),
+          participantCount: marketDetails.participantCount,
+          homeCount: marketDetails.homeCount,
+          drawCount: marketDetails.drawCount,
+          awayCount: marketDetails.awayCount,
+          isPublic: marketDetails.isPublic,
+        }
+      } catch (error) {
+        console.error('Error fetching market details:', error)
+        return null
+      }
     },
     enabled: isReady && !!dashboardProgram && !!marketAddress,
     staleTime: 5000,
@@ -69,15 +109,39 @@ export function useAllMarkets(page = 0, pageSize = 50) {
         return []
       }
 
-      // TODO: Implement after Dashboard Program is deployed
-      // Call get_all_markets instruction with pagination
-      // const markets = await dashboardProgram.methods
-      //   .getAllMarkets(page, pageSize)
-      //   .accounts({})
-      //   .view()
+      try {
+        // Call getAllMarkets view function from Dashboard IDL
+        // filterStatus: null (all statuses), filterVisibility: null (all), sortBy: CreationTime
+        const marketSummaries = await dashboardProgram.methods
+          .getAllMarkets(
+            null, // filterStatus - null means all statuses
+            null, // filterVisibility - null means all (public and private)
+            { creationTime: {} }, // sortBy - sort by creation time (newest first)
+            page,
+            pageSize
+          )
+          .view()
 
-      // For now, return empty array
-      return []
+        return marketSummaries.map((summary: any) => ({
+          marketAddress: summary.marketAddress.toString(),
+          creator: summary.creator.toString(),
+          matchId: summary.matchId,
+          entryFee: summary.entryFee.toNumber(),
+          kickoffTime: summary.kickoffTime.toNumber(),
+          endTime: summary.endTime.toNumber(),
+          status: parseMarketStatus(summary.status),
+          outcome: null, // Summary doesn't include outcome
+          totalPool: summary.totalPool.toNumber(),
+          participantCount: summary.participantCount,
+          homeCount: summary.homeCount,
+          drawCount: summary.drawCount,
+          awayCount: summary.awayCount,
+          isPublic: summary.isPublic,
+        }))
+      } catch (error) {
+        console.error('Error fetching all markets:', error)
+        return []
+      }
     },
     enabled: isReady && !!dashboardProgram,
     staleTime: 10000, // 10 seconds
@@ -98,16 +162,40 @@ export function useUserMarkets(userAddress?: string) {
         return []
       }
 
-      // TODO: Implement after Dashboard Program is deployed
-      // Call get_user_markets instruction
-      // const userPubkey = new PublicKey(userAddress)
-      // const markets = await dashboardProgram.methods
-      //   .getUserMarkets(userPubkey)
-      //   .accounts({})
-      //   .view()
+      try {
+        const userPubkey = new PublicKey(userAddress)
+        
+        // Call getUserMarkets view function from Dashboard IDL
+        const marketSummaries = await dashboardProgram.methods
+          .getUserMarkets(
+            userPubkey,
+            null, // filterStatus - null means all statuses
+            { creationTime: {} }, // sortBy - sort by creation time
+            0, // page
+            100 // pageSize - get all user markets
+          )
+          .view()
 
-      // For now, return empty array
-      return []
+        return marketSummaries.map((summary: any) => ({
+          marketAddress: summary.marketAddress.toString(),
+          creator: summary.creator.toString(),
+          matchId: summary.matchId,
+          entryFee: summary.entryFee.toNumber(),
+          kickoffTime: summary.kickoffTime.toNumber(),
+          endTime: summary.endTime.toNumber(),
+          status: parseMarketStatus(summary.status),
+          outcome: null,
+          totalPool: summary.totalPool.toNumber(),
+          participantCount: summary.participantCount,
+          homeCount: summary.homeCount,
+          drawCount: summary.drawCount,
+          awayCount: summary.awayCount,
+          isPublic: summary.isPublic,
+        }))
+      } catch (error) {
+        console.error('Error fetching user markets:', error)
+        return []
+      }
     },
     enabled: isReady && !!dashboardProgram && !!userAddress,
     staleTime: 10000,
@@ -128,17 +216,34 @@ export function useUserStats(userAddress?: string) {
         return null
       }
 
-      // TODO: Implement after Dashboard Program is deployed
-      // Fetch UserStats account for the user
-      // const userPubkey = new PublicKey(userAddress)
-      // const [userStatsPda] = PublicKey.findProgramAddressSync(
-      //   [Buffer.from('user_stats'), userPubkey.toBuffer()],
-      //   dashboardProgram.programId
-      // )
-      // const userStats = await dashboardProgram.account.userStats.fetch(userStatsPda)
+      try {
+        const userPubkey = new PublicKey(userAddress)
+        
+        // Derive UserStats PDA
+        const [userStatsPda] = PublicKey.findProgramAddressSync(
+          [Buffer.from('user_stats'), userPubkey.toBuffer()],
+          dashboardProgram.programId
+        )
+        
+        // Fetch UserStats account
+        const userStats = await dashboardProgram.account.userStats.fetch(userStatsPda)
 
-      // For now, return null
-      return null
+        return {
+          user: userStats.user.toString(),
+          totalMarkets: userStats.totalMarkets,
+          wins: userStats.wins,
+          losses: userStats.losses,
+          totalWagered: userStats.totalWagered.toNumber(),
+          totalWon: userStats.totalWon.toNumber(),
+          currentStreak: userStats.currentStreak,
+          bestStreak: userStats.bestStreak,
+          lastUpdated: userStats.lastUpdated.toNumber(),
+        }
+      } catch (error) {
+        console.error('Error fetching user stats:', error)
+        // Return null if account doesn't exist yet (user hasn't participated in any markets)
+        return null
+      }
     },
     enabled: isReady && !!dashboardProgram && !!userAddress,
     staleTime: 30000, // 30 seconds

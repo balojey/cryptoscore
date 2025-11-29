@@ -1,13 +1,14 @@
 import { useCallback, useState } from 'react'
 import { toast } from 'react-hot-toast'
-// import { PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js'
+import { PublicKey, SystemProgram } from '@solana/web3.js'
+import { BN } from '@coral-xyz/anchor'
 import { useSolanaProgram } from './useSolanaProgram'
 
 export type MatchOutcome = 'Home' | 'Draw' | 'Away'
 
 export interface CreateMarketParams {
   matchId: string
-  entryFee: number // in SOL
+  entryFee: number // in lamports
   kickoffTime: number
   endTime: number
   isPublic: boolean
@@ -35,9 +36,17 @@ export function useMarketActions() {
   /**
    * Create a new prediction market
    */
-  const createMarket = useCallback(async (_params: CreateMarketParams) => {
-    if (!factoryProgram || !provider || !wallet.publicKey) {
-      toast.error('Wallet not connected')
+  const createMarket = useCallback(async (params: CreateMarketParams) => {
+    if (!factoryProgram || !marketProgram || !provider || !wallet.publicKey) {
+      const missingItems = []
+      if (!factoryProgram) missingItems.push('factoryProgram')
+      if (!marketProgram) missingItems.push('marketProgram')
+      if (!provider) missingItems.push('provider')
+      if (!wallet.publicKey) missingItems.push('wallet')
+      
+      const errorMsg = `Missing: ${missingItems.join(', ')}`
+      console.error('Cannot create market:', errorMsg)
+      toast.error('Wallet not connected or programs not initialized')
       return null
     }
 
@@ -45,43 +54,77 @@ export function useMarketActions() {
     setTxSignature(null)
 
     try {
-      // TODO: Implement after Factory Program is deployed
-      // Convert entry fee from SOL to lamports
-      // const entryFeeLamports = params.entryFee * LAMPORTS_PER_SOL
+      console.log('Factory Program ID:', factoryProgram.programId.toString())
+      console.log('Market Program ID:', marketProgram.programId.toString())
+      
+      // Derive Factory PDA
+      const [factoryPda] = PublicKey.findProgramAddressSync(
+        [Buffer.from('factory')],
+        factoryProgram.programId
+      )
 
-      // Derive market PDA
-      // const [marketPda] = PublicKey.findProgramAddressSync(
-      //   [
-      //     Buffer.from('market'),
-      //     factoryProgram.programId.toBuffer(),
-      //     Buffer.from(params.matchId)
-      //   ],
-      //   marketProgram.programId
-      // )
+      // Derive Market Registry PDA
+      const [marketRegistryPda] = PublicKey.findProgramAddressSync(
+        [
+          Buffer.from('market_registry'),
+          factoryPda.toBuffer(),
+          Buffer.from(params.matchId)
+        ],
+        factoryProgram.programId
+      )
 
-      // Call create_market instruction
-      // const tx = await factoryProgram.methods
-      //   .createMarket(
-      //     params.matchId,
-      //     new BN(entryFeeLamports),
-      //     new BN(params.kickoffTime),
-      //     new BN(params.endTime),
-      //     params.isPublic
-      //   )
-      //   .accounts({
-      //     factory: factoryPda,
-      //     market: marketPda,
-      //     creator: wallet.publicKey,
-      //     systemProgram: SystemProgram.programId,
-      //   })
-      //   .rpc()
+      // Derive Market PDA (from Market program)
+      const [marketPda] = PublicKey.findProgramAddressSync(
+        [
+          Buffer.from('market'),
+          factoryPda.toBuffer(),
+          Buffer.from(params.matchId)
+        ],
+        marketProgram.programId
+      )
 
-      // setTxSignature(tx)
-      // toast.success('Market created successfully!')
-      // return tx
+      // Step 1: Initialize the Market account
+      const initMarketTx = await marketProgram.methods
+        .initializeMarket(
+          params.matchId,
+          new BN(params.entryFee),
+          new BN(params.kickoffTime),
+          new BN(params.endTime),
+          params.isPublic
+        )
+        .accounts({
+          market: marketPda,
+          factory: factoryPda,
+          creator: wallet.publicKey,
+          systemProgram: SystemProgram.programId,
+        })
+        .rpc()
 
-      toast('Market creation not yet implemented')
-      return null
+      console.log('Market initialized:', initMarketTx)
+
+      // Step 2: Register the market in the Factory
+      const createMarketTx = await factoryProgram.methods
+        .createMarket(
+          params.matchId,
+          new BN(params.entryFee),
+          new BN(params.kickoffTime),
+          new BN(params.endTime),
+          params.isPublic
+        )
+        .accounts({
+          factory: factoryPda,
+          marketRegistry: marketRegistryPda,
+          marketAccount: marketPda,
+          creator: wallet.publicKey,
+          systemProgram: SystemProgram.programId,
+        })
+        .rpc()
+
+      console.log('Market registered in factory:', createMarketTx)
+
+      setTxSignature(createMarketTx)
+      toast.success('Market created successfully!')
+      return createMarketTx
     }
     catch (error: any) {
       console.error('Error creating market:', error)
@@ -91,12 +134,12 @@ export function useMarketActions() {
     finally {
       setIsLoading(false)
     }
-  }, [factoryProgram, provider, wallet.publicKey])
+  }, [factoryProgram, marketProgram, provider, wallet.publicKey])
 
   /**
    * Join an existing market with a prediction
    */
-  const joinMarket = useCallback(async (_params: JoinMarketParams) => {
+  const joinMarket = useCallback(async (params: JoinMarketParams) => {
     if (!marketProgram || !provider || !wallet.publicKey) {
       toast.error('Wallet not connected')
       return null
@@ -106,42 +149,39 @@ export function useMarketActions() {
     setTxSignature(null)
 
     try {
-      // TODO: Implement after Market Program is deployed
-      // const marketPubkey = new PublicKey(params.marketAddress)
-
-      // Fetch market to get entry fee
-      // const market = await marketProgram.account.market.fetch(marketPubkey)
+      const marketPubkey = new PublicKey(params.marketAddress)
 
       // Derive participant PDA
-      // const [participantPda] = PublicKey.findProgramAddressSync(
-      //   [
-      //     Buffer.from('participant'),
-      //     marketPubkey.toBuffer(),
-      //     wallet.publicKey.toBuffer()
-      //   ],
-      //   marketProgram.programId
-      // )
+      const [participantPda] = PublicKey.findProgramAddressSync(
+        [
+          Buffer.from('participant'),
+          marketPubkey.toBuffer(),
+          wallet.publicKey.toBuffer()
+        ],
+        marketProgram.programId
+      )
 
-      // Convert prediction to enum
-      // const predictionEnum = { [params.prediction.toLowerCase()]: {} }
+      // Convert prediction to enum format expected by Anchor
+      const predictionEnum = params.prediction === 'Home' 
+        ? { home: {} } 
+        : params.prediction === 'Draw' 
+          ? { draw: {} } 
+          : { away: {} }
 
-      // Call join_market instruction
-      // const tx = await marketProgram.methods
-      //   .joinMarket(predictionEnum)
-      //   .accounts({
-      //     market: marketPubkey,
-      //     participant: participantPda,
-      //     user: wallet.publicKey,
-      //     systemProgram: SystemProgram.programId,
-      //   })
-      //   .rpc()
+      // Call joinMarket instruction
+      const tx = await marketProgram.methods
+        .joinMarket(predictionEnum)
+        .accounts({
+          market: marketPubkey,
+          participant: participantPda,
+          user: wallet.publicKey,
+          systemProgram: SystemProgram.programId,
+        })
+        .rpc()
 
-      // setTxSignature(tx)
-      // toast.success('Joined market successfully!')
-      // return tx
-
-      toast('Join market not yet implemented')
-      return null
+      setTxSignature(tx)
+      toast.success('Joined market successfully!')
+      return tx
     }
     catch (error: any) {
       console.error('Error joining market:', error)
@@ -156,7 +196,7 @@ export function useMarketActions() {
   /**
    * Resolve a market with the match outcome
    */
-  const resolveMarket = useCallback(async (_params: ResolveMarketParams) => {
+  const resolveMarket = useCallback(async (params: ResolveMarketParams) => {
     if (!marketProgram || !provider || !wallet.publicKey) {
       toast.error('Wallet not connected')
       return null
@@ -166,27 +206,27 @@ export function useMarketActions() {
     setTxSignature(null)
 
     try {
-      // TODO: Implement after Market Program is deployed
-      // const marketPubkey = new PublicKey(params.marketAddress)
+      const marketPubkey = new PublicKey(params.marketAddress)
 
-      // Convert outcome to enum
-      // const outcomeEnum = { [params.outcome.toLowerCase()]: {} }
+      // Convert outcome to enum format expected by Anchor
+      const outcomeEnum = params.outcome === 'Home' 
+        ? { home: {} } 
+        : params.outcome === 'Draw' 
+          ? { draw: {} } 
+          : { away: {} }
 
-      // Call resolve_market instruction
-      // const tx = await marketProgram.methods
-      //   .resolveMarket(outcomeEnum)
-      //   .accounts({
-      //     market: marketPubkey,
-      //     authority: wallet.publicKey,
-      //   })
-      //   .rpc()
+      // Call resolveMarket instruction
+      const tx = await marketProgram.methods
+        .resolveMarket(outcomeEnum)
+        .accounts({
+          market: marketPubkey,
+          creator: wallet.publicKey,
+        })
+        .rpc()
 
-      // setTxSignature(tx)
-      // toast.success('Market resolved successfully!')
-      // return tx
-
-      toast('Resolve market not yet implemented')
-      return null
+      setTxSignature(tx)
+      toast.success('Market resolved successfully!')
+      return tx
     }
     catch (error: any) {
       console.error('Error resolving market:', error)
@@ -201,7 +241,7 @@ export function useMarketActions() {
   /**
    * Withdraw rewards from a resolved market
    */
-  const withdrawRewards = useCallback(async (_marketAddress: string) => {
+  const withdrawRewards = useCallback(async (marketAddress: string) => {
     if (!marketProgram || !provider || !wallet.publicKey) {
       toast.error('Wallet not connected')
       return null
@@ -211,36 +251,32 @@ export function useMarketActions() {
     setTxSignature(null)
 
     try {
-      // TODO: Implement after Market Program is deployed
-      // const marketPubkey = new PublicKey(marketAddress)
+      const marketPubkey = new PublicKey(marketAddress)
 
       // Derive participant PDA
-      // const [participantPda] = PublicKey.findProgramAddressSync(
-      //   [
-      //     Buffer.from('participant'),
-      //     marketPubkey.toBuffer(),
-      //     wallet.publicKey.toBuffer()
-      //   ],
-      //   marketProgram.programId
-      // )
+      const [participantPda] = PublicKey.findProgramAddressSync(
+        [
+          Buffer.from('participant'),
+          marketPubkey.toBuffer(),
+          wallet.publicKey.toBuffer()
+        ],
+        marketProgram.programId
+      )
 
-      // Call withdraw instruction
-      // const tx = await marketProgram.methods
-      //   .withdraw()
-      //   .accounts({
-      //     market: marketPubkey,
-      //     participant: participantPda,
-      //     user: wallet.publicKey,
-      //     systemProgram: SystemProgram.programId,
-      //   })
-      //   .rpc()
+      // Call withdrawRewards instruction
+      const tx = await marketProgram.methods
+        .withdrawRewards()
+        .accounts({
+          market: marketPubkey,
+          participant: participantPda,
+          user: wallet.publicKey,
+          systemProgram: SystemProgram.programId,
+        })
+        .rpc()
 
-      // setTxSignature(tx)
-      // toast.success('Rewards withdrawn successfully!')
-      // return tx
-
-      toast('Withdraw rewards not yet implemented')
-      return null
+      setTxSignature(tx)
+      toast.success('Rewards withdrawn successfully!')
+      return tx
     }
     catch (error: any) {
       console.error('Error withdrawing rewards:', error)

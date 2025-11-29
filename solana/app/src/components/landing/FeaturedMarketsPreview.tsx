@@ -1,6 +1,7 @@
 import type { Market } from '../../types'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useAllMarketsQuery } from '../../hooks/useAllMarketsQuery'
 import EnhancedMarketCard, { EnhancedMarketCardSkeleton } from '../cards/EnhancedMarketCard'
 import ErrorBanner from '../terminal/ErrorBanner'
 
@@ -8,41 +9,17 @@ import ErrorBanner from '../terminal/ErrorBanner'
 export default function FeaturedMarketsPreview() {
   const [showError, setShowError] = useState(true)
   const [cachedMarkets, setCachedMarkets] = useState<Market[] | null>(null)
-  const [marketsData, setMarketsData] = useState<Market[] | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isError, setIsError] = useState(false)
 
-  // Fetch markets from Solana program
-  const fetchMarkets = async () => {
-    try {
-      setIsLoading(true)
-      setIsError(false)
-
-      // TODO: Implement Solana program integration once contracts are deployed
-      // For now, return empty array to prevent errors
-      // This will be replaced with actual Anchor program calls:
-      // 1. Initialize Anchor provider with connection
-      // 2. Create Program instance with IDL and program ID
-      // 3. Fetch market accounts using program.account.marketState.all()
-      // 4. Transform account data to Market type
-      
-      const transformedMarkets: Market[] = []
-
-      setMarketsData(transformedMarkets)
-      setIsLoading(false)
-    }
-    catch (error) {
-      console.error('Error fetching markets:', error)
-      setIsError(true)
-      setIsLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchMarkets()
-  }, [])
-
-  const refetch = fetchMarkets
+  // Fetch all public markets from Dashboard program
+  // We'll filter and select featured ones on the client side
+  const { data: marketsData, isLoading, isError, refetch } = useAllMarketsQuery({
+    filterStatus: null, // Get all statuses
+    filterVisibility: true, // Only public markets
+    sortBy: 'EndingSoon', // Sort by ending soon first
+    page: 0,
+    pageSize: 50, // Fetch more to have options for selection
+    enabled: true,
+  })
 
   // Cache successful data fetches
   useEffect(() => {
@@ -56,7 +33,7 @@ export default function FeaturedMarketsPreview() {
 
   const handleRetry = () => {
     setShowError(true)
-    refetch()
+    refetch().catch(console.error)
   }
 
   const handleDismiss = () => {

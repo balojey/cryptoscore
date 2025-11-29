@@ -1,13 +1,10 @@
-import type { MarketDashboardInfo } from '../types'
-import { useConnection } from '@solana/wallet-adapter-react'
+import type { Market, MarketDashboardInfo } from '../types'
+import { PublicKey } from '@solana/web3.js'
+import { AnchorProvider, Program } from '@coral-xyz/anchor'
+import { useConnection, useWallet } from '@solana/wallet-adapter-react'
 import { useQuery } from '@tanstack/react-query'
 import { useCallback, useRef } from 'react'
-import { DASHBOARD_PROGRAM_ID } from '../config/programs'
-
-// Note: These will be used after program deployment
-// import { PublicKey } from '@solana/web3.js'
-// import { Program } from '@coral-xyz/anchor'
-// import { DashboardIDL } from '../config/programs'
+import { DASHBOARD_PROGRAM_ID, DashboardIDL, FactoryIDL, MarketIDL } from '../config/programs'
 
 export interface DashboardData {
   createdMarkets: MarketDashboardInfo[]
@@ -19,10 +16,11 @@ export interface DashboardData {
 
 /**
  * Hook for fetching user dashboard data (created and joined markets)
- * This replaces the Polkadot useReadContract calls with Solana program queries
+ * Uses Solana Dashboard program's getUserMarkets view function
  */
 export function useDashboardData(userAddress?: string): DashboardData {
   const { connection } = useConnection()
+  const wallet = useWallet()
   const lastFetchTime = useRef<number>(0)
   const rateLimitDelay = 2000 // Minimum 2 seconds between requests
 
@@ -47,66 +45,98 @@ export function useDashboardData(userAddress?: string): DashboardData {
       }
       lastFetchTime.current = Date.now()
 
-      // TODO: Implement after Dashboard Program is deployed
-      // This will replace the Polkadot getUserMarketsDashboardPaginated calls
-      
-      // const userPubkey = new PublicKey(userAddress)
-      // const provider = new AnchorProvider(connection, wallet, { commitment: 'confirmed' })
-      // const program = new Program(DashboardIDL, DASHBOARD_PROGRAM_ID, provider)
-      
-      // Fetch created markets (markets where user is the creator)
-      // const createdMarketsData = await program.methods
-      //   .getUserMarketsDashboardPaginated(userPubkey, 0, 100, true)
-      //   .accounts({})
-      //   .view()
-
-      // Fetch joined markets (markets where user has placed predictions)
-      // const joinedMarketsData = await program.methods
-      //   .getUserMarketsDashboardPaginated(userPubkey, 0, 100, false)
-      //   .accounts({})
-      //   .view()
-
-      // Transform Solana program data to MarketDashboardInfo format
-      // const createdMarkets: MarketDashboardInfo[] = createdMarketsData.map(market => ({
-      //   marketAddress: market.publicKey.toString(),
-      //   matchId: market.matchId,
-      //   creator: market.creator.toString(),
-      //   entryFee: market.entryFee,
-      //   resolved: market.resolved,
-      //   winner: market.winner,
-      //   participantsCount: market.participantCount,
-      //   isPublic: market.isPublic,
-      //   startTime: market.kickoffTime,
-      //   homeCount: market.homeCount,
-      //   awayCount: market.awayCount,
-      //   drawCount: market.drawCount,
-      // }))
-
-      // const joinedMarkets: MarketDashboardInfo[] = joinedMarketsData.map(market => ({
-      //   marketAddress: market.publicKey.toString(),
-      //   matchId: market.matchId,
-      //   creator: market.creator.toString(),
-      //   entryFee: market.entryFee,
-      //   resolved: market.resolved,
-      //   winner: market.winner,
-      //   participantsCount: market.participantCount,
-      //   isPublic: market.isPublic,
-      //   startTime: market.kickoffTime,
-      //   homeCount: market.homeCount,
-      //   awayCount: market.awayCount,
-      //   drawCount: market.drawCount,
-      // }))
-
       console.log('Fetching user dashboard data from Solana program:', {
         programId: DASHBOARD_PROGRAM_ID,
         userAddress,
       })
 
-      // Placeholder: Return empty arrays until program is deployed
-      // This prevents the app from crashing during migration
+      // Create provider and program instance
+      const userPubkey = new PublicKey(userAddress)
+      const provider = new AnchorProvider(
+        connection,
+        wallet as any,
+        { commitment: 'confirmed' }
+      )
+      const dashboardProgram = new Program(DashboardIDL as any, provider)
+
+      // Call getUserMarkets view function from Dashboard IDL
+      // This returns an array of MarketSummary objects
+      const allUserMarkets: any[] = await dashboardProgram.methods
+        .getUserMarkets(
+          userPubkey,
+          null, // filterStatus - null means all statuses
+          { creationTime: {} }, // sortBy - sort by creation time
+          0, // page
+          100 // pageSize
+        )
+        .view()
+
+      console.log('Fetched user markets:', allUserMarkets.length)
+
+      // Helper function to convert market status enum to resolved boolean
+      const isResolved = (status: number): boolean => {
+        // Status enum: 0=Open, 1=Live, 2=Resolved, 3=Cancelled
+        return status === 2
+      }
+
+      // Helper function to convert outcome enum to winner number
+      const getWinner = (outcome: any): number => {
+        if (!outcome) return 0
+        // MatchOutcome enum: Home=0, Draw=1, Away=2
+        if (outcome.home !== undefined) return 1
+        if (outcome.draw !== undefined) return 3
+        if (outcome.away !== undefined) return 2
+        return 0
+      }
+
+      // Helper to parse matchId (can be string or number)
+      const parseMatchId = (matchId: any): bigint => {
+        if (typeof matchId === 'string') {
+          return BigInt(matchId)
+        }
+        return BigInt(matchId.toString())
+      }
+
+      // Separate created vs joined markets
+      const createdMarkets: MarketDashboardInfo[] = allUserMarkets
+        .filter((m: any) => m.creator.toString() === userAddress)
+        .map((market: any) => ({
+          marketAddress: market.marketAddress.toString(),
+          matchId: parseMatchId(market.matchId),
+          creator: market.creator.toString(),
+          entryFee: BigInt(market.entryFee.toString()),
+          resolved: isResolved(market.status),
+          winner: getWinner(market.outcome),
+          participantsCount: BigInt(market.participantCount),
+          isPublic: market.isPublic,
+          startTime: BigInt(market.kickoffTime.toString()),
+          homeCount: BigInt(market.homeCount),
+          awayCount: BigInt(market.awayCount),
+          drawCount: BigInt(market.drawCount),
+        }))
+
+      const joinedMarkets: MarketDashboardInfo[] = allUserMarkets
+        .filter((m: any) => m.creator.toString() !== userAddress)
+        .map((market: any) => ({
+          marketAddress: market.marketAddress.toString(),
+          matchId: parseMatchId(market.matchId),
+          creator: market.creator.toString(),
+          entryFee: BigInt(market.entryFee.toString()),
+          resolved: isResolved(market.status),
+          winner: getWinner(market.outcome),
+          participantsCount: BigInt(market.participantCount),
+          isPublic: market.isPublic,
+          startTime: BigInt(market.kickoffTime.toString()),
+          homeCount: BigInt(market.homeCount),
+          awayCount: BigInt(market.awayCount),
+          drawCount: BigInt(market.drawCount),
+        }))
+
+      console.log('Created markets:', createdMarkets.length, 'Joined markets:', joinedMarkets.length)
+
       return {
-        createdMarkets: [],
-        joinedMarkets: [],
+        createdMarkets,
+        joinedMarkets,
       }
     }
     catch (error) {
@@ -124,7 +154,7 @@ export function useDashboardData(userAddress?: string): DashboardData {
       console.error('Error fetching user dashboard data:', error)
       throw error
     }
-  }, [connection, userAddress])
+  }, [connection, wallet, userAddress])
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['dashboard', 'user', userAddress],
@@ -170,20 +200,21 @@ export function useDashboardData(userAddress?: string): DashboardData {
 
 /**
  * Hook for fetching all markets from dashboard
- * Replaces the Polkadot useReadContract for dashboard.getMarketsDashboardPaginated
+ * Uses Solana Dashboard program's getAllMarkets view function
  */
 export function useAllMarkets(options: {
-  offset?: number
-  limit?: number
+  page?: number
+  pageSize?: number
   publicOnly?: boolean
   enabled?: boolean
 } = {}) {
-  const { offset = 0, limit = 1000, publicOnly = false, enabled = true } = options
+  const { page = 0, pageSize = 100, publicOnly = false, enabled = true } = options
   const { connection } = useConnection()
+  const wallet = useWallet()
   const lastFetchTime = useRef<number>(0)
   const rateLimitDelay = 2000
 
-  const fetchDashboardData = useCallback(async (): Promise<MarketDashboardInfo[]> => {
+  const fetchDashboardData = useCallback(async (): Promise<Market[]> => {
     try {
       // Rate limiting: ensure minimum delay between requests
       const now = Date.now()
@@ -194,23 +225,63 @@ export function useAllMarkets(options: {
       }
       lastFetchTime.current = Date.now()
 
-      // TODO: Replace with actual Anchor program call after deployment
-      // const provider = new AnchorProvider(connection, wallet, { commitment: 'confirmed' })
-      // const program = new Program(DashboardIDL, DASHBOARD_PROGRAM_ID, provider)
-      // const markets = await program.methods
-      //   .getMarketsDashboardPaginated(offset, limit, publicOnly)
-      //   .accounts({ dashboard: dashboardPDA })
-      //   .view()
-      
       console.log('Fetching dashboard data from Solana program:', {
         programId: DASHBOARD_PROGRAM_ID,
-        offset,
-        limit,
+        page,
+        pageSize,
         publicOnly,
       })
 
-      // Placeholder: Return empty array until program is deployed
-      return []
+      // Create provider and program instance
+      const provider = new AnchorProvider(
+        connection,
+        wallet as any,
+        { commitment: 'confirmed' }
+      )
+      const dashboardProgram = new Program(DashboardIDL as any, provider)
+
+      // Call getAllMarkets view function from Dashboard IDL
+      // Returns array of MarketSummary objects
+      const markets: any[] = await dashboardProgram.methods
+        .getAllMarkets(
+          null, // filterStatus - null means all statuses
+          publicOnly ? true : null, // filterVisibility
+          { creationTime: {} }, // sortBy - sort by creation time
+          page,
+          Math.min(pageSize, 100) // Max 100 per page
+        )
+        .view()
+
+      console.log('Fetched all markets:', markets.length)
+
+      // Helper function to check if market is resolved
+      const isResolved = (status: number): boolean => {
+        // Status enum: 0=Open, 1=Live, 2=Resolved, 3=Cancelled
+        return status === 2
+      }
+
+      // Helper to parse matchId (can be string or number)
+      const parseMatchId = (matchId: any): bigint => {
+        if (typeof matchId === 'string') {
+          return BigInt(matchId)
+        }
+        return BigInt(matchId.toString())
+      }
+
+      // Transform MarketSummary to Market type
+      return markets.map((market: any) => ({
+        marketAddress: market.marketAddress.toString(),
+        matchId: parseMatchId(market.matchId),
+        creator: market.creator.toString(),
+        entryFee: BigInt(market.entryFee.toString()),
+        resolved: isResolved(market.status),
+        participantsCount: BigInt(market.participantCount),
+        isPublic: market.isPublic,
+        startTime: BigInt(market.kickoffTime.toString()),
+        homeCount: BigInt(market.homeCount),
+        awayCount: BigInt(market.awayCount),
+        drawCount: BigInt(market.drawCount),
+      }))
     }
     catch (error) {
       const errorMessage = error?.toString() || ''
@@ -224,10 +295,10 @@ export function useAllMarkets(options: {
       console.error('Error fetching dashboard data:', error)
       throw error
     }
-  }, [connection, offset, limit, publicOnly])
+  }, [connection, wallet, page, pageSize, publicOnly])
 
   return useQuery({
-    queryKey: ['dashboard', 'markets', offset, limit, publicOnly],
+    queryKey: ['dashboard', 'markets', page, pageSize, publicOnly],
     queryFn: fetchDashboardData,
     enabled,
     staleTime: 15000, // 15 seconds
@@ -239,16 +310,17 @@ export function useAllMarkets(options: {
 
 /**
  * Hook for fetching all markets from factory
- * Replaces the Polkadot useReadContract for factory.getAllMarkets
+ * Uses Solana Factory program's getMarkets view function
  * Used by MetricsBar component
  */
 export function useFactoryMarkets(options: { enabled?: boolean } = {}) {
   const { enabled = true } = options
   const { connection } = useConnection()
+  const wallet = useWallet()
   const lastFetchTime = useRef<number>(0)
   const rateLimitDelay = 2000
 
-  const fetchFactoryMarkets = useCallback(async (): Promise<MarketDashboardInfo[]> => {
+  const fetchFactoryMarkets = useCallback(async (): Promise<Market[]> => {
     try {
       // Rate limiting
       const now = Date.now()
@@ -258,18 +330,72 @@ export function useFactoryMarkets(options: { enabled?: boolean } = {}) {
       }
       lastFetchTime.current = Date.now()
 
-      // TODO: Replace with actual Anchor program call after deployment
-      // const provider = new AnchorProvider(connection, wallet, { commitment: 'confirmed' })
-      // const program = new Program(FactoryIDL, FACTORY_PROGRAM_ID, provider)
-      // const markets = await program.methods
-      //   .getAllMarkets()
-      //   .accounts({})
-      //   .view()
-      
       console.log('Fetching factory markets from Solana program')
+
+      // Create provider and program instance
+      const provider = new AnchorProvider(
+        connection,
+        wallet as any,
+        { commitment: 'confirmed' }
+      )
+      const factoryProgram = new Program(FactoryIDL as any, provider)
+
+      // Call getMarkets view function from Factory IDL
+      // Note: Factory's getMarkets doesn't return data directly, it needs accounts
+      // We need to fetch all MarketRegistry accounts instead
+      const marketRegistries = await (factoryProgram.account as any).marketRegistry.all()
+
+      console.log('Fetched factory market registries:', marketRegistries.length)
+
+      // Fetch detailed market data for each registry entry
+      const marketProgram = new Program(MarketIDL as any, provider)
       
-      // Placeholder: Return empty array until program is deployed
-      return []
+      const markets = await Promise.all(
+        marketRegistries.map(async (registry: { account: any, publicKey: PublicKey }) => {
+          try {
+            const registryData = registry.account
+            const marketPubkey = registryData.marketAddress
+            
+            // Fetch market account data
+            const marketAccount = await (marketProgram.account as any).market.fetch(marketPubkey)
+            
+            // Helper function to check if market is resolved
+            const isResolved = (status: any): boolean => {
+              return status.resolved !== undefined
+            }
+
+            // Helper to parse matchId (can be string or number)
+            const parseMatchId = (matchId: any): bigint => {
+              if (typeof matchId === 'string') {
+                return BigInt(matchId)
+              }
+              return BigInt(matchId.toString())
+            }
+            
+            return {
+              marketAddress: marketPubkey.toString(),
+              matchId: parseMatchId(registryData.matchId),
+              creator: registryData.creator.toString(),
+              entryFee: BigInt(marketAccount.entryFee.toString()),
+              resolved: isResolved(marketAccount.status),
+              participantsCount: BigInt(marketAccount.participantCount),
+              isPublic: registryData.isPublic,
+              startTime: BigInt(registryData.kickoffTime.toString()),
+              homeCount: BigInt(marketAccount.homeCount),
+              awayCount: BigInt(marketAccount.awayCount),
+              drawCount: BigInt(marketAccount.drawCount),
+            } as Market
+          } catch (err) {
+            console.warn(`Failed to fetch market ${registry.account.marketAddress.toString()}:`, err)
+            return null
+          }
+        })
+      )
+
+      // Filter out failed fetches
+      const validMarkets = markets.filter((m: Market | null): m is Market => m !== null)
+      console.log('Valid markets fetched:', validMarkets.length)
+      return validMarkets
     }
     catch (error) {
       const errorMessage = error?.toString() || ''
@@ -280,7 +406,7 @@ export function useFactoryMarkets(options: { enabled?: boolean } = {}) {
       console.error('Error fetching factory markets:', error)
       throw error
     }
-  }, [connection])
+  }, [connection, wallet])
 
   return useQuery({
     queryKey: ['factory', 'markets'],
@@ -295,12 +421,13 @@ export function useFactoryMarkets(options: { enabled?: boolean } = {}) {
 
 /**
  * Hook for fetching detailed market data
- * Replaces the Polkadot useReadContracts for multiple market calls
+ * Fetches Market account data from Solana for multiple addresses
  * Used by MetricsBar component
  */
 export function useMarketDetails(marketAddresses: string[], options: { enabled?: boolean } = {}) {
   const { enabled = true } = options
   const { connection } = useConnection()
+  const wallet = useWallet()
   const lastFetchTime = useRef<number>(0)
   const rateLimitDelay = 2000
 
@@ -318,20 +445,73 @@ export function useMarketDetails(marketAddresses: string[], options: { enabled?:
       }
       lastFetchTime.current = Date.now()
 
-      // TODO: Replace with actual Anchor program calls after deployment
-      // Fetch market account data for each address
-      // const marketDetails = await Promise.all(
-      //   marketAddresses.map(async (address) => {
-      //     const marketPubkey = new PublicKey(address)
-      //     const program = new Program(MarketIDL, MARKET_PROGRAM_ID, provider)
-      //     return await program.account.market.fetch(marketPubkey)
-      //   })
-      // )
-      
       console.log('Fetching market details for:', marketAddresses.length, 'markets')
-      
-      // Placeholder: Return empty array until program is deployed
-      return []
+
+      // Create provider and program instance
+      const provider = new AnchorProvider(
+        connection,
+        wallet as any,
+        { commitment: 'confirmed' }
+      )
+      const marketProgram = new Program(MarketIDL as any, provider)
+
+      // Fetch market account data for each address
+      const marketDetails = await Promise.all(
+        marketAddresses.map(async (address) => {
+          try {
+            const marketPubkey = new PublicKey(address)
+            
+            // Fetch market account using Anchor's fetch method
+            const marketAccount = await (marketProgram.account as any).market.fetch(marketPubkey)
+            
+            // Helper function to check if market is resolved
+            const isResolved = (status: any): boolean => {
+              return status.resolved !== undefined
+            }
+
+            // Helper function to get outcome value
+            const getOutcome = (outcome: any): number | undefined => {
+              if (!outcome) return undefined
+              if (outcome.home !== undefined) return 0
+              if (outcome.draw !== undefined) return 1
+              if (outcome.away !== undefined) return 2
+              return undefined
+            }
+
+            // Helper to parse matchId (can be string or number)
+            const parseMatchId = (matchId: any): bigint => {
+              if (typeof matchId === 'string') {
+                return BigInt(matchId)
+              }
+              return BigInt(matchId.toString())
+            }
+            
+            return {
+              marketAddress: address,
+              matchId: parseMatchId(marketAccount.matchId),
+              creator: marketAccount.creator.toString(),
+              entryFee: BigInt(marketAccount.entryFee.toString()),
+              resolved: isResolved(marketAccount.status),
+              participantsCount: BigInt(marketAccount.participantCount),
+              isPublic: marketAccount.isPublic,
+              startTime: BigInt(marketAccount.kickoffTime.toString()),
+              homeCount: BigInt(marketAccount.homeCount),
+              awayCount: BigInt(marketAccount.awayCount),
+              drawCount: BigInt(marketAccount.drawCount),
+              totalPool: BigInt(marketAccount.totalPool.toString()),
+              outcome: getOutcome(marketAccount.outcome),
+            }
+          } catch (err) {
+            console.warn(`Failed to fetch market ${address}:`, err)
+            return null
+          }
+        })
+      )
+
+      // Filter out failed fetches
+      const validDetails = marketDetails.filter((m): m is any => m !== null)
+      console.log('Valid market details fetched:', validDetails.length)
+      return validDetails
     }
     catch (error) {
       const errorMessage = error?.toString() || ''
@@ -342,7 +522,7 @@ export function useMarketDetails(marketAddresses: string[], options: { enabled?:
       console.error('Error fetching market details:', error)
       throw error
     }
-  }, [connection, marketAddresses])
+  }, [connection, wallet, marketAddresses])
 
   return useQuery({
     queryKey: ['markets', 'details', marketAddresses],

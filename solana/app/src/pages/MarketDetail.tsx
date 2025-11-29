@@ -14,8 +14,9 @@ import { useMatchData } from '../hooks/useMatchData'
 import { useMarketData } from '../hooks/useMarketData'
 import { useMarketActions } from '../hooks/useMarketActions'
 import { useUserPrediction } from '../hooks/useUserPrediction'
+import { useUserRewards } from '../hooks/useUserRewards'
 import { shortenAddress, formatSOL } from '../utils/formatters'
-import { currentNetwork } from '../config/solana'
+import { getAccountExplorerUrl } from '../config/programs'
 
 // --- SUB-COMPONENTS ---
 
@@ -140,7 +141,7 @@ function MarketStats({ marketInfo, poolSize, participantsCount, marketStatus, is
           label="Creator"
           value={(
             <a
-              href={`${currentNetwork.explorer}/address/${marketInfo.creator}?cluster=${currentNetwork.name.toLowerCase().includes('devnet') ? 'devnet' : 'mainnet'}`}
+              href={getAccountExplorerUrl(marketInfo.creator || '')}
               target="_blank"
               rel="noopener noreferrer"
               className="font-mono hover:underline"
@@ -443,7 +444,7 @@ export function MarketDetail() {
   const { marketAddress } = useParams<{ marketAddress: string }>()
   const { publicKey: userAddress } = useWallet()
   const { joinMarket, resolveMarket, withdrawRewards, getExplorerLink, isLoading, txSignature } = useMarketActions()
-  const { data: marketData, isLoading: isLoadingMarket, error: marketError } = useMarketData(marketAddress)
+  const { data: marketData, isLoading: isLoadingMarket, error: marketError, refetch: refetchMarket } = useMarketData(marketAddress)
 
   const [selectedTeam, setSelectedTeam] = useState<number | null>(null)
   const [actionStatus, setActionStatus] = useState<{ 
@@ -458,27 +459,28 @@ export function MarketDetail() {
     marketData ? Number(marketData.matchId) : 0,
   )
 
-  // Mock data for development (TODO: Replace with actual Solana program data)
+  // Get user's prediction and rewards
+  const { predictionName, hasJoined } = useUserPrediction(marketAddress)
+  const { data: rewardsData } = useUserRewards(marketAddress)
+
+  // Market info
   const marketInfo = marketData ? {
     creator: marketData.creator,
     matchId: marketData.matchId,
-    entryFee: marketData.entryFee * LAMPORTS_PER_SOL, // Convert to lamports for display
+    entryFee: marketData.entryFee, // Already in lamports from the hook
     isPublic: marketData.isPublic,
     startTime: marketData.kickoffTime,
   } : null
 
   const marketStatus = marketData?.status === 'Resolved'
   const participantsCount = marketData?.participantCount || 0
-  const isUserParticipant = false // TODO: Implement user participation check
+  const isUserParticipant = hasJoined
   const winningTeam = marketData?.outcome === 'Home' ? 1 : marketData?.outcome === 'Away' ? 2 : marketData?.outcome === 'Draw' ? 3 : null
-  const entryFeeValue = marketData?.entryFee ? marketData.entryFee * LAMPORTS_PER_SOL : 0
+  const entryFeeValue = marketData?.entryFee || 0 // Already in lamports
   const homeCount = marketData?.homeCount || 0
   const awayCount = marketData?.awayCount || 0
   const drawCount = marketData?.drawCount || 0
-  const userRewardBalance = 0 // TODO: Implement reward balance check
-  
-  // Get user's prediction
-  const { predictionName, hasJoined } = useUserPrediction(marketAddress)
+  const userRewardBalance = rewardsData?.hasRewards ? 1 : 0 // Simplified check
 
   // Update action status based on transaction state
   useEffect(() => {
@@ -488,11 +490,13 @@ export function MarketDetail() {
         message: 'Transaction successful!',
         signature: txSignature
       })
+      // Refetch market data after successful transaction
+      refetchMarket()
     }
     if (isLoading) {
       setActionStatus({ type: 'info', message: 'Processing transaction...' })
     }
-  }, [txSignature, isLoading])
+  }, [txSignature, isLoading, refetchMarket])
 
   // Clear action status after some time
   useEffect(() => {
@@ -620,32 +624,35 @@ export function MarketDetail() {
 
   const renderButtons = (): React.ReactNode => {
     if (marketStatus) { // Resolved
-      // Check if user is a winner (their prediction matches the winning outcome)
-      const userIsWinner = isUserParticipant && predictionName !== 'NONE' && (
-        (winningTeam === 1 && predictionName === 'HOME')
-        || (winningTeam === 2 && predictionName === 'AWAY')
-        || (winningTeam === 3 && predictionName === 'DRAW')
-      )
-
-      // Check if user has already withdrawn (reward balance is 0)
-      const hasRewardToWithdraw = Boolean(userRewardBalance && Number(userRewardBalance as bigint) > 0)
+      // Use the rewards data from the hook
+      const userIsWinner = rewardsData?.isWinner || false
+      const canWithdraw = rewardsData?.canWithdraw || false
+      const hasWithdrawn = rewardsData?.hasWithdrawn || false
 
       return (
         <div className="flex items-center gap-4">
           <Button variant="secondary" disabled>Resolved</Button>
-          {userIsWinner && hasRewardToWithdraw
+          {userIsWinner && canWithdraw
             ? (
-                <Button variant="success" onClick={handleWithdraw} className="gap-2">
+                <Button variant="success" onClick={handleWithdraw} className="gap-2" disabled={isLoading}>
                   <span className="icon-[mdi--cash-multiple] w-5 h-5" />
-                  Withdraw
+                  {isLoading ? 'Withdrawing...' : 'Withdraw Rewards'}
                 </Button>
               )
             : null}
-          {userIsWinner && !hasRewardToWithdraw
+          {userIsWinner && hasWithdrawn
             ? (
                 <div className="text-sm font-medium flex items-center gap-2" style={{ color: 'var(--accent-green)' }}>
                   <span className="icon-[mdi--check-circle] w-5 h-5" />
                   <span>Withdrawn</span>
+                </div>
+              )
+            : null}
+          {!userIsWinner && isUserParticipant
+            ? (
+                <div className="text-sm font-medium flex items-center gap-2" style={{ color: 'var(--text-tertiary)' }}>
+                  <span className="icon-[mdi--close-circle] w-5 h-5" />
+                  <span>Not a winner</span>
                 </div>
               )
             : null}
@@ -670,11 +677,11 @@ export function MarketDetail() {
         variant="default"
         size="lg"
         onClick={handleJoinMarket}
-        disabled={selectedTeam === null || isUserParticipant}
+        disabled={selectedTeam === null || isUserParticipant || isLoading || !userAddress}
         className="gap-2"
       >
         <span className="icon-[mdi--login] w-5 h-5" />
-        Join Market
+        {isLoading ? 'Joining...' : isUserParticipant ? 'Already Joined' : !userAddress ? 'Connect Wallet' : 'Join Market'}
       </Button>
     )
   }
@@ -715,7 +722,7 @@ export function MarketDetail() {
                 marketAddress: marketAddress!,
                 matchId: BigInt(marketData.matchId),
                 creator: marketData.creator,
-                entryFee: BigInt(marketData.entryFee * LAMPORTS_PER_SOL),
+                entryFee: BigInt(marketData.entryFee),
                 isPublic: marketData.isPublic,
                 startTime: BigInt(marketData.kickoffTime),
                 resolved: marketData.status === 'Resolved',
@@ -729,7 +736,7 @@ export function MarketDetail() {
                 marketAddress: marketAddress!,
                 matchId: BigInt(marketData.matchId),
                 creator: marketData.creator,
-                entryFee: BigInt(marketData.entryFee * LAMPORTS_PER_SOL),
+                entryFee: BigInt(marketData.entryFee),
                 isPublic: marketData.isPublic,
                 startTime: BigInt(marketData.kickoffTime),
                 resolved: marketData.status === 'Resolved',

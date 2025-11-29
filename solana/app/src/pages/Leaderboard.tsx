@@ -9,7 +9,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import AnimatedNumber from '../components/ui/AnimatedNumber'
-import { useAllMarkets } from '../hooks/useDashboardData'
+import { useLeaderboard } from '../hooks/useLeaderboard'
 import { shortenAddress } from '../utils/formatters'
 
 type LeaderboardTab = 'winRate' | 'earnings' | 'active' | 'streak'
@@ -17,79 +17,37 @@ type LeaderboardTab = 'winRate' | 'earnings' | 'active' | 'streak'
 export function Leaderboard() {
   const [activeTab, setActiveTab] = useState<LeaderboardTab>('winRate')
 
-  // Fetch all markets to calculate leaderboard using Solana hooks
-  const { markets: allMarkets, isLoading } = useAllMarkets({
-    page: 0,
-    pageSize: 100,
-    includePrivate: true,
-  })
-
-  const leaderboardData = useMemo(() => {
-    if (!allMarkets || !Array.isArray(allMarkets))
-      return []
-
-    // Aggregate data by creator
-    const traderStats = new Map<string, {
-      address: string
-      totalMarkets: number
-      resolvedMarkets: number
-      totalVolume: number
-      estimatedWins: number
-      estimatedEarnings: number
-    }>()
-
-    allMarkets.forEach((market: any) => {
-      const creator = market.creator
-      const existing = traderStats.get(creator) || {
-        address: creator,
-        totalMarkets: 0,
-        resolvedMarkets: 0,
-        totalVolume: 0,
-        estimatedWins: 0,
-        estimatedEarnings: 0,
-      }
-
-      // Convert lamports to SOL for pool size calculation
-      const poolSize = (Number(market.entryFee) / LAMPORTS_PER_SOL) * Number(market.participantsCount)
-
-      existing.totalMarkets++
-      existing.totalVolume += poolSize
-
-      if (market.resolved) {
-        existing.resolvedMarkets++
-        // Estimate wins (placeholder - 60% win rate)
-        if (Math.random() > 0.4) {
-          existing.estimatedWins++
-          existing.estimatedEarnings += poolSize * 0.95 // 95% after fees
-        }
-      }
-
-      traderStats.set(creator, existing)
-    })
-
-    return Array.from(traderStats.values())
-  }, [allMarkets])
+  // Fetch leaderboard data from UserStats accounts
+  const { data: leaderboardData, isLoading } = useLeaderboard({ enabled: true })
 
   const sortedData = useMemo(() => {
+    if (!leaderboardData || leaderboardData.length === 0) {
+      return []
+    }
+
     const data = [...leaderboardData]
 
     switch (activeTab) {
       case 'winRate':
+        // Sort by win rate (highest first), filter users with at least 1 market
         return data
-          .filter(t => t.resolvedMarkets > 0)
-          .sort((a, b) => {
-            const aRate = a.estimatedWins / a.resolvedMarkets
-            const bRate = b.estimatedWins / b.resolvedMarkets
-            return bRate - aRate
-          })
+          .filter(t => t.totalMarkets > 0)
+          .sort((a, b) => b.winRate - a.winRate)
       case 'earnings':
-        return data.sort((a, b) => b.estimatedEarnings - a.estimatedEarnings)
+        // Sort by net profit (highest first)
+        return data.sort((a, b) => {
+          const aProfit = Number(a.netProfit) / LAMPORTS_PER_SOL
+          const bProfit = Number(b.netProfit) / LAMPORTS_PER_SOL
+          return bProfit - aProfit
+        })
       case 'active':
+        // Sort by total markets (most active first)
         return data.sort((a, b) => b.totalMarkets - a.totalMarkets)
       case 'streak':
+        // Sort by best streak (highest first)
         return data
-          .filter(t => t.estimatedWins > 0)
-          .sort((a, b) => b.estimatedWins - a.estimatedWins)
+          .filter(t => t.bestStreak > 0)
+          .sort((a, b) => b.bestStreak - a.bestStreak)
       default:
         return data
     }
@@ -197,9 +155,9 @@ export function Leaderboard() {
               <div className="space-y-2">
                 {sortedData.slice(0, 50).map((trader, index) => {
                   const rank = index + 1
-                  const winRate = trader.resolvedMarkets > 0
-                    ? (trader.estimatedWins / trader.resolvedMarkets) * 100
-                    : 0
+                  const netProfitSOL = Number(trader.netProfit) / LAMPORTS_PER_SOL
+                  const totalWageredSOL = Number(trader.totalWagered) / LAMPORTS_PER_SOL
+                  const totalWonSOL = Number(trader.totalWon) / LAMPORTS_PER_SOL
 
                   return (
                     <div
@@ -239,7 +197,8 @@ export function Leaderboard() {
                           {trader.totalMarkets}
                           {' '}
                           markets •
-                          {trader.resolvedMarkets}
+                          {' '}
+                          {trader.wins + trader.losses}
                           {' '}
                           resolved
                         </div>
@@ -250,25 +209,37 @@ export function Leaderboard() {
                         {activeTab === 'winRate' && (
                           <div>
                             <div className="font-bold text-lg" style={{ color: 'var(--accent-green)' }}>
-                              <AnimatedNumber value={winRate} decimals={1} suffix="%" />
+                              <AnimatedNumber value={trader.winRate} decimals={1} suffix="%" />
                             </div>
                             <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                              {trader.estimatedWins}
+                              {trader.wins}
                               W /
-                              {trader.resolvedMarkets - trader.estimatedWins}
+                              {' '}
+                              {trader.losses}
                               L
                             </div>
                           </div>
                         )}
                         {activeTab === 'earnings' && (
                           <div>
-                            <div className="font-bold text-lg" style={{ color: 'var(--accent-green)' }}>
-                              <AnimatedNumber value={trader.estimatedEarnings} decimals={2} suffix=" SOL" />
+                            <div 
+                              className="font-bold text-lg" 
+                              style={{ color: netProfitSOL >= 0 ? 'var(--accent-green)' : 'var(--accent-red)' }}
+                            >
+                              <AnimatedNumber 
+                                value={netProfitSOL} 
+                                decimals={2} 
+                                suffix=" SOL" 
+                              />
                             </div>
                             <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                              {trader.totalVolume.toFixed(2)}
+                              {totalWageredSOL.toFixed(2)}
                               {' '}
-                              SOL volume
+                              wagered •
+                              {' '}
+                              {totalWonSOL.toFixed(2)}
+                              {' '}
+                              won
                             </div>
                           </div>
                         )}
@@ -278,17 +249,28 @@ export function Leaderboard() {
                               {trader.totalMarkets}
                             </div>
                             <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                              markets created
+                              markets participated
                             </div>
                           </div>
                         )}
                         {activeTab === 'streak' && (
                           <div>
                             <div className="font-bold text-lg" style={{ color: 'var(--accent-amber)' }}>
-                              {trader.estimatedWins}
+                              {trader.bestStreak}
                             </div>
                             <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                              wins
+                              best streak
+                              {trader.currentStreak !== 0 && (
+                                <>
+                                  {' '}
+                                  •
+                                  {' '}
+                                  {trader.currentStreak > 0 ? '+' : ''}
+                                  {trader.currentStreak}
+                                  {' '}
+                                  current
+                                </>
+                              )}
                             </div>
                           </div>
                         )}

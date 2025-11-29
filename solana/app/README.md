@@ -1,6 +1,6 @@
-# CryptoScore dApp - React Frontend
+# CryptoScore dApp - Solana Frontend
 
-A professional Web3 trading terminal for decentralized sports prediction markets on Polkadot.
+A professional Web3 trading terminal for decentralized sports prediction markets on Solana.
 
 ## 🎨 Features
 
@@ -27,7 +27,8 @@ A professional Web3 trading terminal for decentralized sports prediction markets
 ### Prerequisites
 
 - Node.js 18+ and npm
-- MetaMask or compatible Web3 wallet
+- Solana wallet (Phantom, Solflare, Backpack, etc.)
+- Deployed Solana programs (Factory, Market, Dashboard)
 
 ### Installation
 
@@ -68,11 +69,12 @@ src/
 - **React 19.1** - UI framework with latest features
 - **TypeScript 5.9** - Type safety with strict mode
 - **Vite 7.1** - Lightning-fast build tool
-- **Wagmi 2.17** - Ethereum React hooks
-- **Viem 2.37** - TypeScript Ethereum interface
+- **Anchor 0.30** - Solana program framework
+- **@solana/web3.js** - Solana JavaScript SDK
+- **@solana/wallet-adapter-react** - Wallet integration
 - **TanStack Query 5.90** - Data fetching and caching
 - **Tailwind CSS 4.1** - Utility-first styling
-- **DaisyUI 5.1** - Component library
+- **Radix UI** - Accessible component primitives
 - **Recharts 3.4** - Data visualization
 - **React Router 7.9** - Client-side routing
 - **@tanstack/react-virtual 3.13** - Virtual scrolling
@@ -84,6 +86,16 @@ src/
 Create a `.env` file:
 
 ```env
+# Solana Program IDs (from deployment)
+VITE_FACTORY_PROGRAM_ID=your_factory_program_id
+VITE_MARKET_PROGRAM_ID=your_market_program_id
+VITE_DASHBOARD_PROGRAM_ID=your_dashboard_program_id
+
+# Solana Network Configuration
+VITE_SOLANA_NETWORK=devnet
+VITE_SOLANA_RPC_URL=https://api.devnet.solana.com
+
+# Football Data API Keys (optional, for match data)
 VITE_FOOTBALL_DATA_API_KEY_1=your_api_key_1
 VITE_FOOTBALL_DATA_API_KEY_2=your_api_key_2
 VITE_FOOTBALL_DATA_API_KEY_3=your_api_key_3
@@ -93,23 +105,30 @@ VITE_FOOTBALL_DATA_API_KEY_5=your_api_key_5
 
 ### Network Configuration
 
-The app connects to Polkadot Asset Hub Testnet (Paseo):
-- Chain ID: 420420422
-- Native Token: PAS
+The app connects to Solana networks:
+- **Devnet** - Development and testing
+- **Testnet** - Pre-production testing
+- **Mainnet-beta** - Production deployment
+
+Supported networks:
+- Devnet: https://api.devnet.solana.com
+- Testnet: https://api.testnet.solana.com
+- Mainnet: https://api.mainnet-beta.solana.com
 
 ## 📚 Documentation
 
-### User Guides
-- [Theme Quick Start](./THEMES_QUICKSTART.md) - Quick guide to using themes
-- [Theme Preview](./docs/THEME_PREVIEW.md) - Visual guide to all themes
+### Quick Start
+- [Quick Start Guide](./QUICK_START.md) - Get started quickly
+- [Deployment Checklist](../DEPLOYMENT_CHECKLIST.md) - Pre-deployment verification
+
+### Integration Documentation
+- [IDL Integration Guide](../SOLANA_IDL_INTEGRATION.md) - Complete integration details
+- [Integration Summary](../INTEGRATION_SUMMARY.md) - Overview of completed work
 
 ### Developer Documentation
-- [Theme System](./docs/THEME_SYSTEM.md) - Complete theming guide and customization
-- [Theme Implementation](./docs/THEME_IMPLEMENTATION_SUMMARY.md) - Technical implementation details
-- [Theme Audit](./docs/THEME_AUDIT_COMPLETE.md) - Component audit and fixes
-- [Implementation Plan](./docs/IMPLEMENTATION_PLAN.md) - Complete development roadmap
-- [Redesign Summary](./docs/REDESIGN_COMPLETE.md) - Feature overview
-- [Cleanup Summary](./docs/CLEANUP_SUMMARY.md) - Project reorganization details
+- [Program Configuration](./src/config/programs.ts) - Program IDs and network config
+- [Hooks Documentation](./src/hooks/) - Custom React hooks for Solana
+- [Type Definitions](./src/types.ts) - TypeScript interfaces
 
 ## 🧪 Development
 
@@ -152,8 +171,10 @@ Deploy to any static hosting service:
 ## 🔐 Security
 
 - No private keys stored in frontend
-- All transactions require wallet approval
-- Contract addresses verified on-chain
+- All transactions require wallet signature
+- Program addresses verified on-chain
+- PDA derivation prevents address spoofing
+- Input validation before transactions
 - API keys rotated automatically
 
 ## 📱 PWA Features
@@ -233,9 +254,10 @@ MIT License - see LICENSE file for details
 
 ## 🔗 Links
 
-- [Smart Contracts](../hardhat/) - Solidity contracts
-- [Documentation](./docs/) - Full implementation guides
-- [Polkadot](https://polkadot.network/) - Network information
+- [Solana Programs](../programs/) - Anchor smart contracts
+- [Documentation](../docs/) - Full implementation guides
+- [Solana](https://solana.com/) - Network information
+- [Anchor](https://www.anchor-lang.com/) - Framework documentation
 
 ## 💬 Support
 
@@ -244,6 +266,70 @@ For issues and questions:
 - Join our Discord community
 - Check the documentation
 
+## 🚀 Solana Integration
+
+### Programs
+
+The frontend integrates with three Solana programs:
+
+1. **CryptoScore Factory** - Market creation and registry
+   - Creates new prediction markets
+   - Tracks all markets system-wide
+   - Manages market registry
+
+2. **CryptoScore Market** - Market participation and resolution
+   - Join markets with predictions
+   - Resolve markets with outcomes
+   - Withdraw rewards
+
+3. **CryptoScore Dashboard** - Data aggregation and queries
+   - Fetch all markets with pagination
+   - Fetch user's markets
+   - Fetch market details
+   - Fetch user statistics
+
+### Hooks
+
+Custom React hooks for Solana integration:
+
+- `useSolanaProgram()` - Initialize Anchor programs
+- `useMarketData()` - Fetch market details
+- `useAllMarkets()` - Fetch all markets with pagination
+- `useUserMarkets()` - Fetch user's markets
+- `useUserStats()` - Fetch user statistics
+- `useUserPrediction()` - Check user's prediction
+- `useMarketActions()` - Transaction methods (create, join, resolve, withdraw)
+
+### PDA Derivations
+
+All Program Derived Addresses (PDAs) are correctly derived:
+
+```typescript
+// Factory PDA
+[Buffer.from('factory')]
+
+// Market Registry PDA
+[Buffer.from('market_registry'), factoryPda, matchId]
+
+// Market PDA
+[Buffer.from('market'), factoryPda, matchId]
+
+// Participant PDA
+[Buffer.from('participant'), marketPda, userPubkey]
+
+// User Stats PDA
+[Buffer.from('user_stats'), userPubkey]
+```
+
+### Transaction Flow
+
+1. **Create Market**: Two-step process
+   - Market program initializes Market account
+   - Factory program creates MarketRegistry entry
+2. **Join Market**: Market program creates Participant account
+3. **Resolve Market**: Market program updates outcome
+4. **Withdraw Rewards**: Market program transfers SOL to winner
+
 ---
 
-Built with ❤️ for the Polkadot ecosystem
+Built with ❤️ for the Solana ecosystem

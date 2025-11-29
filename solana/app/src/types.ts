@@ -1,16 +1,16 @@
 export interface MarketDashboardInfo {
   marketAddress: string // Solana public key as base58 string
-  matchId: bigint
+  matchId: bigint // Match ID from football API
   creator: string // Solana public key as base58 string
-  entryFee: bigint
-  resolved: boolean
-  winner: number
-  participantsCount: bigint
-  isPublic: boolean
-  startTime: bigint
-  homeCount: bigint
-  awayCount: bigint
-  drawCount: bigint
+  entryFee: bigint // Entry fee in lamports
+  resolved: boolean // Whether market is resolved
+  winner: number // Winner: 0=None, 1=Home, 2=Away, 3=Draw
+  participantsCount: bigint // Number of participants
+  isPublic: boolean // Whether market is public
+  startTime: bigint // Match kickoff time (Unix timestamp)
+  homeCount: bigint // Number of home predictions
+  awayCount: bigint // Number of away predictions
+  drawCount: bigint // Number of draw predictions
 }
 
 export interface Match {

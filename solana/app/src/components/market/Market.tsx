@@ -17,7 +17,6 @@ import {
 import { Input } from '@/components/ui/input'
 import { useMarketActions } from '../../hooks/useMarketActions'
 import { MarqueeText } from '../MarqueeText'
-import { formatSOL } from '../../utils/formatters'
 
 export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: MarketProps) {
   const { publicKey: userAddress } = useWallet()
@@ -34,15 +33,21 @@ export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: 
 
   const { createMarket, isLoading: isCreateMarketLoading } = useMarketActions()
 
-  // Clear transaction status after some time
+  // Handle transaction status changes
   useEffect(() => {
-    if (transactionStatus?.type === 'success' || transactionStatus?.type === 'error') {
+    if (transactionStatus?.type === 'success') {
+      // Close dialog immediately on success
+      const timer = setTimeout(() => {
+        setIsCreating(false)
+        setTransactionStatus(null)
+        refetchMarkets()
+      }, 2000) // Show success message for 2 seconds
+      return () => clearTimeout(timer)
+    }
+    else if (transactionStatus?.type === 'error') {
+      // Clear error after 5 seconds but keep dialog open
       const timer = setTimeout(() => {
         setTransactionStatus(null)
-        if (transactionStatus.type === 'success') {
-          setIsCreating(false)
-          refetchMarkets()
-        }
       }, 5000)
       return () => clearTimeout(timer)
     }
@@ -78,7 +83,7 @@ export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: 
     }
 
     try {
-      setTransactionStatus({ type: 'info', message: 'Creating market...' })
+      setTransactionStatus({ type: 'info', message: 'Initializing market...' })
       
       const entryFeeLamports = Math.floor(Number(entryFee) * LAMPORTS_PER_SOL)
       const kickoffTime = Math.floor(new Date(match.utcDate).getTime() / 1000)
@@ -91,22 +96,29 @@ export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: 
         endTime,
         isPublic,
       })
+      console.log('Signature: ', signature)
 
-      setTransactionStatus({
-        type: 'success',
-        message: 'Market created successfully!',
-        signature,
-      })
+      if (signature) {
+        setTransactionStatus({
+          type: 'success',
+          message: 'Market created successfully!',
+          signature,
+        })
 
-      // Set the newly created market (we'll get the actual address from the program)
-      setNewlyCreatedMarket({ matchId: match.id, address: 'pending' })
+        // Set the newly created market
+        setNewlyCreatedMarket({ matchId: match.id, address: 'pending' })
+      }
+      else {
+        throw new Error('Transaction failed - no signature returned')
+      }
     }
     catch (e: any) {
       console.error('Failed to create market:', e)
-      setError(e.message || 'Failed to create market.')
+      const errorMessage = e.message || 'Failed to create market.'
+      setError(errorMessage)
       setTransactionStatus({
         type: 'error',
-        message: e.message || 'Failed to create market.',
+        message: errorMessage,
       })
     }
   }

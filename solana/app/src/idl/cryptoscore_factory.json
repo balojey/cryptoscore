@@ -115,7 +115,7 @@
   ],
   "accounts": [
     {
-      "name": "Factory",
+      "name": "factory",
       "type": {
         "kind": "struct",
         "fields": [
@@ -139,7 +139,7 @@
       }
     },
     {
-      "name": "MarketRegistry",
+      "name": "marketRegistry",
       "type": {
         "kind": "struct",
         "fields": [
@@ -261,6 +261,7 @@
       "msg": "Market count overflow"
     }
   ],
+  "address": "93CjfuYYswDbcjasA1PTUmHhsqFsBQC4JnsiKB8nKJhP",
   "metadata": {
     "address": "93CjfuYYswDbcjasA1PTUmHhsqFsBQC4JnsiKB8nKJhP"
   }

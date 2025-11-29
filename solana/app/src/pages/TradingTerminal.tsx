@@ -10,7 +10,7 @@ import MetricsBar from '../components/terminal/MetricsBar'
 import TerminalHeader from '../components/terminal/TerminalHeader'
 import TopMovers from '../components/terminal/TopMovers'
 import { DASHBOARD_PROGRAM_ID } from '../config/programs'
-import { useDashboardData } from '../hooks/useDashboardData'
+import { useAllMarkets } from '../hooks/useDashboardData'
 import { useSimpleRealtimeMarkets } from '../hooks/useEnhancedRealtimeMarkets'
 
 type Timeframe = '24h' | '7d' | '30d' | 'all'
@@ -25,14 +25,14 @@ export function TradingTerminal() {
   const retryCountRef = useRef(0)
   const maxRetries = 3
 
-  // Fetch all markets for chart data from Solana program
-  const { data: marketsData, isLoading: isLoadingMarkets, error: fetchError, refetch } = useDashboardData({
+  // Fetch all markets for chart data from Solana Dashboard program
+  const { data: marketsData, isLoading: isLoadingMarkets, error: fetchError, refetch } = useAllMarkets({
     offset: 0,
     limit: 1000,
     publicOnly: false,
   })
 
-  // Markets are already in the correct format from useDashboardData
+  // Markets are already in the correct format from useAllMarkets
   const markets: Market[] = useMemo(() => {
     return marketsData || []
   }, [marketsData])
