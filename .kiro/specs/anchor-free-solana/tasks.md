@@ -1,6 +1,6 @@
 # Implementation Plan
 
-- [ ] 1. Remove Anchor dependencies and set up new packages
+- [x] 1. Remove Anchor dependencies and set up new packages
   - Remove @coral-xyz/anchor from package.json
   - Add @solana/web3.js (latest version)
   - Add borsh for instruction serialization
