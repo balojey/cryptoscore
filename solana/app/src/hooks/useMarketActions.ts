@@ -1,10 +1,17 @@
 import { useCallback, useState } from 'react'
 import { toast } from 'react-hot-toast'
 import { PublicKey, SystemProgram } from '@solana/web3.js'
-import { BN } from '@coral-xyz/anchor'
-import { useSolanaProgram } from './useSolanaProgram'
+import { useQueryClient } from '@tanstack/react-query'
+import { useSolanaConnection } from './useSolanaConnection'
+import { TransactionBuilder } from '../lib/solana/transaction-builder'
+import { InstructionEncoder } from '../lib/solana/instruction-encoder'
+import { PDAUtils } from '../lib/solana/pda-utils'
+import { SolanaErrorHandler } from '../lib/solana/error-handler'
+import { SolanaUtils } from '../lib/solana/utils'
+import { FACTORY_PROGRAM_ID, MARKET_PROGRAM_ID } from '../config/programs'
+import { PredictionChoice, MatchOutcome } from '../types/solana-program-types'
 
-export type MatchOutcome = 'Home' | 'Draw' | 'Away'
+export type MatchOutcomeType = 'Home' | 'Draw' | 'Away'
 
 export interface CreateMarketParams {
   matchId: string
@@ -16,12 +23,12 @@ export interface CreateMarketParams {
 
 export interface JoinMarketParams {
   marketAddress: string
-  prediction: MatchOutcome
+  prediction: MatchOutcomeType
 }
 
 export interface ResolveMarketParams {
   marketAddress: string
-  outcome: MatchOutcome
+  outcome: MatchOutcomeType
 }
 
 /**
@@ -29,7 +36,8 @@ export interface ResolveMarketParams {
  * Handles transaction signing, confirmation, and loading states
  */
 export function useMarketActions() {
-  const { factoryProgram, marketProgram, wallet, provider } = useSolanaProgram()
+  const { connection, publicKey, signTransaction } = useSolanaConnection()
+  const queryClient = useQueryClient()
   const [isLoading, setIsLoading] = useState(false)
   const [txSignature, setTxSignature] = useState<string | null>(null)
 
@@ -37,16 +45,8 @@ export function useMarketActions() {
    * Create a new prediction market
    */
   const createMarket = useCallback(async (params: CreateMarketParams) => {
-    if (!factoryProgram || !marketProgram || !provider || !wallet.publicKey) {
-      const missingItems = []
-      if (!factoryProgram) missingItems.push('factoryProgram')
-      if (!marketProgram) missingItems.push('marketProgram')
-      if (!provider) missingItems.push('provider')
-      if (!wallet.publicKey) missingItems.push('wallet')
-      
-      const errorMsg = `Missing: ${missingItems.join(', ')}`
-      console.error('Cannot create market:', errorMsg)
-      toast.error('Wallet not connected or programs not initialized')
+    if (!publicKey || !signTransaction) {
+      toast.error('Wallet not connected')
       return null
     }
 
@@ -54,93 +54,85 @@ export function useMarketActions() {
     setTxSignature(null)
 
     try {
-      console.log('Factory Program ID:', factoryProgram.programId.toString())
-      console.log('Market Program ID:', marketProgram.programId.toString())
+      const factoryProgramId = new PublicKey(FACTORY_PROGRAM_ID)
+      const marketProgramId = new PublicKey(MARKET_PROGRAM_ID)
       
-      // Derive Factory PDA
-      const [factoryPda] = PublicKey.findProgramAddressSync(
-        [Buffer.from('factory')],
-        factoryProgram.programId
-      )
+      // Derive Factory and Market PDAs using PDAUtils
+      const factoryPdaUtils = new PDAUtils(factoryProgramId)
+      const marketPdaUtils = new PDAUtils(marketProgramId)
+      
+      const { pda: factoryPda } = await factoryPdaUtils.findFactoryPDA()
+      const { pda: marketPda } = await marketPdaUtils.findMarketPDA(factoryPda, params.matchId)
 
-      // Derive Market Registry PDA
-      const [marketRegistryPda] = PublicKey.findProgramAddressSync(
-        [
-          Buffer.from('market_registry'),
-          factoryPda.toBuffer(),
-          Buffer.from(params.matchId)
-        ],
-        factoryProgram.programId
-      )
+      console.log('Factory PDA:', factoryPda.toString())
+      console.log('Market PDA:', marketPda.toString())
 
-      // Derive Market PDA (from Market program)
-      const [marketPda] = PublicKey.findProgramAddressSync(
-        [
-          Buffer.from('market'),
-          factoryPda.toBuffer(),
-          Buffer.from(params.matchId)
-        ],
-        marketProgram.programId
-      )
-
-      // Step 1: Initialize the Market account
-      const initMarketTx = await marketProgram.methods
-        .initializeMarket(
-          params.matchId,
-          new BN(params.entryFee),
-          new BN(params.kickoffTime),
-          new BN(params.endTime),
-          params.isPublic
-        )
-        .accounts({
+      // Build instruction using InstructionEncoder
+      const encoder = new InstructionEncoder(marketProgramId)
+      const createMarketInstruction = encoder.createMarket(
+        {
+          matchId: params.matchId,
+          entryFee: BigInt(params.entryFee),
+          kickoffTime: BigInt(params.kickoffTime),
+          endTime: BigInt(params.endTime),
+          isPublic: params.isPublic,
+        },
+        {
+          factory: factoryPda,
           market: marketPda,
-          factory: factoryPda,
-          creator: wallet.publicKey,
+          creator: publicKey,
           systemProgram: SystemProgram.programId,
-        })
-        .rpc()
+        }
+      )
 
-      console.log('Market initialized:', initMarketTx)
+      // Build transaction using TransactionBuilder
+      const builder = new TransactionBuilder({
+        computeUnitLimit: 200000,
+        computeUnitPrice: 1,
+      })
+      
+      builder.addInstruction(createMarketInstruction)
+      const transaction = await builder.build(connection)
+      transaction.feePayer = publicKey
 
-      // Step 2: Register the market in the Factory
-      const createMarketTx = await factoryProgram.methods
-        .createMarket(
-          params.matchId,
-          new BN(params.entryFee),
-          new BN(params.kickoffTime),
-          new BN(params.endTime),
-          params.isPublic
-        )
-        .accounts({
-          factory: factoryPda,
-          marketRegistry: marketRegistryPda,
-          marketAccount: marketPda,
-          creator: wallet.publicKey,
-          systemProgram: SystemProgram.programId,
-        })
-        .rpc()
+      // Sign and send transaction using wallet adapter
+      const signedTransaction = await signTransaction(transaction)
+      const signature = await connection.sendRawTransaction(signedTransaction.serialize())
 
-      console.log('Market registered in factory:', createMarketTx)
+      console.log('Transaction sent:', signature)
 
-      setTxSignature(createMarketTx)
+      // Confirm transaction with retry logic
+      const confirmed = await SolanaUtils.confirmTransaction(connection, signature)
+      
+      if (!confirmed) {
+        throw new Error('Transaction confirmation failed')
+      }
+
+      setTxSignature(signature)
+      
+      // Handle success with toast notification and cache invalidation
       toast.success('Market created successfully!')
-      return createMarketTx
+      queryClient.invalidateQueries({ queryKey: ['markets'] })
+      
+      return signature
     }
     catch (error: any) {
-      console.error('Error creating market:', error)
-      toast.error(error.message || 'Failed to create market')
+      // Handle errors with SolanaErrorHandler
+      SolanaErrorHandler.logError(error, 'createMarket')
+      const errorMessage = SolanaErrorHandler.getUserMessage(error)
+      toast.error(errorMessage)
       return null
     }
     finally {
       setIsLoading(false)
     }
-  }, [factoryProgram, marketProgram, provider, wallet.publicKey])
+  }, [connection, publicKey, signTransaction, queryClient])
 
   /**
    * Join an existing market with a prediction
    */
   const joinMarket = useCallback(async (params: JoinMarketParams) => {
-    if (!marketProgram || !provider || !wallet.publicKey) {
+    if (!publicKey || !signTransaction) {
       toast.error('Wallet not connected')
       return null
     }
@@ -150,54 +142,79 @@ export function useMarketActions() {
 
     try {
       const marketPubkey = new PublicKey(params.marketAddress)
+      const marketProgramId = new PublicKey(MARKET_PROGRAM_ID)
 
-      // Derive participant PDA
-      const [participantPda] = PublicKey.findProgramAddressSync(
-        [
-          Buffer.from('participant'),
-          marketPubkey.toBuffer(),
-          wallet.publicKey.toBuffer()
-        ],
-        marketProgram.programId
-      )
+      // Derive participant PDA using PDAUtils
+      const pdaUtils = new PDAUtils(marketProgramId)
+      const { pda: participantPda } = await pdaUtils.findParticipantPDA(marketPubkey, publicKey)
 
-      // Convert prediction to enum format expected by Anchor
-      const predictionEnum = params.prediction === 'Home' 
-        ? { home: {} } 
+      console.log('Participant PDA:', participantPda.toString())
+
+      // Convert prediction to enum value
+      const predictionValue = params.prediction === 'Home' 
+        ? PredictionChoice.Home 
         : params.prediction === 'Draw' 
-          ? { draw: {} } 
-          : { away: {} }
+          ? PredictionChoice.Draw 
+          : PredictionChoice.Away
 
-      // Call joinMarket instruction
-      const tx = await marketProgram.methods
-        .joinMarket(predictionEnum)
-        .accounts({
+      // Build instruction using InstructionEncoder
+      const encoder = new InstructionEncoder(marketProgramId)
+      const joinMarketInstruction = encoder.joinMarket(
+        { prediction: predictionValue },
+        {
           market: marketPubkey,
           participant: participantPda,
-          user: wallet.publicKey,
+          user: publicKey,
           systemProgram: SystemProgram.programId,
-        })
-        .rpc()
+        }
+      )
 
-      setTxSignature(tx)
+      // Build and send transaction
+      const builder = new TransactionBuilder({
+        computeUnitLimit: 200000,
+        computeUnitPrice: 1,
+      })
+      
+      builder.addInstruction(joinMarketInstruction)
+      const transaction = await builder.build(connection)
+      transaction.feePayer = publicKey
+
+      const signedTransaction = await signTransaction(transaction)
+      const signature = await connection.sendRawTransaction(signedTransaction.serialize())
+
+      console.log('Transaction sent:', signature)
+
+      const confirmed = await SolanaUtils.confirmTransaction(connection, signature)
+      
+      if (!confirmed) {
+        throw new Error('Transaction confirmation failed')
+      }
+
+      setTxSignature(signature)
+      
+      // Handle success and errors appropriately
       toast.success('Joined market successfully!')
-      return tx
+      queryClient.invalidateQueries({ queryKey: ['markets'] })
+      queryClient.invalidateQueries({ queryKey: ['market', 'details', params.marketAddress] })
+      
+      return signature
     }
     catch (error: any) {
-      console.error('Error joining market:', error)
-      toast.error(error.message || 'Failed to join market')
+      SolanaErrorHandler.logError(error, 'joinMarket')
+      const errorMessage = SolanaErrorHandler.getUserMessage(error)
+      toast.error(errorMessage)
       return null
     }
     finally {
       setIsLoading(false)
     }
-  }, [marketProgram, provider, wallet.publicKey])
+  }, [connection, publicKey, signTransaction, queryClient])
 
   /**
    * Resolve a market with the match outcome
    */
   const resolveMarket = useCallback(async (params: ResolveMarketParams) => {
-    if (!marketProgram || !provider || !wallet.publicKey) {
+    if (!publicKey || !signTransaction) {
       toast.error('Wallet not connected')
       return null
     }
@@ -207,42 +224,71 @@ export function useMarketActions() {
 
     try {
       const marketPubkey = new PublicKey(params.marketAddress)
+      const marketProgramId = new PublicKey(MARKET_PROGRAM_ID)
 
-      // Convert outcome to enum format expected by Anchor
-      const outcomeEnum = params.outcome === 'Home' 
-        ? { home: {} } 
+      // Convert outcome to enum value
+      const outcomeValue = params.outcome === 'Home' 
+        ? MatchOutcome.Home 
         : params.outcome === 'Draw' 
-          ? { draw: {} } 
-          : { away: {} }
+          ? MatchOutcome.Draw 
+          : MatchOutcome.Away
 
-      // Call resolveMarket instruction
-      const tx = await marketProgram.methods
-        .resolveMarket(outcomeEnum)
-        .accounts({
+      // Build instruction using InstructionEncoder
+      const encoder = new InstructionEncoder(marketProgramId)
+      const resolveMarketInstruction = encoder.resolveMarket(
+        { outcome: outcomeValue },
+        {
           market: marketPubkey,
-          creator: wallet.publicKey,
-        })
-        .rpc()
+          resolver: publicKey,
+        }
+      )
 
-      setTxSignature(tx)
+      // Build and send transaction
+      const builder = new TransactionBuilder({
+        computeUnitLimit: 200000,
+        computeUnitPrice: 1,
+      })
+      
+      builder.addInstruction(resolveMarketInstruction)
+      const transaction = await builder.build(connection)
+      transaction.feePayer = publicKey
+
+      const signedTransaction = await signTransaction(transaction)
+      const signature = await connection.sendRawTransaction(signedTransaction.serialize())
+
+      console.log('Transaction sent:', signature)
+
+      const confirmed = await SolanaUtils.confirmTransaction(connection, signature)
+      
+      if (!confirmed) {
+        throw new Error('Transaction confirmation failed')
+      }
+
+      setTxSignature(signature)
+      
+      // Handle success and errors appropriately
       toast.success('Market resolved successfully!')
-      return tx
+      queryClient.invalidateQueries({ queryKey: ['markets'] })
+      queryClient.invalidateQueries({ queryKey: ['market', 'details', params.marketAddress] })
+      
+      return signature
     }
     catch (error: any) {
-      console.error('Error resolving market:', error)
-      toast.error(error.message || 'Failed to resolve market')
+      SolanaErrorHandler.logError(error, 'resolveMarket')
+      const errorMessage = SolanaErrorHandler.getUserMessage(error)
+      toast.error(errorMessage)
       return null
     }
     finally {
       setIsLoading(false)
     }
-  }, [marketProgram, provider, wallet.publicKey])
+  }, [connection, publicKey, signTransaction, queryClient])
 
   /**
    * Withdraw rewards from a resolved market
    */
   const withdrawRewards = useCallback(async (marketAddress: string) => {
-    if (!marketProgram || !provider || !wallet.publicKey) {
+    if (!publicKey || !signTransaction) {
       toast.error('Wallet not connected')
       return null
     }
@@ -252,49 +298,71 @@ export function useMarketActions() {
 
     try {
       const marketPubkey = new PublicKey(marketAddress)
+      const marketProgramId = new PublicKey(MARKET_PROGRAM_ID)
 
-      // Derive participant PDA
-      const [participantPda] = PublicKey.findProgramAddressSync(
-        [
-          Buffer.from('participant'),
-          marketPubkey.toBuffer(),
-          wallet.publicKey.toBuffer()
-        ],
-        marketProgram.programId
-      )
+      // Derive participant PDA using PDAUtils
+      const pdaUtils = new PDAUtils(marketProgramId)
+      const { pda: participantPda } = await pdaUtils.findParticipantPDA(marketPubkey, publicKey)
 
-      // Call withdrawRewards instruction
-      const tx = await marketProgram.methods
-        .withdrawRewards()
-        .accounts({
-          market: marketPubkey,
-          participant: participantPda,
-          user: wallet.publicKey,
-          systemProgram: SystemProgram.programId,
-        })
-        .rpc()
+      console.log('Participant PDA:', participantPda.toString())
 
-      setTxSignature(tx)
-      toast.success('Rewards withdrawn successfully!')
-      return tx
+      // Build instruction using InstructionEncoder
+      const encoder = new InstructionEncoder(marketProgramId)
+      const withdrawInstruction = encoder.withdraw({
+        market: marketPubkey,
+        participant: participantPda,
+        user: publicKey,
+        systemProgram: SystemProgram.programId,
+      })
+
+      // Build and send transaction
+      const builder = new TransactionBuilder({
+        computeUnitLimit: 200000,
+        computeUnitPrice: 1,
+      })
+      
+      builder.addInstruction(withdrawInstruction)
+      const transaction = await builder.build(connection)
+      transaction.feePayer = publicKey
+
+      const signedTransaction = await signTransaction(transaction)
+      const signature = await connection.sendRawTransaction(signedTransaction.serialize())
+
+      console.log('Transaction sent:', signature)
+
+      const confirmed = await SolanaUtils.confirmTransaction(connection, signature)
+      
+      if (!confirmed) {
+        throw new Error('Transaction confirmation failed')
+      }
+
+      setTxSignature(signature)
+      
+      // Handle success with celebration and cache invalidation
+      toast.success('🎉 Rewards withdrawn successfully!')
+      queryClient.invalidateQueries({ queryKey: ['markets'] })
+      queryClient.invalidateQueries({ queryKey: ['market', 'details', marketAddress] })
+      queryClient.invalidateQueries({ queryKey: ['user'] })
+      
+      return signature
     }
     catch (error: any) {
-      console.error('Error withdrawing rewards:', error)
-      toast.error(error.message || 'Failed to withdraw rewards')
+      SolanaErrorHandler.logError(error, 'withdrawRewards')
+      const errorMessage = SolanaErrorHandler.getUserMessage(error)
+      toast.error(errorMessage)
       return null
     }
     finally {
       setIsLoading(false)
     }
-  }, [marketProgram, provider, wallet.publicKey])
+  }, [connection, publicKey, signTransaction, queryClient])
 
   /**
    * Get Solana Explorer link for a transaction
    */
   const getExplorerLink = useCallback((signature: string) => {
     const network = import.meta.env.VITE_SOLANA_NETWORK || 'devnet'
-    const cluster = network === 'mainnet-beta' ? '' : `?cluster=${network}`
-    return `https://explorer.solana.com/tx/${signature}${cluster}`
+    return SolanaUtils.getExplorerUrl(signature, network as any)
   }, [])
 
   return {

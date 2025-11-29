@@ -69,14 +69,14 @@
     - Create getRecentBlockhash and getExplorerUrl methods
     - _Requirements: 16.1, 16.2, 16.3, 16.4, 16.5_
 
-- [ ] 3. Update custom hooks for Anchor-free integration
-  - [ ] 3.1 Create useSolanaConnection hook
+- [x] 3. Update custom hooks for Anchor-free integration
+  - [x] 3.1 Create useSolanaConnection hook
     - Use @solana/wallet-adapter-react hooks
     - Return connection, wallet, publicKey, and isConnected
     - Return signTransaction and signAllTransactions methods
     - _Requirements: 17.1, 17.2, 17.3, 17.4, 17.5_
 
-  - [ ] 3.2 Update useMarketData hook
+  - [x] 3.2 Update useMarketData hook
     - Remove Anchor program usage
     - Fetch market account using connection.getAccountInfo
     - Decode account data using AccountDecoder.decodeMarket
@@ -84,14 +84,14 @@
     - Maintain React Query caching with 10-second stale time
     - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5_
 
-  - [ ] 3.3 Create useAllMarkets hook
+  - [x] 3.3 Create useAllMarkets hook
     - Fetch all market accounts using connection.getProgramAccounts
     - Decode each account using AccountDecoder
     - Return array of markets with addresses
     - Maintain React Query caching with 30-second stale time
     - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5_
 
-  - [ ] 3.4 Update useMarketActions hook - createMarket
+  - [x] 3.4 Update useMarketActions hook - createMarket
     - Remove Anchor program methods
     - Derive factory and market PDAs using PDAUtils
     - Build instruction using InstructionEncoder.createMarket
@@ -102,27 +102,27 @@
     - Handle errors with SolanaErrorHandler
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 13.1, 13.2, 13.3_
 
-  - [ ] 3.5 Update useMarketActions hook - joinMarket
+  - [x] 3.5 Update useMarketActions hook - joinMarket
     - Derive participant PDA using PDAUtils
     - Build instruction using InstructionEncoder.joinMarket
     - Build and send transaction
     - Handle success and errors appropriately
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 13.1, 13.2, 13.3_
 
-  - [ ] 3.6 Update useMarketActions hook - resolveMarket
+  - [x] 3.6 Update useMarketActions hook - resolveMarket
     - Build instruction using InstructionEncoder.resolveMarket
     - Build and send transaction
     - Handle success and errors appropriately
     - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 13.1, 13.2, 13.3_
 
-  - [ ] 3.7 Update useMarketActions hook - withdraw
+  - [x] 3.7 Update useMarketActions hook - withdraw
     - Derive participant PDA using PDAUtils
     - Build instruction using InstructionEncoder.withdraw
     - Build and send transaction
     - Handle success with celebration and cache invalidation
     - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5, 13.1, 13.2, 13.3_
 
-  - [ ] 3.8 Create useAccountSubscription hook
+  - [x] 3.8 Create useAccountSubscription hook
     - Subscribe to market account changes using connection.onAccountChange
     - Decode updated account data using AccountDecoder
     - Update React Query cache when changes detected
@@ -130,7 +130,7 @@
     - Unsubscribe on component unmount
     - _Requirements: 12.1, 12.2, 12.3, 12.4, 12.5_
 
-  - [ ] 3.9 Create useParticipantData hook
+  - [x] 3.9 Create useParticipantData hook
     - Derive participant PDA for connected user and market
     - Fetch participant account data
     - Decode using AccountDecoder.decodeParticipant
