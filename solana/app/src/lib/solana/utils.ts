@@ -158,4 +158,66 @@ export class SolanaUtils {
   static async sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms))
   }
+
+  /**
+   * Estimate transaction fee with retry logic
+   * Handles network condition changes by retrying with fresh blockhash
+   * 
+   * @param connection - Solana connection instance
+   * @param transaction - Transaction to estimate fee for
+   * @param maxRetries - Maximum number of retry attempts
+   * @returns Fee in lamports, or null if estimation fails
+   */
+  static async estimateTransactionFee(
+    connection: Connection,
+    transaction: Transaction,
+    maxRetries = 2
+  ): Promise<number | null> {
+    let retries = 0
+
+    while (retries <= maxRetries) {
+      try {
+        // Get fresh blockhash for each attempt
+        const { blockhash } = await connection.getLatestBlockhash('confirmed')
+        transaction.recentBlockhash = blockhash
+
+        // Compile message and get fee
+        const message = transaction.compileMessage()
+        const feeResponse = await connection.getFeeForMessage(message, 'confirmed')
+
+        if (feeResponse.value !== null) {
+          return feeResponse.value
+        }
+
+        // If fee is null, retry with fresh blockhash
+        retries++
+        if (retries <= maxRetries) {
+          await this.sleep(500 * retries) // Exponential backoff
+        }
+      }
+      catch (error) {
+        console.error(`Fee estimation attempt ${retries + 1} failed:`, error)
+        retries++
+        if (retries <= maxRetries) {
+          await this.sleep(500 * retries)
+        }
+      }
+    }
+
+    console.error('Fee estimation failed after all retries')
+    return null
+  }
+
+  /**
+   * Format fee estimate for display
+   * 
+   * @param lamports - Fee in lamports
+   * @param includeSymbol - Whether to include SOL symbol
+   * @returns Formatted fee string
+   */
+  static formatFee(lamports: number, includeSymbol = true): string {
+    const sol = this.lamportsToSol(lamports)
+    const formatted = sol < 0.0001 ? sol.toExponential(2) : sol.toFixed(6)
+    return includeSymbol ? `${formatted} SOL` : formatted
+  }
 }

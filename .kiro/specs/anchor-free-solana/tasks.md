@@ -165,15 +165,15 @@
     - Add Solana Explorer links
     - _Requirements: 17.1, 17.2, 17.3, 17.4, 17.5_
 
-- [ ] 5. Implement transaction fee estimation
-  - [ ] 5.1 Add fee estimation to transaction builder
+- [x] 5. Implement transaction fee estimation
+  - [x] 5.1 Add fee estimation to transaction builder
     - Use connection.getFeeForMessage for fee estimation
     - Display estimated fee before transaction confirmation
     - Handle fee estimation failures gracefully
     - Update estimates when network conditions change
     - _Requirements: 14.1, 14.2, 14.3, 14.4, 14.5_
 
-- [ ] 6. Add transaction simulation before sending
+- [-] 6. Add transaction simulation before sending
   - [ ] 6.1 Implement simulation in useMarketActions
     - Simulate transactions before sending using SolanaUtils
     - Log simulation results for debugging

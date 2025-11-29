@@ -3,7 +3,7 @@ import { toast } from 'react-hot-toast'
 import { PublicKey, SystemProgram } from '@solana/web3.js'
 import { useQueryClient } from '@tanstack/react-query'
 import { useSolanaConnection } from './useSolanaConnection'
-import { TransactionBuilder } from '../lib/solana/transaction-builder'
+import { TransactionBuilder, type FeeEstimate } from '../lib/solana/transaction-builder'
 import { InstructionEncoder } from '../lib/solana/instruction-encoder'
 import { PDAUtils } from '../lib/solana/pda-utils'
 import { SolanaErrorHandler } from '../lib/solana/error-handler'
@@ -40,6 +40,7 @@ export function useMarketActions() {
   const queryClient = useQueryClient()
   const [isLoading, setIsLoading] = useState(false)
   const [txSignature, setTxSignature] = useState<string | null>(null)
+  const [estimatedFee, setEstimatedFee] = useState<FeeEstimate | null>(null)
 
   /**
    * Create a new prediction market
@@ -92,6 +93,19 @@ export function useMarketActions() {
       })
       
       builder.addInstruction(createMarketInstruction)
+
+      // Estimate fee before building final transaction
+      const feeEstimate = await builder.previewFee(connection, publicKey)
+      setEstimatedFee(feeEstimate)
+
+      if (feeEstimate.success) {
+        console.log(`Estimated fee: ${SolanaUtils.formatFee(feeEstimate.fee)}`)
+      }
+      else {
+        console.warn('Fee estimation failed:', feeEstimate.error)
+        // Continue with transaction even if fee estimation fails
+      }
+
       const transaction = await builder.build(connection)
       transaction.feePayer = publicKey
 
@@ -176,6 +190,18 @@ export function useMarketActions() {
       })
       
       builder.addInstruction(joinMarketInstruction)
+
+      // Estimate fee before building final transaction
+      const feeEstimate = await builder.previewFee(connection, publicKey)
+      setEstimatedFee(feeEstimate)
+
+      if (feeEstimate.success) {
+        console.log(`Estimated fee: ${SolanaUtils.formatFee(feeEstimate.fee)}`)
+      }
+      else {
+        console.warn('Fee estimation failed:', feeEstimate.error)
+      }
+
       const transaction = await builder.build(connection)
       transaction.feePayer = publicKey
 
@@ -250,6 +276,18 @@ export function useMarketActions() {
       })
       
       builder.addInstruction(resolveMarketInstruction)
+
+      // Estimate fee before building final transaction
+      const feeEstimate = await builder.previewFee(connection, publicKey)
+      setEstimatedFee(feeEstimate)
+
+      if (feeEstimate.success) {
+        console.log(`Estimated fee: ${SolanaUtils.formatFee(feeEstimate.fee)}`)
+      }
+      else {
+        console.warn('Fee estimation failed:', feeEstimate.error)
+      }
+
       const transaction = await builder.build(connection)
       transaction.feePayer = publicKey
 
@@ -322,6 +360,18 @@ export function useMarketActions() {
       })
       
       builder.addInstruction(withdrawInstruction)
+
+      // Estimate fee before building final transaction
+      const feeEstimate = await builder.previewFee(connection, publicKey)
+      setEstimatedFee(feeEstimate)
+
+      if (feeEstimate.success) {
+        console.log(`Estimated fee: ${SolanaUtils.formatFee(feeEstimate.fee)}`)
+      }
+      else {
+        console.warn('Fee estimation failed:', feeEstimate.error)
+      }
+
       const transaction = await builder.build(connection)
       transaction.feePayer = publicKey
 
@@ -373,5 +423,6 @@ export function useMarketActions() {
     getExplorerLink,
     isLoading,
     txSignature,
+    estimatedFee,
   }
 }
