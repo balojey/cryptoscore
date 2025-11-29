@@ -1,7 +1,6 @@
 import type { Market } from '../../types'
 import { Link } from 'react-router-dom'
-import { formatEther } from 'viem'
-import { useAccount, useReadContract } from 'wagmi'
+import { useWallet } from '@solana/wallet-adapter-react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import {
@@ -9,13 +8,19 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { CryptoScoreMarketABI } from '../../config/contracts'
 import { useMatchData } from '../../hooks/useMatchData'
-import { shortenAddress } from '../../utils/formatters'
+import { useMarketData } from '../../hooks/useMarketData'
+import { shortenAddress, formatSOL } from '../../utils/formatters'
 
 interface EnhancedMarketCardProps {
   market: Market
   onQuickJoin?: (marketAddress: string, prediction: number) => void
+}
+
+interface Participant {
+  user: string
+  prediction: number
+  amount: number
 }
 
 interface PredictionDistribution {
@@ -60,27 +65,15 @@ export function EnhancedMarketCardSkeleton() {
 
 // Calculate prediction distribution from participants
 function usePredictionDistribution(marketAddress: string): PredictionDistribution {
-  const { data: homeCount = 0n } = useReadContract({
-    abi: CryptoScoreMarketABI,
-    address: marketAddress as `0x${string}`,
-    functionName: 'homeCount',
-  })
+  const { data: marketData } = useMarketData(marketAddress)
+  
+  if (!marketData) {
+    return { home: 0, draw: 0, away: 0, total: 0 }
+  }
 
-  const { data: awayCount = 0n } = useReadContract({
-    abi: CryptoScoreMarketABI,
-    address: marketAddress as `0x${string}`,
-    functionName: 'awayCount',
-  })
-
-  const { data: drawCount = 0n } = useReadContract({
-    abi: CryptoScoreMarketABI,
-    address: marketAddress as `0x${string}`,
-    functionName: 'drawCount',
-  })
-
-  const home = Number(homeCount)
-  const away = Number(awayCount)
-  const draw = Number(drawCount)
+  const home = marketData.homeCount || 0
+  const away = marketData.awayCount || 0
+  const draw = marketData.drawCount || 0
   const total = home + away + draw
 
   return { home, draw, away, total }
@@ -192,19 +185,15 @@ function PredictionBar({
 }
 
 export default function EnhancedMarketCard({ market }: EnhancedMarketCardProps) {
-  const { address: userAddress } = useAccount()
+  const { publicKey: userAddress } = useWallet()
   const { data: matchData, loading, error } = useMatchData(Number(market.matchId))
   const distribution = usePredictionDistribution(market.marketAddress)
+  const { data: marketData } = useMarketData(market.marketAddress)
 
-  const { data: isParticipant } = useReadContract({
-    abi: CryptoScoreMarketABI,
-    address: market.marketAddress as `0x${string}`,
-    functionName: 'isParticipant',
-    args: [userAddress!],
-    query: { enabled: !!userAddress },
-  })
-
-  const hasJoined = Boolean(isParticipant)
+  // Check if user has joined this market
+  const hasJoined = marketData?.participants?.some(
+    p => p.user === userAddress?.toString()
+  ) || false
 
   if (loading) {
     return <EnhancedMarketCardSkeleton />
@@ -227,8 +216,8 @@ export default function EnhancedMarketCard({ market }: EnhancedMarketCardProps) 
   }
 
   const matchDate = new Date(matchData.utcDate)
-  const poolSize = Number(formatEther(market.entryFee)) * Number(market.participantsCount)
-  const isOwner = userAddress?.toLowerCase() === market.creator.toLowerCase()
+  const poolSize = (market.entryFee / 1_000_000_000) * Number(market.participantsCount) // Convert lamports to SOL
+  const isOwner = userAddress?.toString() === market.creator
 
   return (
     <Link
@@ -314,9 +303,7 @@ export default function EnhancedMarketCard({ market }: EnhancedMarketCardProps) 
                     <span>Pool Size</span>
                   </div>
                   <div className="info-value font-mono">
-                    {poolSize.toFixed(2)}
-                    {' '}
-                    <span style={{ color: 'var(--text-tertiary)' }}>PAS</span>
+                    {formatSOL(poolSize * 1_000_000_000, 2)} {/* Convert back to lamports for formatting */}
                   </div>
                 </div>
               </TooltipTrigger>
@@ -358,9 +345,7 @@ export default function EnhancedMarketCard({ market }: EnhancedMarketCardProps) 
                     <span>Entry Fee</span>
                   </div>
                   <div className="info-value font-mono">
-                    {formatEther(market.entryFee)}
-                    {' '}
-                    <span style={{ color: 'var(--text-tertiary)' }}>PAS</span>
+                    {formatSOL(market.entryFee, 4)}
                   </div>
                 </div>
               </TooltipTrigger>

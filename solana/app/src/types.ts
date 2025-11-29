@@ -1,7 +1,7 @@
 export interface MarketDashboardInfo {
-  marketAddress: `0x${string}`
+  marketAddress: string // Solana public key as base58 string
   matchId: bigint
-  creator: `0x${string}`
+  creator: string // Solana public key as base58 string
   entryFee: bigint
   resolved: boolean
   winner: number
@@ -75,10 +75,10 @@ export interface Match {
 
 // Unified Market type for props
 export interface Market {
-  marketAddress: `0x${string}`
+  marketAddress: string // Solana public key as base58 string
   matchId: bigint
-  entryFee: bigint
-  creator: `0x${string}`
+  entryFee: bigint // Amount in lamports (1 SOL = 1,000,000,000 lamports)
+  creator: string // Solana public key as base58 string
   participantsCount: bigint
   resolved: boolean
   isPublic: boolean
@@ -96,6 +96,6 @@ export interface MarketCardProps {
 export interface MarketProps {
   match: Match
   userHasMarket: boolean
-  marketAddress?: `0x${string}`
+  marketAddress?: string // Solana PublicKey as base58 string
   refetchMarkets: () => void
 }

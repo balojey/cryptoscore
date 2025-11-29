@@ -1,146 +1,146 @@
 # CryptoScore Solana
 
-A decentralized prediction market platform built on Solana using the Anchor framework.
+CryptoScore prediction markets on Solana blockchain using Anchor framework. This workspace contains both Solana programs (smart contracts) and a complete frontend application adapted from the original dapp-react codebase.
 
-## Architecture
+## 🏗️ Architecture
 
-This workspace contains three Solana programs:
+```
+solana/
+├── programs/           # Solana programs (Anchor/Rust)
+│   ├── factory/        # Factory program - creates markets
+│   ├── market/         # Market program - handles predictions
+│   └── dashboard/      # Dashboard program - data aggregation
+├── app/               # Frontend application (React/TypeScript)
+├── tests/             # Integration tests
+├── scripts/           # Deployment and utility scripts
+└── migrations/        # Deployment migrations
+```
 
-- **Factory Program** (`programs/factory/`) - Creates and manages market instances
-- **Market Program** (`programs/market/`) - Individual prediction market logic
-- **Dashboard Program** (`programs/dashboard/`) - Data aggregation and querying
+## 🚀 Quick Start
 
-## Prerequisites
+### Prerequisites
 
 - [Rust](https://rustup.rs/) (latest stable)
 - [Solana CLI](https://docs.solana.com/cli/install-solana-cli-tools) (v1.18+)
 - [Anchor CLI](https://www.anchor-lang.com/docs/installation) (v0.30+)
 - [Node.js](https://nodejs.org/) (v18+)
-- [Yarn](https://yarnpkg.com/) (v1.22+)
+- [Yarn](https://yarnpkg.com/) package manager
 
-## Setup
+### Installation
 
-1. **Install dependencies:**
-   ```bash
-   yarn install
-   ```
+1. **Clone and install dependencies:**
+```bash
+cd solana/
+yarn install
+```
 
 2. **Configure Solana CLI:**
-   ```bash
-   solana config set --url devnet
-   solana-keygen new  # Create a new keypair if needed
-   ```
+```bash
+# Set to devnet for development
+solana config set --url devnet
 
-3. **Copy environment variables:**
-   ```bash
-   cp .env.example .env
-   ```
+# Create a keypair if you don't have one
+solana-keygen new
 
-4. **Build programs:**
-   ```bash
-   anchor build
-   ```
+# Get some SOL for testing
+solana airdrop 2
+```
 
-## Development
+3. **Build programs:**
+```bash
+yarn build
+# or with verification
+yarn build:verify
+```
 
-### Common Commands
+4. **Run tests:**
+```bash
+yarn test
+```
+
+## 🌐 Network Configuration
+
+### Available Networks
+
+- **localnet** - Local development (solana-test-validator)
+- **devnet** - Solana devnet for testing
+- **testnet** - Solana testnet for staging
+- **mainnet-beta** - Solana mainnet for production
+
+### Configure for Network
 
 ```bash
-# Build all programs
-anchor build
+# Configure for devnet (default)
+yarn configure:devnet
 
-# Run tests
-anchor test
+# Configure for other networks
+yarn configure:localnet
+yarn configure:testnet
+yarn configure:mainnet
+
+# List all available networks
+yarn configure:list
+
+# Check current network
+yarn configure:current
+```
+
+## 🚀 Deployment
+
+### Local Development
+
+1. **Start local validator:**
+```bash
+yarn localnet
+# In another terminal, keep this running
+```
+
+2. **Deploy to localnet:**
+```bash
+yarn deploy:localnet
+```
+
+### Devnet Deployment
+
+```bash
+# Ensure you have devnet SOL
+solana airdrop 2 --url devnet
 
 # Deploy to devnet
-anchor deploy --provider.cluster devnet
-
-# Start local validator
-yarn localnet
-
-# View program logs
-yarn logs
+yarn deploy:devnet
 ```
 
-### Program Structure
+### Production Deployment
 
+```bash
+# Configure for mainnet
+yarn configure:mainnet
+
+# Deploy to mainnet (requires mainnet SOL)
+yarn deploy:mainnet
 ```
-programs/
-├── factory/          # Factory Program
-│   ├── src/lib.rs   # Main program logic
-│   └── Cargo.toml   # Dependencies
-├── market/           # Market Program
-│   ├── src/lib.rs   # Market logic
-│   └── Cargo.toml   # Dependencies
-└── dashboard/        # Dashboard Program
-    ├── src/lib.rs   # Query logic
-    └── Cargo.toml   # Dependencies
-```
+
+## 📋 Available Scripts
+
+### Build & Verification
+- `yarn build` - Build all programs
+- `yarn build:verify` - Build with verification
+- `yarn verify` - Verify build artifacts
 
 ### Testing
+- `yarn test` - Run all tests
+- `yarn test:unit` - Run unit tests only
+- `yarn test:integration` - Run integration tests only
 
-Run the test suite:
-```bash
-anchor test
-```
+### Deployment
+- `yarn deploy:localnet` - Deploy to local validator
+- `yarn deploy:devnet` - Deploy to devnet
+- `yarn deploy:testnet` - Deploy to testnet  
+- `yarn deploy:mainnet` - Deploy to mainnet
 
-Tests are located in `tests/cryptoscore.ts` and cover all three programs.
-
-## Configuration
-
-### Anchor.toml
-
-The workspace is configured for devnet development by default. Program IDs are defined for both localnet and devnet environments.
-
-### Environment Variables
-
-Key environment variables in `.env`:
-
-- `ANCHOR_PROVIDER_URL` - Solana RPC endpoint
-- `ANCHOR_WALLET` - Path to wallet keypair
-- `SOLANA_NETWORK` - Target network (devnet/mainnet-beta)
-- `*_PROGRAM_ID` - Program IDs for each program
-
-## Deployment
-
-1. **Build programs:**
-   ```bash
-   anchor build
-   ```
-
-2. **Deploy to devnet:**
-   ```bash
-   anchor deploy --provider.cluster devnet
-   ```
-
-3. **Update program IDs:**
-   After deployment, update the program IDs in:
-   - `Anchor.toml`
-   - `.env`
-   - Frontend configuration
-
-## Program IDs
-
-### Devnet
-- Factory: `93CjfuYYswDbcjasA1PTUmHhsqFsBQC4JnsiKB8nKJhP`
-- Market: `94CjfuYYswDbcjasA1PTUmHhsqFsBQC4JnsiKB8nKJhQ`
-- Dashboard: `95CjfuYYswDbcjasA1PTUmHhsqFsBQC4JnsiKB8nKJhR`
-
-*Note: These are placeholder IDs and will be updated after deployment.*
-
-## Frontend Integration
-
-The frontend application will be located in `app/` directory and will be a complete copy of the existing React application adapted for Solana.
-
-## Contributing
-
-1. Follow Rust and Anchor best practices
-2. Write tests for all new functionality
-3. Update documentation for any changes
-4. Test on devnet before mainnet deployment
-
-## Resources
-
+### Network Configuration
+- `yarn configure:localnet` - Configure for localnet
+- `yarn
 - [Anchor Documentation](https://www.anchor-lang.com/)
 - [Solana Documentation](https://docs.solana.com/)
 - [Solana Cookbook](https://solanacookbook.com/)

@@ -1,0 +1,17 @@
+{
+  "version": "0.1.0",
+  "name": "cryptoscore_dashboard",
+  "instructions": [
+    {
+      "name": "getMarkets",
+      "accounts": [],
+      "args": []
+    }
+  ],
+  "accounts": [],
+  "events": [],
+  "errors": [],
+  "metadata": {
+    "address": "DHJASkp8vNuyR5xPSyj1G66xExRjnPBUuUN4QKiTnadZ"
+  }
+}

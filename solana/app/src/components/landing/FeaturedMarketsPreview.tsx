@@ -1,8 +1,6 @@
 import type { Market } from '../../types'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useReadContract, useReadContracts } from 'wagmi'
-import { CRYPTO_SCORE_FACTORY_ADDRESS, CryptoScoreFactoryABI, CryptoScoreMarketABI } from '../../config/contracts'
 import EnhancedMarketCard, { EnhancedMarketCardSkeleton } from '../cards/EnhancedMarketCard'
 import ErrorBanner from '../terminal/ErrorBanner'
 
@@ -10,77 +8,41 @@ import ErrorBanner from '../terminal/ErrorBanner'
 export default function FeaturedMarketsPreview() {
   const [showError, setShowError] = useState(true)
   const [cachedMarkets, setCachedMarkets] = useState<Market[] | null>(null)
+  const [marketsData, setMarketsData] = useState<Market[] | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isError, setIsError] = useState(false)
 
-  // Fetch all markets from factory contract
-  const { data: factoryMarkets, isLoading: isLoadingFactory, isError: isFactoryError, refetch: refetchFactory } = useReadContract({
-    address: CRYPTO_SCORE_FACTORY_ADDRESS as any,
-    abi: CryptoScoreFactoryABI,
-    functionName: 'getAllMarkets',
-  })
+  // Fetch markets from Solana program
+  const fetchMarkets = async () => {
+    try {
+      setIsLoading(true)
+      setIsError(false)
 
-  // Filter public markets only
-  const publicMarketAddresses = useMemo(() => {
-    if (!factoryMarkets || !Array.isArray(factoryMarkets))
-      return []
-    return factoryMarkets
-      .filter((market: any) => market.isPublic)
-      .slice(0, 50) // Limit to 50 markets
-      .map((market: any) => market.marketAddress as `0x${string}`)
-  }, [factoryMarkets])
+      // TODO: Implement Solana program integration once contracts are deployed
+      // For now, return empty array to prevent errors
+      // This will be replaced with actual Anchor program calls:
+      // 1. Initialize Anchor provider with connection
+      // 2. Create Program instance with IDL and program ID
+      // 3. Fetch market accounts using program.account.marketState.all()
+      // 4. Transform account data to Market type
+      
+      const transformedMarkets: Market[] = []
 
-  // Fetch detailed data from individual market contracts
-  const { data: marketDetails, isLoading: isLoadingDetails, isError: isDetailsError } = useReadContracts({
-    contracts: publicMarketAddresses.flatMap(address => [
-      {
-        address,
-        abi: CryptoScoreMarketABI as any,
-        functionName: 'getParticipantsCount',
-      },
-      {
-        address,
-        abi: CryptoScoreMarketABI as any,
-        functionName: 'getPredictionCounts',
-      },
-      {
-        address,
-        abi: CryptoScoreMarketABI as any,
-        functionName: 'resolved',
-      },
-    ]),
-  })
+      setMarketsData(transformedMarkets)
+      setIsLoading(false)
+    }
+    catch (error) {
+      console.error('Error fetching markets:', error)
+      setIsError(true)
+      setIsLoading(false)
+    }
+  }
 
-  // Combine factory data with market details
-  const marketsData = useMemo(() => {
-    if (!factoryMarkets || !Array.isArray(factoryMarkets) || !marketDetails)
-      return null
+  useEffect(() => {
+    fetchMarkets()
+  }, [])
 
-    const publicMarkets = factoryMarkets.filter((market: any) => market.isPublic).slice(0, 50)
-
-    return publicMarkets.map((factoryMarket: any, index: number) => {
-      const detailsIndex = index * 3
-      const participantsCount = marketDetails[detailsIndex]?.result as bigint | undefined
-      const predictionCounts = marketDetails[detailsIndex + 1]?.result as [bigint, bigint, bigint] | undefined
-      const resolved = marketDetails[detailsIndex + 2]?.result as boolean | undefined
-
-      return {
-        marketAddress: factoryMarket.marketAddress,
-        matchId: factoryMarket.matchId,
-        entryFee: factoryMarket.entryFee,
-        creator: factoryMarket.creator,
-        participantsCount: participantsCount || BigInt(0),
-        resolved: resolved || false,
-        isPublic: factoryMarket.isPublic,
-        startTime: factoryMarket.startTime,
-        homeCount: predictionCounts?.[0] || BigInt(0),
-        awayCount: predictionCounts?.[1] || BigInt(0),
-        drawCount: predictionCounts?.[2] || BigInt(0),
-      } as Market
-    })
-  }, [factoryMarkets, marketDetails])
-
-  const isLoading = isLoadingFactory || isLoadingDetails
-  const isError = isFactoryError || isDetailsError
-  const refetch = refetchFactory
+  const refetch = fetchMarkets
 
   // Cache successful data fetches
   useEffect(() => {

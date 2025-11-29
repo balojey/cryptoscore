@@ -1,8 +1,8 @@
 import type { Market } from '../../types'
 import { useMemo, useState } from 'react'
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { formatEther } from 'viem'
 import { ErrorBoundary } from '../ErrorBoundary'
+import { formatSOL } from '../../utils/formatters'
 
 type ChartType = 'tvl' | 'volume' | 'participants'
 type Timeframe = '24h' | '7d' | '30d' | 'all'
@@ -24,7 +24,7 @@ function CustomTooltip({ active, payload, label, metricType }: any) {
     let suffix = ''
 
     if (metricType === 'tvl' || metricType === 'volume') {
-      suffix = ' PAS'
+      suffix = ' SOL'
     }
     else if (metricType === 'participants') {
       formattedValue = value.toFixed(0)
@@ -153,7 +153,8 @@ export default function MarketOverviewChart({
         })
       }
 
-      const poolSize = Number(formatEther(market.entryFee)) * Number(market.participantsCount)
+      // Convert lamports to SOL for pool size
+      const poolSize = (Number(market.entryFee) * Number(market.participantsCount)) / 1_000_000_000
       const participants = Number(market.participantsCount)
 
       const existing = dataByDate.get(dateKey) || {

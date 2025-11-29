@@ -143,27 +143,27 @@
     - Add transaction signing and confirmation with loading states
     - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5_
 
-- [ ] 7. Implement real-time updates and event handling
-  - [ ] 7.1 Set up WebSocket subscriptions for account changes
+- [x] 7. Implement real-time updates and event handling
+  - [x] 7.1 Set up WebSocket subscriptions for account changes
     - Subscribe to program account changes using Solana WebSocket connections
     - Implement account change listeners for Market and Factory accounts
     - Add exponential backoff for WebSocket reconnection on failures
     - _Requirements: 9.1, 9.4_
 
-  - [ ] 7.2 Implement cache invalidation and notifications
+  - [x] 7.2 Implement cache invalidation and notifications
     - Invalidate cached data when market accounts are updated
     - Display toast notifications for relevant events (new markets, resolutions)
     - Implement fallback to polling when WebSocket connections are unavailable
     - _Requirements: 9.2, 9.3, 9.5_
 
-- [ ] 8. Update UI components for Solana integration
-  - [ ] 8.1 Update market display components
+- [x] 8. Update UI components for Solana integration
+  - [x] 8.1 Update market display components
     - Modify EnhancedMarketCard to display SOL amounts with proper formatting
     - Update PortfolioSummary to show SOL-based portfolio metrics
     - Ensure all market-related components handle Solana transaction states
     - _Requirements: 12.4, 12.5_
 
-  - [ ] 8.2 Update transaction handling in UI
+  - [x] 8.2 Update transaction handling in UI
     - Modify Market.tsx creation modal for Solana transaction flow
     - Update MarketDetail.tsx for Solana-based joining and withdrawal
     - Add transaction signature display and Solana Explorer links
@@ -171,33 +171,33 @@
     - _Requirements: 8.4, 8.5_
 
 - [ ] 9. Set up testing framework and write integration tests
-  - [ ] 9.1 Configure Anchor testing environment
+  - [x] 9.1 Configure Anchor testing environment
     - Set up test validator configuration for local testing
     - Configure test accounts and funding for integration tests
     - Create test utilities for program deployment and account setup
     - _Requirements: 10.1, 10.4_
 
-  - [ ] 9.2 Write end-to-end integration tests
+  - [x] 9.2 Write end-to-end integration tests
     - Test complete user flow from market creation to reward withdrawal
     - Test multi-user scenarios with different predictions and outcomes
     - Test error scenarios including insufficient funds and invalid operations
     - Verify event emissions and account state changes throughout flows
     - _Requirements: 10.2, 10.3, 10.5_
 
-- [ ] 10. Create deployment configuration and scripts
-  - [ ] 10.1 Set up deployment scripts for all programs
+- [-] 10. Create deployment configuration and scripts
+  - [x] 10.1 Set up deployment scripts for all programs
     - Create deployment scripts for Factory, Market, and Dashboard programs
     - Implement program build verification before deployment
     - Add program ID updates in frontend configuration after deployment
     - _Requirements: 11.1, 11.2, 11.3_
 
-  - [ ] 10.2 Configure network-specific settings
+  - [x] 10.2 Configure network-specific settings
     - Set up separate configurations for devnet, testnet, and mainnet-beta
     - Create environment-specific program ID management
     - Generate and export program IDL files for frontend integration
     - _Requirements: 11.4, 11.5_
 
-  - [ ] 10.3 Create workspace documentation
+  - [x] 10.3 Create workspace documentation
     - Document setup instructions for development environment
     - Create deployment guide for different networks
     - Document API interfaces and program instruction usage

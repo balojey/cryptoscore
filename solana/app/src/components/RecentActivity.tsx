@@ -1,9 +1,9 @@
 import type { Market, MarketDashboardInfo } from '../types'
 import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { formatEther } from 'viem'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { formatSOL } from '../utils/formatters'
 
 interface RecentActivityProps {
   markets: (Market | MarketDashboardInfo)[]
@@ -295,9 +295,9 @@ export default function RecentActivity({ markets, limit = 10, isLoading = false,
                         <span>•</span>
                         <span className="icon-[mdi--database-outline] w-3 h-3" />
                         <span>
-                          {formatEther(market.entryFee)}
+                          {formatSOL(market.entryFee, 4, false)}
                           {' '}
-                          PAS
+                          SOL
                         </span>
                       </div>
                     </div>

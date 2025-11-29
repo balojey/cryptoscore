@@ -1,19 +1,64 @@
-import { PublicKey } from '@solana/web3.js'
+// Solana Program Configuration
+// This file will be auto-generated during deployment
 
-// Program IDs for Solana programs
-export const FACTORY_PROGRAM_ID = new PublicKey(
-  import.meta.env.VITE_FACTORY_PROGRAM_ID || '11111111111111111111111111111111',
-)
+export const PROGRAM_IDS = {
+  factory: import.meta.env.VITE_FACTORY_PROGRAM_ID || "93CjfuYYswDbcjasA1PTUmHhsqFsBQC4JnsiKB8nKJhP",
+  market: import.meta.env.VITE_MARKET_PROGRAM_ID || "94CjfuYYswDbcjasA1PTUmHhsqFsBQC4JnsiKB8nKJhQ",
+  dashboard: import.meta.env.VITE_DASHBOARD_PROGRAM_ID || "95CjfuYYswDbcjasA1PTUmHhsqFsBQC4JnsiKB8nKJhR",
+} as const;
 
-export const MARKET_PROGRAM_ID = new PublicKey(
-  import.meta.env.VITE_MARKET_PROGRAM_ID || '11111111111111111111111111111111',
-)
+// Export individual program IDs for compatibility
+export const FACTORY_PROGRAM_ID = PROGRAM_IDS.factory;
+export const MARKET_PROGRAM_ID = PROGRAM_IDS.market;
+export const DASHBOARD_PROGRAM_ID = PROGRAM_IDS.dashboard;
 
-export const DASHBOARD_PROGRAM_ID = new PublicKey(
-  import.meta.env.VITE_DASHBOARD_PROGRAM_ID || '11111111111111111111111111111111',
-)
+export const NETWORK = (import.meta.env.VITE_SOLANA_NETWORK || "devnet") as "localnet" | "devnet" | "testnet" | "mainnet-beta";
 
-// Program IDL imports will be added here once programs are built
-// export { IDL as FactoryIDL } from '../idl/factory'
-// export { IDL as MarketIDL } from '../idl/market'
-// export { IDL as DashboardIDL } from '../idl/dashboard'
+export const RPC_URL = import.meta.env.VITE_SOLANA_RPC_URL || "https://api.devnet.solana.com";
+
+// Program IDLs (will be populated after build and export)
+export { default as FactoryIDL } from "../idl/cryptoscore_factory.json";
+export { default as MarketIDL } from "../idl/cryptoscore_market.json";
+export { default as DashboardIDL } from "../idl/cryptoscore_dashboard.json";
+
+// Network configurations
+export const NETWORK_CONFIGS = {
+  localnet: {
+    name: "Localnet",
+    rpcUrl: "http://127.0.0.1:8899",
+    explorerUrl: "http://localhost:3000",
+  },
+  devnet: {
+    name: "Devnet",
+    rpcUrl: "https://api.devnet.solana.com",
+    explorerUrl: "https://explorer.solana.com",
+  },
+  testnet: {
+    name: "Testnet", 
+    rpcUrl: "https://api.testnet.solana.com",
+    explorerUrl: "https://explorer.solana.com",
+  },
+  "mainnet-beta": {
+    name: "Mainnet",
+    rpcUrl: "https://api.mainnet-beta.solana.com",
+    explorerUrl: "https://explorer.solana.com",
+  },
+} as const;
+
+export const getCurrentNetworkConfig = () => NETWORK_CONFIGS[NETWORK];
+
+// Helper function to get explorer URL for transaction
+export const getExplorerUrl = (signature: string, cluster?: string) => {
+  const network = cluster || NETWORK;
+  const baseUrl = NETWORK_CONFIGS[network].explorerUrl;
+  const clusterParam = network !== "mainnet-beta" ? `?cluster=${network}` : "";
+  return `${baseUrl}/tx/${signature}${clusterParam}`;
+};
+
+// Helper function to get explorer URL for account
+export const getAccountExplorerUrl = (address: string, cluster?: string) => {
+  const network = cluster || NETWORK;
+  const baseUrl = NETWORK_CONFIGS[network].explorerUrl;
+  const clusterParam = network !== "mainnet-beta" ? `?cluster=${network}` : "";
+  return `${baseUrl}/account/${address}${clusterParam}`;
+};

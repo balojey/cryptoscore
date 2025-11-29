@@ -1,125 +1,185 @@
 import type { Market } from '../types'
 import { useQueryClient } from '@tanstack/react-query'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { toast } from 'sonner'
+import { useMarketWebSocketSubscriptions, useFactoryWebSocketSubscription } from './useSolanaWebSocket'
+import { useRealtimeNotifications } from './useRealtimeNotifications'
 
 interface RealtimeOptions {
   enabled?: boolean
   interval?: number
   onUpdate?: () => void
   markets?: Market[]
+  useWebSocket?: boolean
+  factoryAddress?: string
 }
 
 export function useRealtimeMarkets(options: RealtimeOptions = {}) {
-  const { enabled = true, interval = 10000, onUpdate, markets = [] } = options
+  const { 
+    enabled = true, 
+    interval = 10000, 
+    onUpdate, 
+    markets = [], 
+    useWebSocket = true,
+    factoryAddress 
+  } = options
   const queryClient = useQueryClient()
-  const previousMarketsRef = useRef<Market[]>([])
-  const notificationCooldownRef = useRef<Set<string>>(new Set())
+  const [isWebSocketFallback, setIsWebSocketFallback] = useState(false)
 
+  // Extract market addresses for WebSocket subscriptions
+  const marketAddresses = markets.map(market => market.marketAddress).filter(Boolean)
+
+  // WebSocket subscriptions for real-time updates
+  const marketWebSocket = useMarketWebSocketSubscriptions(
+    useWebSocket && !isWebSocketFallback ? marketAddresses : []
+  )
+  
+  const factoryWebSocket = useFactoryWebSocketSubscription(
+    useWebSocket && !isWebSocketFallback ? factoryAddress : undefined
+  )
+
+  // Real-time notifications for market events
+  useRealtimeNotifications({
+    enabled,
+    markets,
+    onMarketUpdate: (marketAddress) => {
+      console.log('Market update detected:', marketAddress)
+      queryClient.invalidateQueries({ queryKey: ['market', 'details', marketAddress] })
+    },
+    onNewMarket: (market) => {
+      console.log('New market detected:', market.marketAddress)
+      queryClient.invalidateQueries({ queryKey: ['markets'] })
+    },
+    onMarketResolved: (market) => {
+      console.log('Market resolved:', market.marketAddress)
+      queryClient.invalidateQueries({ queryKey: ['markets'] })
+      queryClient.invalidateQueries({ queryKey: ['user'] })
+    },
+    onNewParticipant: (marketAddress, count) => {
+      console.log('New participants joined:', marketAddress, count)
+      queryClient.invalidateQueries({ queryKey: ['market', 'details', marketAddress] })
+    },
+  })
+
+  /**
+   * Handle WebSocket account changes and invalidate cache
+   */
+  const handleWebSocketUpdate = useCallback((accountAddress: string, accountType: string) => {
+    console.log(`WebSocket update received for ${accountType}:`, accountAddress)
+    
+    // Invalidate specific queries based on account type
+    if (accountType === 'market') {
+      queryClient.invalidateQueries({ queryKey: ['market', 'details', accountAddress] })
+      queryClient.invalidateQueries({ queryKey: ['markets'] })
+    } else if (accountType === 'factory') {
+      queryClient.invalidateQueries({ queryKey: ['markets'] })
+    }
+
+    // Trigger general update callback
+    onUpdate?.()
+  }, [queryClient, onUpdate])
+
+  /**
+   * Monitor WebSocket account changes for cache invalidation
+   */
   useEffect(() => {
-    if (!enabled)
-      return
+    if (!useWebSocket || isWebSocketFallback) return
+
+    // Check for market account changes
+    marketWebSocket.accountChanges.forEach((change, address) => {
+      handleWebSocketUpdate(address, change.type)
+    })
+
+    // Check for factory account changes
+    if (factoryWebSocket.factoryData) {
+      handleWebSocketUpdate(factoryAddress || '', 'factory')
+    }
+  }, [
+    marketWebSocket.accountChanges, 
+    factoryWebSocket.factoryData, 
+    handleWebSocketUpdate, 
+    useWebSocket, 
+    isWebSocketFallback,
+    factoryAddress
+  ])
+
+  /**
+   * Fallback to polling when WebSocket is unavailable or fails
+   */
+  useEffect(() => {
+    // Enable polling if WebSocket is disabled or has failed
+    const shouldPoll = !enabled || !useWebSocket || isWebSocketFallback || 
+                      (!marketWebSocket.isConnected && marketAddresses.length > 0)
+
+    if (!shouldPoll) return
 
     const intervalId = setInterval(() => {
       // Invalidate all market-related queries to trigger refetch
       queryClient.invalidateQueries({ queryKey: ['markets'] })
-      queryClient.invalidateQueries({ queryKey: ['readContract'] })
+      queryClient.invalidateQueries({ queryKey: ['market'] })
+      queryClient.invalidateQueries({ queryKey: ['user'] })
 
       onUpdate?.()
     }, interval)
 
     return () => clearInterval(intervalId)
-  }, [enabled, interval, queryClient, onUpdate])
+  }, [
+    enabled, 
+    interval, 
+    queryClient, 
+    onUpdate, 
+    useWebSocket, 
+    isWebSocketFallback, 
+    marketWebSocket.isConnected,
+    marketAddresses.length
+  ])
 
-  // Detect significant market events and show toast notifications
+  /**
+   * Monitor WebSocket connection status and fallback to polling if needed
+   */
   useEffect(() => {
-    if (!enabled || markets.length === 0 || previousMarketsRef.current.length === 0)
-      return
+    if (!useWebSocket) return
 
-    const previousMarkets = previousMarketsRef.current
-    const currentMarkets = markets
+    // If WebSocket fails to connect or has too many reconnect attempts, fallback to polling
+    const shouldFallback = (marketAddresses.length > 0 && !marketWebSocket.isConnected && 
+                           marketWebSocket.reconnectAttempts >= 5) ||
+                          (factoryAddress && !factoryWebSocket.isConnected && 
+                           factoryWebSocket.reconnectAttempts >= 5)
 
-    // Create map for quick lookup
-    const previousMap = new Map(previousMarkets.map(m => [m.marketAddress, m]))
-
-    // Detect new markets
-    const newMarkets = currentMarkets.filter(m => !previousMap.has(m.marketAddress))
-    if (newMarkets.length > 0 && newMarkets.length <= 3) {
-      newMarkets.forEach((market) => {
-        const cooldownKey = `new-${market.marketAddress}`
-        if (!notificationCooldownRef.current.has(cooldownKey)) {
-          marketToast.newMarket()
-          notificationCooldownRef.current.add(cooldownKey)
-          // Remove from cooldown after 5 minutes
-          setTimeout(() => notificationCooldownRef.current.delete(cooldownKey), 300000)
-        }
-      })
+    if (shouldFallback && !isWebSocketFallback) {
+      console.warn('WebSocket connection failed, falling back to polling')
+      setIsWebSocketFallback(true)
+      marketToast.error('Real-time updates unavailable. Using polling fallback.')
+    } else if (!shouldFallback && isWebSocketFallback) {
+      // Reset fallback if WebSocket reconnects successfully
+      setIsWebSocketFallback(false)
+      console.log('WebSocket reconnected, disabling polling fallback')
     }
+  }, [
+    useWebSocket,
+    marketAddresses.length,
+    marketWebSocket.isConnected,
+    marketWebSocket.reconnectAttempts,
+    factoryAddress,
+    factoryWebSocket.isConnected,
+    factoryWebSocket.reconnectAttempts,
+    isWebSocketFallback
+  ])
 
-    // Detect markets with new participants
-    currentMarkets.forEach((current) => {
-      const previous = previousMap.get(current.marketAddress)
-      if (previous) {
-        const prevParticipants = Number(previous.participantsCount)
-        const currParticipants = Number(current.participantsCount)
 
-        // New participant joined
-        if (currParticipants > prevParticipants) {
-          const cooldownKey = `join-${current.marketAddress}-${currParticipants}`
-          if (!notificationCooldownRef.current.has(cooldownKey)) {
-            marketToast.newParticipant(currParticipants - prevParticipants)
-            notificationCooldownRef.current.add(cooldownKey)
-            // Remove from cooldown after 2 minutes
-            setTimeout(() => notificationCooldownRef.current.delete(cooldownKey), 120000)
-          }
-        }
-      }
-    })
-
-    // Detect resolved markets
-    currentMarkets.forEach((current) => {
-      const previous = previousMap.get(current.marketAddress)
-      if (previous && !previous.resolved && current.resolved) {
-        const cooldownKey = `resolve-${current.marketAddress}`
-        if (!notificationCooldownRef.current.has(cooldownKey)) {
-          marketToast.marketResolved()
-          notificationCooldownRef.current.add(cooldownKey)
-          // Remove from cooldown after 10 minutes
-          setTimeout(() => notificationCooldownRef.current.delete(cooldownKey), 600000)
-        }
-      }
-    })
-
-    // Detect markets starting soon (within 1 hour)
-    const now = Math.floor(Date.now() / 1000)
-    const oneHourFromNow = now + 3600
-    currentMarkets.forEach((market) => {
-      const startTime = Number(market.startTime)
-      if (!market.resolved && startTime > now && startTime <= oneHourFromNow) {
-        const cooldownKey = `starting-${market.marketAddress}`
-        if (!notificationCooldownRef.current.has(cooldownKey)) {
-          const minutesUntilStart = Math.floor((startTime - now) / 60)
-          if (minutesUntilStart <= 60 && minutesUntilStart > 0) {
-            marketToast.marketStarting(minutesUntilStart)
-            notificationCooldownRef.current.add(cooldownKey)
-            // Remove from cooldown after 30 minutes
-            setTimeout(() => notificationCooldownRef.current.delete(cooldownKey), 1800000)
-          }
-        }
-      }
-    })
-  }, [enabled, markets])
-
-  // Update previous markets reference
-  useEffect(() => {
-    if (markets.length > 0) {
-      previousMarketsRef.current = markets
-    }
-  }, [markets])
 
   return {
-    isPolling: enabled,
+    isPolling: enabled && (!useWebSocket || isWebSocketFallback || !marketWebSocket.isConnected),
+    isWebSocketActive: useWebSocket && !isWebSocketFallback && marketWebSocket.isConnected,
+    isWebSocketFallback,
     interval,
+    webSocketStatus: {
+      marketConnected: marketWebSocket.isConnected,
+      factoryConnected: factoryWebSocket.isConnected,
+      marketSubscriptions: marketWebSocket.subscriptions.length,
+      factorySubscriptions: factoryWebSocket.subscriptions.length,
+      reconnectAttempts: Math.max(marketWebSocket.reconnectAttempts, factoryWebSocket.reconnectAttempts),
+    },
   }
 }
 
@@ -149,6 +209,34 @@ export const marketToast = {
   marketStarting: (minutes: number) => {
     toast.info(`Market starting in ${minutes} ${minutes === 1 ? 'minute' : 'minutes'}!`, {
       description: '⚡ Last chance to join',
+      duration: 4000,
+    })
+  },
+
+  marketUpdated: (marketAddress: string) => {
+    toast.info('Market updated', {
+      description: `📊 Real-time data refreshed for market ${marketAddress.slice(0, 8)}...`,
+      duration: 2000,
+    })
+  },
+
+  webSocketConnected: () => {
+    toast.success('Real-time updates active', {
+      description: '🔗 WebSocket connection established',
+      duration: 3000,
+    })
+  },
+
+  webSocketDisconnected: () => {
+    toast.warning('Real-time updates paused', {
+      description: '📡 Attempting to reconnect...',
+      duration: 3000,
+    })
+  },
+
+  webSocketFallback: () => {
+    toast.info('Using polling fallback', {
+      description: '🔄 WebSocket unavailable, polling every 10 seconds',
       duration: 4000,
     })
   },

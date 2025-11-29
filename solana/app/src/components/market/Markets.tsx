@@ -1,8 +1,8 @@
 import type { Match } from '../../types'
 import { useEffect, useMemo, useState } from 'react'
-import { useAccount, useContractRead } from 'wagmi'
-import { CRYPTO_SCORE_FACTORY_ADDRESS, CryptoScoreFactoryABI } from '../../config/contracts'
+import { useWallet } from '@solana/wallet-adapter-react'
 import { getRandomApiKey } from '../../utils/apiKey'
+import { useAllMarkets } from '../../hooks/useMarketData'
 import { Market } from './Market'
 
 const COMPETITIONS = [
@@ -77,29 +77,26 @@ export function Markets() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const { address: userAddress } = useAccount()
+  const { publicKey: userAddress } = useWallet()
 
-  const { data: allMarkets, refetch: refetchAllMarkets } = useContractRead({
-    address: CRYPTO_SCORE_FACTORY_ADDRESS,
-    abi: CryptoScoreFactoryABI,
-    functionName: 'getAllMarkets',
-  })
+  // Fetch all markets from Solana Dashboard program
+  const { data: allMarketsData, refetch: refetchAllMarkets } = useAllMarkets()
 
   const userMarketsByMatchId = useMemo(() => {
-    if (!allMarkets || !userAddress)
-      return new Map<number, { creator: string, marketAddress: `0x${string}` }>()
+    if (!allMarketsData || !userAddress)
+      return new Map<number, { creator: string, marketAddress: string }>()
 
     const marketMap = new Map()
-    ;(allMarkets as any[]).forEach((market) => {
-      if (market.creator === userAddress) {
+    allMarketsData.forEach((market) => {
+      if (market.creator === userAddress.toString()) {
         marketMap.set(Number(market.matchId), {
           creator: market.creator,
-          marketAddress: market.marketContractAddress,
+          marketAddress: market.marketAddress,
         })
       }
     })
     return marketMap
-  }, [allMarkets, userAddress])
+  }, [allMarketsData, userAddress])
 
   useEffect(() => {
     const fetchMatches = async () => {

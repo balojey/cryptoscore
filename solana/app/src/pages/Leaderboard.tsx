@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { formatEther } from 'viem'
-import { useReadContract } from 'wagmi'
+import { LAMPORTS_PER_SOL } from '@solana/web3.js'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -10,7 +9,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import AnimatedNumber from '../components/ui/AnimatedNumber'
-import { CRYPTO_SCORE_DASHBOARD_ADDRESS, CryptoScoreDashboardABI } from '../config/contracts'
+import { useAllMarkets } from '../hooks/useDashboardData'
 import { shortenAddress } from '../utils/formatters'
 
 type LeaderboardTab = 'winRate' | 'earnings' | 'active' | 'streak'
@@ -18,12 +17,11 @@ type LeaderboardTab = 'winRate' | 'earnings' | 'active' | 'streak'
 export function Leaderboard() {
   const [activeTab, setActiveTab] = useState<LeaderboardTab>('winRate')
 
-  // Fetch all markets to calculate leaderboard
-  const { data: allMarkets, isLoading } = useReadContract({
-    address: CRYPTO_SCORE_DASHBOARD_ADDRESS,
-    abi: CryptoScoreDashboardABI,
-    functionName: 'getMarketsDashboardPaginated',
-    args: [0n, 100n, true],
+  // Fetch all markets to calculate leaderboard using Solana hooks
+  const { markets: allMarkets, isLoading } = useAllMarkets({
+    page: 0,
+    pageSize: 100,
+    includePrivate: true,
   })
 
   const leaderboardData = useMemo(() => {
@@ -41,7 +39,7 @@ export function Leaderboard() {
     }>()
 
     allMarkets.forEach((market: any) => {
-      const creator = market.creator.toLowerCase()
+      const creator = market.creator
       const existing = traderStats.get(creator) || {
         address: creator,
         totalMarkets: 0,
@@ -51,7 +49,8 @@ export function Leaderboard() {
         estimatedEarnings: 0,
       }
 
-      const poolSize = Number(formatEther(market.entryFee)) * Number(market.participantsCount)
+      // Convert lamports to SOL for pool size calculation
+      const poolSize = (Number(market.entryFee) / LAMPORTS_PER_SOL) * Number(market.participantsCount)
 
       existing.totalMarkets++
       existing.totalVolume += poolSize
@@ -234,7 +233,7 @@ export function Leaderboard() {
                       {/* Trader Info */}
                       <div className="flex-1 min-w-0">
                         <div className="font-mono font-semibold" style={{ color: 'var(--text-primary)' }}>
-                          {shortenAddress(trader.address as `0x${string}`)}
+                          {shortenAddress(trader.address)}
                         </div>
                         <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
                           {trader.totalMarkets}
@@ -264,12 +263,12 @@ export function Leaderboard() {
                         {activeTab === 'earnings' && (
                           <div>
                             <div className="font-bold text-lg" style={{ color: 'var(--accent-green)' }}>
-                              <AnimatedNumber value={trader.estimatedEarnings} decimals={2} suffix=" PAS" />
+                              <AnimatedNumber value={trader.estimatedEarnings} decimals={2} suffix=" SOL" />
                             </div>
                             <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
                               {trader.totalVolume.toFixed(2)}
                               {' '}
-                              PAS volume
+                              SOL volume
                             </div>
                           </div>
                         )}

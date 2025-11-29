@@ -1,40 +1,22 @@
 import type { MarketDashboardInfo } from '../types'
 import { useMemo } from 'react'
-import { useAccount, useReadContracts } from 'wagmi'
+import { useWallet } from '@solana/wallet-adapter-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { CryptoScoreMarketABI } from '../config/contracts'
+import { useMarketData } from '../hooks/useMarketData'
 
 interface PerformanceChartProps {
   markets: MarketDashboardInfo[]
 }
 
 export default function PerformanceChart({ markets }: PerformanceChartProps) {
-  const { address } = useAccount()
+  const { publicKey } = useWallet()
 
-  // Fetch user predictions for all markets
-  const contractCalls = useMemo(() => {
-    if (!address || markets.length === 0)
-      return []
-
-    return markets.map(market => ({
-      address: market.marketAddress,
-      abi: CryptoScoreMarketABI as any,
-      functionName: 'getUserPrediction' as const,
-      args: [address] as const,
-    }))
-  }, [address, markets])
-
-  const { data: predictionsData } = useReadContracts({
-    contracts: contractCalls,
-    query: {
-      enabled: contractCalls.length > 0,
-    },
-  })
-
+  // Calculate wins and losses from market data
+  // In Solana, we'll fetch user predictions from the market accounts
   const chartData = useMemo(() => {
     const resolvedMarkets = markets.filter(m => m.resolved)
 
-    if (resolvedMarkets.length === 0 || !predictionsData) {
+    if (resolvedMarkets.length === 0 || !publicKey) {
       return {
         wins: 0,
         losses: 0,
@@ -45,24 +27,24 @@ export default function PerformanceChart({ markets }: PerformanceChartProps) {
     }
 
     // Calculate actual wins and losses
+    // TODO: After Solana program deployment, fetch user predictions from market accounts
+    // For now, we'll use a simplified calculation based on available data
     let wins = 0
     let losses = 0
 
     resolvedMarkets.forEach((market) => {
-      const predictionResult = predictionsData[markets.indexOf(market)]
-      if (predictionResult?.status === 'success') {
-        const prediction = Number(predictionResult.result)
-        const winner = market.winner
+      // TODO: Fetch user prediction from Solana market account
+      // const marketData = await program.account.market.fetch(marketPubkey)
+      // const userPrediction = marketData.participants.find(p => p.user.equals(publicKey))
+      
+      // For now, we can't determine user predictions without the program data
+      // This will be implemented after program deployment
+      const winner = market.winner
 
-        // Only count if user made a prediction and market has a winner
-        if (prediction > 0 && winner > 0) {
-          if (prediction === winner) {
-            wins++
-          }
-          else {
-            losses++
-          }
-        }
+      // Placeholder logic - will be replaced with actual prediction data
+      if (winner > 0) {
+        // We'll need to fetch the actual user prediction from the Solana program
+        // For now, just count resolved markets
       }
     })
 
@@ -77,7 +59,7 @@ export default function PerformanceChart({ markets }: PerformanceChartProps) {
       winPercentage,
       lossPercentage,
     }
-  }, [markets, predictionsData])
+  }, [markets, publicKey])
 
   if (chartData.total === 0) {
     return (

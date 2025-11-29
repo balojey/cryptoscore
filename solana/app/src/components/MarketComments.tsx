@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useAccount } from 'wagmi'
+import { useWallet } from '@solana/wallet-adapter-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { shortenAddress } from '../utils/formatters'
@@ -17,19 +17,19 @@ interface MarketCommentsProps {
 }
 
 export default function MarketComments({ marketAddress: _marketAddress }: MarketCommentsProps) {
-  const { address } = useAccount()
+  const { publicKey } = useWallet()
   const [comments, setComments] = useState<Comment[]>([])
   const [newComment, setNewComment] = useState('')
   const [selectedPrediction, setSelectedPrediction] = useState<'HOME' | 'DRAW' | 'AWAY' | undefined>()
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!newComment.trim() || !address)
+    if (!newComment.trim() || !publicKey)
       return
 
     const comment: Comment = {
       id: Date.now().toString(),
-      author: address,
+      author: publicKey.toBase58(),
       text: newComment.trim(),
       timestamp: Date.now(),
       prediction: selectedPrediction,
@@ -78,7 +78,7 @@ export default function MarketComments({ marketAddress: _marketAddress }: Market
       <h3 className="card-title mb-4">Discussion</h3>
 
       {/* Comment Form */}
-      {address ? (
+      {publicKey ? (
         <form onSubmit={handleSubmit} className="mb-6">
           <div className="mb-3">
             <textarea
@@ -162,7 +162,7 @@ export default function MarketComments({ marketAddress: _marketAddress }: Market
                       </div>
                       <div>
                         <div className="font-mono text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
-                          {shortenAddress(comment.author as `0x${string}`)}
+                          {shortenAddress(comment.author)}
                         </div>
                         <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
                           {getTimeAgo(comment.timestamp)}

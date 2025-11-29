@@ -1,117 +1,58 @@
-import type { Market } from '../../types'
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { useAccount, useReadContract, useReadContracts } from 'wagmi'
-import { CRYPTO_SCORE_FACTORY_ADDRESS, CryptoScoreFactoryABI, CryptoScoreMarketABI } from '../../config/contracts'
+import { useWallet } from '@solana/wallet-adapter-react'
+import type { Market } from '../../types'
 import EnhancedMarketCard, { EnhancedMarketCardSkeleton } from '../cards/EnhancedMarketCard'
+import { useUserMarkets } from '../../hooks/useMarketData'
 
 export function UserMarkets() {
-  const { address, isConnected } = useAccount()
-
-  // Fetch all markets from factory
-  const { data: factoryMarkets, isLoading: isLoadingFactory } = useReadContract({
-    address: CRYPTO_SCORE_FACTORY_ADDRESS as `0x${string}`,
-    abi: CryptoScoreFactoryABI,
-    functionName: 'getAllMarkets',
-    query: { enabled: !!address && !!CRYPTO_SCORE_FACTORY_ADDRESS },
-  })
-
-  // Get all market addresses to check participation and resolved status
-  const marketAddresses = useMemo(() => {
-    if (!factoryMarkets || !Array.isArray(factoryMarkets))
-      return []
-    return factoryMarkets.map((m: any) => m.marketAddress as `0x${string}`)
-  }, [factoryMarkets])
-
-  // Build contracts array for batch reading
-  const contractCalls = useMemo(() => {
-    const calls = []
-    for (const addr of marketAddresses) {
-      // Check if user is a participant
-      calls.push({
-        address: addr,
-        abi: CryptoScoreMarketABI as any,
-        functionName: 'isParticipant' as const,
-        args: [address],
-      })
-      // Check if market is resolved
-      calls.push({
-        address: addr,
-        abi: CryptoScoreMarketABI as any,
-        functionName: 'resolved' as const,
-      })
-      // Get participants count
-      calls.push({
-        address: addr,
-        abi: CryptoScoreMarketABI as any,
-        functionName: 'getParticipantsCount' as const,
-      })
-    }
-    return calls
-  }, [marketAddresses, address])
-
-  const { data: contractResults, isLoading: isLoadingContracts } = useReadContracts({
-    contracts: contractCalls,
-    query: {
-      enabled: marketAddresses.length > 0 && !!address,
-    },
-  })
-
-  const isLoading = isLoadingFactory || isLoadingContracts
+  const { publicKey, connected } = useWallet()
+  
+  // Fetch user's markets
+  const { data: marketDataList, isLoading } = useUserMarkets(publicKey?.toString())
 
   const userMarkets = useMemo(() => {
-    if (!factoryMarkets || !contractResults || !Array.isArray(factoryMarkets))
+    if (!marketDataList || !publicKey)
       return []
 
     const now = Date.now() / 1000
 
-    // Filter markets where user is creator OR participant, and market is open/ending soon/unresolved
-    const filtered = (factoryMarkets as any[])
-      .map((market, index) => {
-        const resultIndex = index * 3
-        const isParticipant = contractResults[resultIndex]?.result as boolean
-        const isResolved = contractResults[resultIndex + 1]?.result as boolean
-        const participantsCount = contractResults[resultIndex + 2]?.result as bigint
-
-        const isCreator = address?.toLowerCase() === market.creator?.toLowerCase()
-
-        // Include if user is creator OR participant
-        if (!isCreator && !isParticipant)
-          return null
-
+    // Convert MarketData to Market format and filter
+    const filtered = marketDataList
+      .filter((marketData) => {
         // Exclude resolved markets
-        if (isResolved)
-          return null
-
-        const startTime = BigInt(market.startTime?.toString() || '0')
-        const startTimeSeconds = Number(startTime)
+        if (marketData.status === 'Resolved' || marketData.status === 'Cancelled')
+          return false
 
         // Only include markets that haven't started yet or are within 2 hours of ending
         // (Open, Ending Soon, or Live status)
-        if (startTimeSeconds < now - 7200)
-          return null // Exclude if more than 2 hours past start
+        if (marketData.kickoffTime < now - 7200)
+          return false
 
-        return {
-          marketAddress: market.marketAddress as `0x${string}`,
-          matchId: BigInt(market.matchId?.toString() || '0'),
-          entryFee: BigInt(market.entryFee?.toString() || '0'),
-          creator: market.creator,
-          participantsCount: participantsCount || BigInt(0),
-          resolved: isResolved || false,
-          isPublic: market.isPublic,
-          startTime,
-        } as Market
+        return true
       })
-      .filter((m): m is Market => m !== null)
+      .map((marketData): Market => ({
+        marketAddress: marketData.marketAddress, // Solana PublicKey as base58 string
+        matchId: BigInt(marketData.matchId),
+        entryFee: BigInt(marketData.entryFee),
+        creator: marketData.creator, // Solana PublicKey as base58 string
+        participantsCount: BigInt(marketData.participantCount),
+        resolved: marketData.status === 'Resolved',
+        isPublic: marketData.isPublic,
+        startTime: BigInt(marketData.kickoffTime),
+        homeCount: BigInt(marketData.homeCount),
+        awayCount: BigInt(marketData.awayCount),
+        drawCount: BigInt(marketData.drawCount),
+      }))
       // Sort by start time (earliest first)
       .sort((a, b) => Number(a.startTime) - Number(b.startTime))
 
     return filtered
-  }, [factoryMarkets, contractResults, address])
+  }, [marketDataList, publicKey])
 
   // Don't render the component if the user is not connected.
   // The homepage will just show the hero and public markets.
-  if (!isConnected) {
+  if (!connected) {
     return null
   }
 
@@ -125,7 +66,7 @@ export function UserMarkets() {
           </h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {[...Array.from({ length: 3 })].map((_, i) => <EnhancedMarketCardSkeleton key={i} />)}
+          {Array.from({ length: 3 }).map((_, i) => <EnhancedMarketCardSkeleton key={i} />)}
         </div>
       </div>
     )

@@ -1,10 +1,4 @@
-import type { Market } from '../../types'
-import { memo, useEffect, useMemo, useState } from 'react'
-import { formatEther } from 'viem'
-import { useReadContract, useReadContracts } from 'wagmi'
-import { CRYPTO_SCORE_FACTORY_ADDRESS, CryptoScoreFactoryABI, CryptoScoreMarketABI } from '../../config/contracts'
-import { useRealtimeMarkets } from '../../hooks/useRealtimeMarkets'
-import ErrorBanner from '../terminal/ErrorBanner'
+import { memo, useMemo, useState } from 'react'
 import AnimatedNumber from '../ui/AnimatedNumber'
 
 interface MetricCardProps {
@@ -60,141 +54,19 @@ const MetricCard = memo(({ label, value, suffix = '', icon, color, decimals = 0,
 })
 
 export default function LiveMetrics() {
-  const [showError, setShowError] = useState(true)
-  const [cachedData, setCachedData] = useState<Market[] | null>(null)
+  const [isLoading] = useState(false)
 
-  // Fetch all markets from factory
-  const { data: factoryMarkets, isLoading: isLoadingFactory, isError: isFactoryError, refetch: refetchFactory } = useReadContract({
-    address: CRYPTO_SCORE_FACTORY_ADDRESS,
-    abi: CryptoScoreFactoryABI,
-    functionName: 'getAllMarkets',
-  })
-
-  // Get market addresses for detailed data
-  const marketAddresses = useMemo(() => {
-    if (!factoryMarkets || !Array.isArray(factoryMarkets))
-      return []
-    return factoryMarkets.map((market: any) => market.marketAddress as `0x${string}`)
-  }, [factoryMarkets])
-
-  // Fetch detailed data from individual market contracts
-  const { data: marketDetails, isLoading: isLoadingDetails, isError: isDetailsError } = useReadContracts({
-    contracts: marketAddresses.flatMap(address => [
-      {
-        address,
-        abi: CryptoScoreMarketABI as any,
-        functionName: 'getParticipantsCount',
-      },
-      {
-        address,
-        abi: CryptoScoreMarketABI as any,
-        functionName: 'getPredictionCounts',
-      },
-      {
-        address,
-        abi: CryptoScoreMarketABI as any,
-        functionName: 'resolved',
-      },
-    ]),
-  })
-
-  // Combine factory data with market details
-  const marketsData = useMemo(() => {
-    if (!factoryMarkets || !Array.isArray(factoryMarkets) || !marketDetails)
-      return null
-
-    return factoryMarkets.map((factoryMarket: any, index: number) => {
-      const detailsIndex = index * 3
-      const participantsCount = marketDetails[detailsIndex]?.result as bigint | undefined
-      const predictionCounts = marketDetails[detailsIndex + 1]?.result as [bigint, bigint, bigint] | undefined
-      const resolved = marketDetails[detailsIndex + 2]?.result as boolean | undefined
-
-      return {
-        marketAddress: factoryMarket.marketAddress,
-        matchId: factoryMarket.matchId,
-        entryFee: factoryMarket.entryFee,
-        creator: factoryMarket.creator,
-        participantsCount: participantsCount || BigInt(0),
-        resolved: resolved || false,
-        isPublic: factoryMarket.isPublic,
-        startTime: factoryMarket.startTime,
-        homeCount: predictionCounts?.[0] || BigInt(0),
-        awayCount: predictionCounts?.[1] || BigInt(0),
-        drawCount: predictionCounts?.[2] || BigInt(0),
-      } as Market
-    })
-  }, [factoryMarkets, marketDetails])
-
-  const isLoading = isLoadingFactory || isLoadingDetails
-  const isError = isFactoryError || isDetailsError
-  const refetch = refetchFactory
-
-  // Cache successful data fetches
-  useEffect(() => {
-    if (marketsData && Array.isArray(marketsData) && marketsData.length > 0) {
-      setCachedData(marketsData)
-    }
-  }, [marketsData])
-
-  // Enable real-time updates with polling
-  useRealtimeMarkets({
-    enabled: !isError,
-    interval: 10000, // Poll every 10 seconds
-    onUpdate: () => {
-      refetch()
-    },
-  })
-
-  // Use cached data if available and current fetch failed
-  const dataToUse = (isError && cachedData) ? cachedData : (marketsData as Market[] | undefined)
-
+  // TODO: Implement Solana program data fetching
+  // This will be implemented after the Solana programs are deployed
+  // For now, we'll show placeholder data
   const metrics = useMemo(() => {
-    if (!dataToUse || !Array.isArray(dataToUse)) {
-      return {
-        totalMarkets: 0,
-        totalValueLocked: 0,
-        activeTraders: 0,
-        marketsResolved: 0,
-      }
-    }
-
-    const markets = dataToUse
-
-    // Total markets (all markets)
-    const totalMarkets = markets.length
-
-    // Total Value Locked (sum of all pool sizes: entryFee * participantsCount)
-    const totalValueLocked = markets.reduce((sum, market) => {
-      const poolSize = Number(formatEther(BigInt(market.entryFee))) * Number(market.participantsCount)
-      return sum + poolSize
-    }, 0)
-
-    // Active traders (unique participants across all markets)
-    // Note: This is an approximation since we don't have individual participant addresses
-    // We'll use total participants count as a proxy
-    const activeTraders = markets.reduce((sum, market) => {
-      return sum + Number(market.participantsCount)
-    }, 0)
-
-    // Markets resolved
-    const marketsResolved = markets.filter(market => market.resolved).length
-
     return {
-      totalMarkets,
-      totalValueLocked,
-      activeTraders,
-      marketsResolved,
+      totalMarkets: 0,
+      totalValueLocked: 0,
+      activeTraders: 0,
+      marketsResolved: 0,
     }
-  }, [dataToUse])
-
-  const handleRetry = () => {
-    setShowError(true)
-    refetch()
-  }
-
-  const handleDismiss = () => {
-    setShowError(false)
-  }
+  }, [])
 
   return (
     <section className="py-16 md:py-24">
@@ -212,18 +84,6 @@ export default function LiveMetrics() {
           </p>
         </div>
 
-        {/* Error Banner */}
-        {isError && showError && (
-          <ErrorBanner
-            message={cachedData
-              ? 'Unable to fetch latest metrics. Showing cached data.'
-              : 'Unable to load platform metrics. Please try again.'}
-            type={cachedData ? 'warning' : 'error'}
-            onRetry={handleRetry}
-            onDismiss={handleDismiss}
-          />
-        )}
-
         {/* Metrics Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <MetricCard
@@ -236,7 +96,7 @@ export default function LiveMetrics() {
           <MetricCard
             label="Total Value Locked"
             value={metrics.totalValueLocked}
-            suffix=" PAS"
+            suffix=" SOL"
             icon="mdi--safe-square-outline"
             color="var(--accent-green)"
             decimals={2}

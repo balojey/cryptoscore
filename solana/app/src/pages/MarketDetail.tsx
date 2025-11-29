@@ -1,9 +1,8 @@
-import type { Address } from 'viem'
 import type { Match } from '../types'
 import React, { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { formatEther } from 'viem'
-import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi'
+import { useWallet } from '@solana/wallet-adapter-react'
+import { LAMPORTS_PER_SOL } from '@solana/web3.js'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import PoolTrendChart from '../components/charts/PoolTrendChart'
@@ -11,10 +10,12 @@ import PredictionDistributionChart from '../components/charts/PredictionDistribu
 import MarketComments from '../components/MarketComments'
 import SharePrediction from '../components/SharePrediction'
 import Confetti from '../components/ui/Confetti'
-import { CRYPTO_SCORE_FACTORY_ADDRESS, CryptoScoreFactoryABI, CryptoScoreMarketABI } from '../config/contracts'
 import { useMatchData } from '../hooks/useMatchData'
+import { useMarketData } from '../hooks/useMarketData'
+import { useMarketActions } from '../hooks/useMarketActions'
 import { useUserPrediction } from '../hooks/useUserPrediction'
-import { shortenAddress } from '../utils/formatters'
+import { shortenAddress, formatSOL } from '../utils/formatters'
+import { currentNetwork } from '../config/solana'
 
 // --- SUB-COMPONENTS ---
 
@@ -84,9 +85,10 @@ interface MarketStatsProps {
   userPrediction: string
   userHasJoined: boolean
   matchData: Match
+  entryFeeValue: number
 }
 
-function MarketStats({ marketInfo, poolSize, participantsCount, marketStatus, isMatchStarted, winningTeamName, homeCount, awayCount, drawCount, userPrediction, userHasJoined, matchData }: MarketStatsProps) {
+function MarketStats({ marketInfo, poolSize, participantsCount, marketStatus, isMatchStarted, winningTeamName, homeCount, awayCount, drawCount, userPrediction, userHasJoined, matchData, entryFeeValue }: MarketStatsProps) {
   const InfoRow = ({ label, value, valueClass, icon }: { label: string, value: React.ReactNode, valueClass?: string, icon: string }) => (
     <div className="info-row">
       <div className="info-label">
@@ -122,22 +124,14 @@ function MarketStats({ marketInfo, poolSize, participantsCount, marketStatus, is
         <InfoRow
           label="Pool Size"
           value={(
-            <>
-              <span className="font-mono">{poolSize.toFixed(2)}</span>
-              {' '}
-              <span style={{ color: 'var(--text-tertiary)' }}>PAS</span>
-            </>
+            <span className="font-mono">{formatSOL(poolSize, 2)}</span>
           )}
           icon="mdi--database-outline"
         />
         <InfoRow
           label="Entry Fee"
           value={(
-            <>
-              <span className="font-mono">{formatEther(marketInfo[3])}</span>
-              {' '}
-              <span style={{ color: 'var(--text-tertiary)' }}>PAS</span>
-            </>
+            <span className="font-mono">{formatSOL(entryFeeValue, 4)}</span>
           )}
           icon="mdi--login"
         />
@@ -146,13 +140,13 @@ function MarketStats({ marketInfo, poolSize, participantsCount, marketStatus, is
           label="Creator"
           value={(
             <a
-              href={`https://blockscout-passet-hub.parity-testnet.parity.io/address/${marketInfo[2]}`}
+              href={`${currentNetwork.explorer}/address/${marketInfo.creator}?cluster=${currentNetwork.name.toLowerCase().includes('devnet') ? 'devnet' : 'mainnet'}`}
               target="_blank"
               rel="noopener noreferrer"
               className="font-mono hover:underline"
               style={{ color: 'var(--accent-cyan)' }}
             >
-              {shortenAddress(marketInfo[2])}
+              {shortenAddress(marketInfo.creator || '')}
             </a>
           )}
           icon="mdi--account-edit-outline"
@@ -446,173 +440,152 @@ function PageSkeleton() {
 // --- MAIN COMPONENT ---
 
 export function MarketDetail() {
-  const { marketAddress } = useParams<{ marketAddress: Address }>()
-  const { address: userAddress } = useAccount()
-  const { writeContractAsync, data: hash, isPending: isWritePending } = useWriteContract()
+  const { marketAddress } = useParams<{ marketAddress: string }>()
+  const { publicKey: userAddress } = useWallet()
+  const { joinMarket, resolveMarket, withdrawRewards, getExplorerLink, isLoading, txSignature } = useMarketActions()
+  const { data: marketData, isLoading: isLoadingMarket, error: marketError } = useMarketData(marketAddress)
 
   const [selectedTeam, setSelectedTeam] = useState<number | null>(null)
-  const [actionStatus, setActionStatus] = useState<{ type: 'info' | 'success' | 'error', message: string } | null>(null)
+  const [actionStatus, setActionStatus] = useState<{ 
+    type: 'info' | 'success' | 'error'
+    message: string
+    signature?: string 
+  } | null>(null)
   const [showConfetti, setShowConfetti] = useState(false)
-
-  const { data: marketInfo, isLoading: isLoadingInfo, error: infoError } = useReadContract({
-    abi: CryptoScoreFactoryABI,
-    address: CRYPTO_SCORE_FACTORY_ADDRESS,
-    functionName: 'marketInfoByAddress',
-    args: [marketAddress!],
-    query: { enabled: !!marketAddress },
-  })
-
+  
+  // Extract match data from market data
   const { data: matchData, loading: isLoadingMatch, error: matchError } = useMatchData(
-    marketInfo ? Number((marketInfo as any)[1]) : 0,
+    marketData ? Number(marketData.matchId) : 0,
   )
 
-  const { data: marketStatus, isLoading: isLoadingStatus } = useReadContract({
-    abi: CryptoScoreMarketABI,
-    address: marketAddress,
-    functionName: 'resolved',
-    query: { enabled: !!marketAddress },
-  })
+  // Mock data for development (TODO: Replace with actual Solana program data)
+  const marketInfo = marketData ? {
+    creator: marketData.creator,
+    matchId: marketData.matchId,
+    entryFee: marketData.entryFee * LAMPORTS_PER_SOL, // Convert to lamports for display
+    isPublic: marketData.isPublic,
+    startTime: marketData.kickoffTime,
+  } : null
 
-  const { data: participantsCount, isLoading: isLoadingParticipants } = useReadContract({
-    abi: CryptoScoreMarketABI,
-    address: marketAddress,
-    functionName: 'getParticipantsCount',
-    query: { enabled: !!marketAddress },
-  })
-
-  const { data: isParticipant } = useReadContract({
-    abi: CryptoScoreMarketABI,
-    address: marketAddress,
-    functionName: 'isParticipant',
-    args: [userAddress!],
-    query: { enabled: !!marketAddress && !!userAddress },
-  })
-  const isUserParticipant = Boolean(isParticipant)
-
-  const { data: winningTeam } = useReadContract({
-    abi: CryptoScoreMarketABI,
-    address: marketAddress,
-    functionName: 'winner',
-    query: { enabled: !!marketAddress && marketStatus === true },
-  })
-
-  const { data: entryFeeValue } = useReadContract({
-    abi: CryptoScoreMarketABI,
-    address: marketAddress,
-    functionName: 'entryFee',
-    query: { enabled: !!marketAddress },
-  })
-
-  // Fetch prediction counts
-  const { data: homeCount } = useReadContract({
-    abi: CryptoScoreMarketABI,
-    address: marketAddress,
-    functionName: 'homeCount',
-    query: { enabled: !!marketAddress },
-  })
-
-  const { data: awayCount } = useReadContract({
-    abi: CryptoScoreMarketABI,
-    address: marketAddress,
-    functionName: 'awayCount',
-    query: { enabled: !!marketAddress },
-  })
-
-  const { data: drawCount } = useReadContract({
-    abi: CryptoScoreMarketABI,
-    address: marketAddress,
-    functionName: 'drawCount',
-    query: { enabled: !!marketAddress },
-  })
-
-  // Get user's reward balance to check if they've already withdrawn
-  const { data: userRewardBalance } = useReadContract({
-    abi: CryptoScoreMarketABI,
-    address: marketAddress,
-    functionName: 'rewards',
-    args: [userAddress!],
-    query: { enabled: !!marketAddress && !!userAddress && marketStatus === true },
-  })
-
+  const marketStatus = marketData?.status === 'Resolved'
+  const participantsCount = marketData?.participantCount || 0
+  const isUserParticipant = false // TODO: Implement user participation check
+  const winningTeam = marketData?.outcome === 'Home' ? 1 : marketData?.outcome === 'Away' ? 2 : marketData?.outcome === 'Draw' ? 3 : null
+  const entryFeeValue = marketData?.entryFee ? marketData.entryFee * LAMPORTS_PER_SOL : 0
+  const homeCount = marketData?.homeCount || 0
+  const awayCount = marketData?.awayCount || 0
+  const drawCount = marketData?.drawCount || 0
+  const userRewardBalance = 0 // TODO: Implement reward balance check
+  
   // Get user's prediction
   const { predictionName, hasJoined } = useUserPrediction(marketAddress)
 
-  const { isLoading: isTxConfirming, isSuccess: isTxConfirmed } = useWaitForTransactionReceipt({ hash })
-
+  // Update action status based on transaction state
   useEffect(() => {
-    if (isTxConfirmed)
-      setActionStatus({ type: 'success', message: 'Transaction successful!' })
-    if (isWritePending)
-      setActionStatus({ type: 'info', message: 'Waiting for wallet confirmation...' })
-    if (isTxConfirming)
-      setActionStatus({ type: 'info', message: 'Confirming transaction...' })
-  }, [isTxConfirmed, isWritePending, isTxConfirming])
+    if (txSignature) {
+      setActionStatus({ 
+        type: 'success', 
+        message: 'Transaction successful!',
+        signature: txSignature
+      })
+    }
+    if (isLoading) {
+      setActionStatus({ type: 'info', message: 'Processing transaction...' })
+    }
+  }, [txSignature, isLoading])
 
-  const handleAction = async (action: () => Promise<any>, errorMsg: string) => {
+  // Clear action status after some time
+  useEffect(() => {
+    if (actionStatus?.type === 'success' || actionStatus?.type === 'error') {
+      const timer = setTimeout(() => {
+        setActionStatus(null)
+      }, 5000)
+      return () => clearTimeout(timer)
+    }
+  }, [actionStatus])
+
+  const handleAction = async (action: () => Promise<string | null>, errorMsg: string) => {
     setActionStatus(null)
     try {
-      await action()
+      const signature = await action()
+      if (signature) {
+        setActionStatus({ 
+          type: 'success', 
+          message: 'Transaction successful!',
+          signature 
+        })
+      }
     }
     catch (e: any) {
       console.error(e)
-      setActionStatus({ type: 'error', message: e.shortMessage || errorMsg })
+      setActionStatus({ type: 'error', message: e.message || errorMsg })
     }
   }
 
   const handleJoinMarket = () => handleAction(async () => {
     if (selectedTeam === null) {
       setActionStatus({ type: 'error', message: 'Please select a team to predict.' })
-      return
+      return null
     }
-    await writeContractAsync({
-      abi: CryptoScoreMarketABI,
-      address: marketAddress!,
-      functionName: 'join',
-      args: [selectedTeam],
-      value: (marketInfo as any)?.[3],
+    if (!marketAddress) {
+      setActionStatus({ type: 'error', message: 'Market address not found.' })
+      return null
+    }
+
+    const prediction = selectedTeam === 1 ? 'Home' : selectedTeam === 2 ? 'Away' : 'Draw'
+    return await joinMarket({
+      marketAddress,
+      prediction: prediction as 'Home' | 'Draw' | 'Away'
     })
-  }, 'Transaction failed.')
+  }, 'Failed to join market.')
 
   const handleResolveMarket = () => handleAction(async () => {
     if (!matchData || (matchData as any).status !== 'FINISHED') {
       setActionStatus({ type: 'error', message: 'Match has not finished yet.' })
-      return
+      return null
     }
-    const winnerTag = (matchData as any)?.score?.winner
-    let outcome: number
-    if (winnerTag === 'HOME_TEAM')
-      outcome = 1
-    else if (winnerTag === 'AWAY_TEAM')
-      outcome = 2
-    else outcome = 3
+    if (!marketAddress) {
+      setActionStatus({ type: 'error', message: 'Market address not found.' })
+      return null
+    }
 
-    await writeContractAsync({
-      abi: CryptoScoreMarketABI,
-      address: marketAddress!,
-      functionName: 'resolve',
-      args: [outcome],
+    const winnerTag = (matchData as any)?.score?.winner
+    let outcome: 'Home' | 'Away' | 'Draw'
+    if (winnerTag === 'HOME_TEAM')
+      outcome = 'Home'
+    else if (winnerTag === 'AWAY_TEAM')
+      outcome = 'Away'
+    else 
+      outcome = 'Draw'
+
+    return await resolveMarket({
+      marketAddress,
+      outcome
     })
   }, 'Failed to resolve market.')
 
   const handleWithdraw = () => handleAction(async () => {
-    await writeContractAsync({
-      abi: CryptoScoreMarketABI,
-      address: marketAddress!,
-      functionName: 'withdraw',
-      args: [], // No arguments needed for withdraw
-    })
-    // Trigger confetti on successful withdrawal
-    setShowConfetti(true)
-    setTimeout(() => setShowConfetti(false), 100)
+    if (!marketAddress) {
+      setActionStatus({ type: 'error', message: 'Market address not found.' })
+      return null
+    }
+
+    const signature = await withdrawRewards(marketAddress)
+    if (signature) {
+      // Trigger confetti on successful withdrawal
+      setShowConfetti(true)
+      setTimeout(() => setShowConfetti(false), 100)
+    }
+    return signature
   }, 'Failed to withdraw funds.')
 
-  const isLoading = isLoadingInfo || isLoadingMatch || isLoadingStatus || isLoadingParticipants
-  const isError = infoError || matchError
+  const isLoadingData = isLoadingMarket || isLoadingMatch
+  const isError = marketError || matchError
 
-  if (isLoading)
+  if (isLoadingData)
     return <PageSkeleton />
 
-  if (isError || !marketInfo || (marketInfo as any)[0] === '0x0000000000000000000000000000000000000000' || !matchData) {
+  if (isError || !marketData || !matchData) {
     return (
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8" style={{ background: 'var(--bg-primary)', minHeight: '100vh' }}>
         <div
@@ -631,9 +604,9 @@ export function MarketDetail() {
     )
   }
 
-  const [, , , , , startTime] = marketInfo as any
-  const isMatchStarted = new Date() > new Date(Number(startTime) * 1000)
-  const poolSize = entryFeeValue && participantsCount ? Number(participantsCount) * Number(formatEther(entryFeeValue as bigint)) : 0
+  const startTime = marketData?.kickoffTime || 0
+  const isMatchStarted = new Date() > new Date(startTime * 1000)
+  const poolSize = marketData?.totalPool || 0
 
   const getTeamName = (index: number) => {
     if (!matchData)
@@ -738,33 +711,33 @@ export function MarketDetail() {
 
             {/* Data Visualizations */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <PredictionDistributionChart markets={[{
+              <PredictionDistributionChart markets={marketData ? [{
                 marketAddress: marketAddress!,
-                matchId: BigInt((marketInfo as any)[1]),
-                creator: (marketInfo as any)[2],
-                entryFee: (marketInfo as any)[3],
-                isPublic: (marketInfo as any)[4],
-                startTime: (marketInfo as any)[5],
-                resolved: Boolean(marketStatus),
-                participantsCount: participantsCount ? BigInt(participantsCount.toString()) : 0n,
-                homeCount: homeCount ? BigInt(homeCount.toString()) : 0n,
-                awayCount: awayCount ? BigInt(awayCount.toString()) : 0n,
-                drawCount: drawCount ? BigInt(drawCount.toString()) : 0n,
-              }]}
+                matchId: BigInt(marketData.matchId),
+                creator: marketData.creator,
+                entryFee: BigInt(marketData.entryFee * LAMPORTS_PER_SOL),
+                isPublic: marketData.isPublic,
+                startTime: BigInt(marketData.kickoffTime),
+                resolved: marketData.status === 'Resolved',
+                participantsCount: BigInt(marketData.participantCount),
+                homeCount: BigInt(marketData.homeCount),
+                awayCount: BigInt(marketData.awayCount),
+                drawCount: BigInt(marketData.drawCount),
+              }] : []}
               />
-              <PoolTrendChart markets={[{
+              <PoolTrendChart markets={marketData ? [{
                 marketAddress: marketAddress!,
-                matchId: BigInt((marketInfo as any)[1]),
-                creator: (marketInfo as any)[2],
-                entryFee: (marketInfo as any)[3],
-                isPublic: (marketInfo as any)[4],
-                startTime: (marketInfo as any)[5],
-                resolved: Boolean(marketStatus),
-                participantsCount: participantsCount ? BigInt(participantsCount.toString()) : 0n,
-                homeCount: homeCount ? BigInt(homeCount.toString()) : 0n,
-                awayCount: awayCount ? BigInt(awayCount.toString()) : 0n,
-                drawCount: drawCount ? BigInt(drawCount.toString()) : 0n,
-              }]}
+                matchId: BigInt(marketData.matchId),
+                creator: marketData.creator,
+                entryFee: BigInt(marketData.entryFee * LAMPORTS_PER_SOL),
+                isPublic: marketData.isPublic,
+                startTime: BigInt(marketData.kickoffTime),
+                resolved: marketData.status === 'Resolved',
+                participantsCount: BigInt(marketData.participantCount),
+                homeCount: BigInt(marketData.homeCount),
+                awayCount: BigInt(marketData.awayCount),
+                drawCount: BigInt(marketData.drawCount),
+              }] : []}
               />
             </div>
 
@@ -801,6 +774,7 @@ export function MarketDetail() {
               userPrediction={predictionName}
               userHasJoined={hasJoined}
               matchData={matchData}
+              entryFeeValue={entryFeeValue}
             />
             {actionStatus && (
               <div
@@ -826,7 +800,20 @@ export function MarketDetail() {
                 {actionStatus.type === 'info' && <span className="icon-[mdi--information-outline] w-5 h-5 mt-0.5" />}
                 {actionStatus.type === 'success' && <span className="icon-[mdi--check-circle-outline] w-5 h-5 mt-0.5" />}
                 {actionStatus.type === 'error' && <span className="icon-[mdi--alert-circle-outline] w-5 h-5 mt-0.5" />}
-                <p>{actionStatus.message}</p>
+                <div className="flex-1">
+                  <p>{actionStatus.message}</p>
+                  {actionStatus.signature && (
+                    <a
+                      href={getExplorerLink(actionStatus.signature)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs hover:underline mt-1 block"
+                      style={{ color: 'var(--accent-cyan)' }}
+                    >
+                      View Transaction on Solana Explorer
+                    </a>
+                  )}
+                </div>
               </div>
             )}
           </div>

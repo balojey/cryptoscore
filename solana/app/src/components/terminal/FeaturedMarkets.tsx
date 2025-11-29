@@ -1,10 +1,10 @@
 import type { Market } from '../../types'
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { formatEther } from 'viem'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { useMatchData } from '../../hooks/useMatchData'
+import { formatSOL } from '../../utils/formatters'
 
 type BadgeType = 'hot' | 'ending-soon' | 'popular'
 
@@ -32,8 +32,9 @@ function selectFeaturedMarkets(markets: Market[]): FeaturedMarket[] {
   // 1. Top 3 by pool size (Hot)
   const byPoolSize = [...activeMarkets]
     .sort((a, b) => {
-      const poolA = Number(formatEther(a.entryFee)) * Number(a.participantsCount)
-      const poolB = Number(formatEther(b.entryFee)) * Number(b.participantsCount)
+      // Convert lamports to SOL for comparison
+      const poolA = (Number(a.entryFee) * Number(a.participantsCount)) / 1_000_000_000
+      const poolB = (Number(b.entryFee) * Number(b.participantsCount)) / 1_000_000_000
       return poolB - poolA
     })
     .slice(0, 3)
@@ -41,7 +42,7 @@ function selectFeaturedMarkets(markets: Market[]): FeaturedMarket[] {
       ...market,
       badge: 'hot' as BadgeType,
       badgeLabel: '🔥 Hot',
-      poolSize: Number(formatEther(market.entryFee)) * Number(market.participantsCount),
+      poolSize: (Number(market.entryFee) * Number(market.participantsCount)) / 1_000_000_000,
     }))
 
   featured.push(...byPoolSize)
@@ -61,7 +62,7 @@ function selectFeaturedMarkets(markets: Market[]): FeaturedMarket[] {
       ...market,
       badge: 'ending-soon' as BadgeType,
       badgeLabel: '⏰ Ending Soon',
-      poolSize: Number(formatEther(market.entryFee)) * Number(market.participantsCount),
+      poolSize: (Number(market.entryFee) * Number(market.participantsCount)) / 1_000_000_000,
     }))
 
   featured.push(...endingSoon)
@@ -75,7 +76,7 @@ function selectFeaturedMarkets(markets: Market[]): FeaturedMarket[] {
       ...market,
       badge: 'popular' as BadgeType,
       badgeLabel: '👥 Popular',
-      poolSize: Number(formatEther(market.entryFee)) * Number(market.participantsCount),
+      poolSize: (Number(market.entryFee) * Number(market.participantsCount)) / 1_000_000_000,
     }))
 
   featured.push(...byParticipants)
@@ -185,7 +186,7 @@ function FeaturedMarketCard({ market }: { market: FeaturedMarket }) {
             <span className="font-mono">
               {market.poolSize.toFixed(2)}
               {' '}
-              PAS
+              SOL
             </span>
           </div>
           <div className="flex items-center gap-1" style={{ color: 'var(--text-tertiary)' }}>

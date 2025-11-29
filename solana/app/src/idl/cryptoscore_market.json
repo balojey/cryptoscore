@@ -1,0 +1,17 @@
+{
+  "version": "0.1.0",
+  "name": "cryptoscore_market",
+  "instructions": [
+    {
+      "name": "initializeMarket",
+      "accounts": [],
+      "args": []
+    }
+  ],
+  "accounts": [],
+  "events": [],
+  "errors": [],
+  "metadata": {
+    "address": "3yLMsy3gJRoYP2RNXgnrXsoFWcqVu6QeTXPejvpcCf1F"
+  }
+}

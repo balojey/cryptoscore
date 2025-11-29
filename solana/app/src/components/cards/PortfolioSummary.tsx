@@ -1,11 +1,10 @@
 import type { MarketDashboardInfo } from '../../types'
 import { useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
-import { formatEther } from 'viem'
-import { useReadContracts } from 'wagmi'
+import { useWallet } from '@solana/wallet-adapter-react'
 import { Card, CardContent } from '@/components/ui/card'
-import { CryptoScoreMarketABI } from '../../config/contracts'
-import { config, getPublicClient } from '../../config/wagmi'
+import { useMarketData } from '../../hooks/useMarketData'
+import { formatSOL } from '../../utils/formatters'
 
 interface PortfolioSummaryProps {
   userAddress?: string
@@ -13,92 +12,41 @@ interface PortfolioSummaryProps {
 }
 
 export default function PortfolioSummary({ userAddress, joinedMarkets = [] }: PortfolioSummaryProps) {
-  // Fetch user predictions and rewards for all joined markets
-  const contractCalls = useMemo(() => {
-    if (!userAddress || joinedMarkets.length === 0)
-      return []
+  const { publicKey } = useWallet()
+  const walletAddress = userAddress || publicKey?.toString()
 
-    const calls = joinedMarkets.flatMap(market => [
-      {
-        address: market.marketAddress,
-        abi: CryptoScoreMarketABI as any,
-        functionName: 'getUserPrediction' as const,
-        args: [userAddress] as const,
-      },
-      {
-        address: market.marketAddress,
-        abi: CryptoScoreMarketABI as any,
-        functionName: 'rewards' as const,
-        args: [userAddress] as const,
-      },
-    ])
-
-    return calls
-  }, [userAddress, joinedMarkets])
-
-  const { data: contractData } = useReadContracts({
-    contracts: contractCalls,
-    query: {
-      enabled: contractCalls.length > 0,
-    },
-  })
-
-  // Fetch withdrawn rewards by listening to Withdrawn events
-  const { data: withdrawnRewards = {} } = useQuery({
-    queryKey: ['withdrawnRewards', userAddress, joinedMarkets.map(m => m.marketAddress).join(',')],
+  // For now, we'll use a simplified approach since we don't have the full Solana integration yet
+  // This will be enhanced when the Solana hooks are fully implemented
+  const { data: portfolioData } = useQuery({
+    queryKey: ['portfolioData', walletAddress, joinedMarkets.map(m => m.marketAddress).join(',')],
     queryFn: async () => {
-      if (!userAddress || joinedMarkets.length === 0)
-        return {}
+      if (!walletAddress || joinedMarkets.length === 0) {
+        return {
+          userMarketData: [],
+          withdrawnRewards: {},
+        }
+      }
 
-      const publicClient = getPublicClient(config)
-      if (!publicClient)
-        return {}
+      // TODO: Implement Solana-specific data fetching
+      // For now, return mock data structure
+      const userMarketData = joinedMarkets.map(market => ({
+        market,
+        prediction: 0, // Will be fetched from Solana program
+        reward: 0, // Will be fetched from Solana program
+        hasWithdrawn: false, // Will be fetched from Solana program
+      }))
 
-      const withdrawnByMarket: Record<string, bigint> = {}
-
-      // Fetch Withdrawn events for each market
-      await Promise.all(
-        joinedMarkets.map(async (market) => {
-          try {
-            const logs = await publicClient.getLogs({
-              address: market.marketAddress,
-              event: {
-                type: 'event',
-                name: 'Withdrawn',
-                inputs: [
-                  { type: 'address', indexed: true, name: 'user' },
-                  { type: 'uint256', indexed: false, name: 'amount' },
-                ],
-              },
-              args: {
-                user: userAddress as `0x${string}`,
-              },
-              fromBlock: 0n,
-              toBlock: 'latest',
-            })
-
-            // Sum all withdrawal amounts for this market
-            const totalWithdrawn = logs.reduce((sum: bigint, log: any) => {
-              return sum + (log.args.amount || 0n)
-            }, 0n)
-
-            withdrawnByMarket[market.marketAddress] = totalWithdrawn
-          }
-          catch (error) {
-            console.error(`Error fetching withdrawals for market ${market.marketAddress}:`, error)
-            withdrawnByMarket[market.marketAddress] = 0n
-          }
-        }),
-      )
-
-      return withdrawnByMarket
+      return {
+        userMarketData,
+        withdrawnRewards: {} as Record<string, number>,
+      }
     },
-    enabled: !!userAddress && joinedMarkets.length > 0,
+    enabled: !!walletAddress && joinedMarkets.length > 0,
     staleTime: 30000, // Cache for 30 seconds
   })
 
   const stats = useMemo(() => {
-    if (!userAddress) {
+    if (!walletAddress) {
       return {
         totalValue: 0,
         activePositions: 0,
@@ -114,31 +62,22 @@ export default function PortfolioSummary({ userAddress, joinedMarkets = [] }: Po
     const activePositions = joinedMarkets.filter(m => !m.resolved).length
     const resolvedPositions = joinedMarkets.filter(m => m.resolved).length
 
-    // Parse contract data to get predictions and rewards
-    const userMarketData = joinedMarkets.map((market, index) => {
-      const predictionResult = contractData?.[index * 2]
-      const rewardResult = contractData?.[index * 2 + 1]
+    const userMarketData = portfolioData?.userMarketData || []
+    const withdrawnRewards = portfolioData?.withdrawnRewards || {}
 
-      return {
-        market,
-        prediction: predictionResult?.status === 'success' ? Number(predictionResult.result) : 0,
-        reward: rewardResult?.status === 'success' ? rewardResult.result as bigint : 0n,
-      }
-    })
-
-    // Calculate total invested (entry fees for all participated markets)
+    // Calculate total invested (entry fees for all participated markets) - convert from lamports to SOL
     const totalInvested = joinedMarkets.reduce((sum, m) => {
-      return sum + Number(formatEther(m.entryFee))
+      return sum + (m.entryFee / 1_000_000_000) // Convert lamports to SOL
     }, 0)
 
-    // Calculate total claimable rewards (not yet withdrawn)
+    // Calculate total claimable rewards (not yet withdrawn) - convert from lamports to SOL
     const totalClaimableRewards = userMarketData.reduce((sum, data) => {
-      return sum + Number(formatEther(data.reward))
+      return sum + (data.reward / 1_000_000_000) // Convert lamports to SOL
     }, 0)
 
-    // Calculate total withdrawn rewards (already claimed)
+    // Calculate total withdrawn rewards (already claimed) - convert from lamports to SOL
     const totalWithdrawnRewards = Object.values(withdrawnRewards).reduce((sum, amount) => {
-      return sum + Number(formatEther(amount))
+      return sum + (amount / 1_000_000_000) // Convert lamports to SOL
     }, 0)
 
     // Calculate wins and losses based on actual predictions
@@ -173,7 +112,7 @@ export default function PortfolioSummary({ userAddress, joinedMarkets = [] }: Po
     // Active positions value = entry fees for unresolved markets
     const activePositionsValue = joinedMarkets
       .filter(m => !m.resolved)
-      .reduce((sum, m) => sum + Number(formatEther(m.entryFee)), 0)
+      .reduce((sum, m) => sum + (m.entryFee / 1_000_000_000), 0) // Convert lamports to SOL
 
     const totalValue = activePositionsValue + totalClaimableRewards
 
@@ -186,7 +125,7 @@ export default function PortfolioSummary({ userAddress, joinedMarkets = [] }: Po
       winRate,
       totalPnL,
     }
-  }, [userAddress, joinedMarkets, contractData])
+  }, [walletAddress, joinedMarkets, portfolioData])
 
   const StatCard = ({
     label,
@@ -237,7 +176,7 @@ export default function PortfolioSummary({ userAddress, joinedMarkets = [] }: Po
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <StatCard
         label="Portfolio Value"
-        value={`${stats.totalValue.toFixed(2)} PAS`}
+        value={formatSOL(stats.totalValue * 1_000_000_000, 2)} // Convert back to lamports for formatting
         icon="mdi--wallet-outline"
         color="var(--accent-cyan)"
         subtitle="Invested + profits"
@@ -262,7 +201,7 @@ export default function PortfolioSummary({ userAddress, joinedMarkets = [] }: Po
 
       <StatCard
         label="P&L"
-        value={`${stats.totalPnL >= 0 ? '+' : ''}${stats.totalPnL.toFixed(2)} PAS`}
+        value={`${stats.totalPnL >= 0 ? '+' : ''}${formatSOL(Math.abs(stats.totalPnL) * 1_000_000_000, 2, false)} SOL`}
         icon="mdi--chart-line"
         color={stats.totalPnL >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'}
         subtitle={stats.totalPnL >= 0 ? 'Profit' : 'Loss'}

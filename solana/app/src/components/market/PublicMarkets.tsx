@@ -1,10 +1,9 @@
 import type { Market } from '../../types'
 import type { FilterOptions } from './MarketFilters'
 import { useMemo, useState } from 'react'
-import { useAccount, useReadContract, useReadContracts } from 'wagmi'
-import { CRYPTO_SCORE_FACTORY_ADDRESS, CryptoScoreFactoryABI, CryptoScoreMarketABI } from '../../config/contracts'
+import { useWallet } from '@solana/wallet-adapter-react'
 import { useFilteredMarkets } from '../../hooks/useFilteredMarkets'
-import { useRealtimeMarkets } from '../../hooks/useRealtimeMarkets'
+import { useAllMarkets } from '../../hooks/useMarketData'
 import EnhancedMarketCard, { EnhancedMarketCardSkeleton } from '../cards/EnhancedMarketCard'
 import VirtualMarketList from '../VirtualMarketList'
 import MarketFilters from './MarketFilters'
@@ -12,134 +11,67 @@ import MarketFilters from './MarketFilters'
 const PAGE_SIZE = 12 // Can increase now since we're not hitting gas limits
 
 export default function PublicMarkets() {
-  const { address } = useAccount()
+  const { publicKey } = useWallet()
   const [currentPage, setCurrentPage] = useState(0)
   const [filters, setFilters] = useState<FilterOptions>({
     status: 'all',
     sortBy: 'newest',
   })
 
-  // Get all markets from factory (lightweight call)
-  const { data: factoryMarkets, isLoading: isLoadingFactory, isError, error, refetch } = useReadContract({
-    address: CRYPTO_SCORE_FACTORY_ADDRESS as `0x${string}`,
-    abi: CryptoScoreFactoryABI,
-    functionName: 'getAllMarkets',
-  })
+  // Get all markets from Solana Dashboard program
+  const { data: allMarketsData, isLoading, isError, error, refetch } = useAllMarkets(currentPage, PAGE_SIZE)
 
   // Filter public markets and exclude user's own markets
-  const publicMarketAddresses = useMemo(() => {
-    if (!factoryMarkets || !Array.isArray(factoryMarkets))
-      return []
-
-    return factoryMarkets
-      .filter((m: any) => m.isPublic && (!address || m.creator.toLowerCase() !== address.toLowerCase()))
-      .map((m: any) => m.marketAddress)
-  }, [factoryMarkets, address])
-
-  // Paginate addresses
-  const paginatedAddresses = useMemo(() => {
-    const start = currentPage * PAGE_SIZE
-    const end = start + PAGE_SIZE
-    return publicMarketAddresses.slice(start, end)
-  }, [publicMarketAddresses, currentPage])
-
-  // Fetch detailed data for current page markets
-  const marketContracts = useMemo(() => {
-    return paginatedAddresses.flatMap((addr: string) => [
-      {
-        address: addr as `0x${string}`,
-        abi: CryptoScoreMarketABI as any,
-        functionName: 'resolved' as const,
-      },
-      {
-        address: addr as `0x${string}`,
-        abi: CryptoScoreMarketABI as any,
-        functionName: 'winner' as const,
-      },
-      {
-        address: addr as `0x${string}`,
-        abi: CryptoScoreMarketABI as any,
-        functionName: 'getParticipantsCount' as const,
-      },
-      {
-        address: addr as `0x${string}`,
-        abi: CryptoScoreMarketABI as any,
-        functionName: 'getPredictionCounts' as const,
-      },
-    ])
-  }, [paginatedAddresses])
-
-  const { data: marketDetails, isLoading: isLoadingDetails } = useReadContracts({
-    contracts: marketContracts,
-    query: {
-      enabled: paginatedAddresses.length > 0,
-    },
-  })
-
-  // Combine factory data with market details
   const markets = useMemo(() => {
-    if (!factoryMarkets || !marketDetails || !Array.isArray(factoryMarkets))
+    if (!allMarketsData || !Array.isArray(allMarketsData))
       return []
 
-    const result: Market[] = []
-
-    paginatedAddresses.forEach((addr: string, idx: number) => {
-      const factoryInfo = (factoryMarkets as any[]).find((m: any) => m.marketAddress === addr)
-      if (!factoryInfo)
-        return
-
-      const baseIdx = idx * 4
-      const resolved = marketDetails[baseIdx]?.result as boolean
-      const participantsCount = marketDetails[baseIdx + 2]?.result as bigint
-      const predictionCounts = marketDetails[baseIdx + 3]?.result as [bigint, bigint, bigint]
-
-      result.push({
-        marketAddress: addr as `0x${string}`,
-        matchId: BigInt(factoryInfo.matchId?.toString() || '0'),
-        creator: factoryInfo.creator,
-        entryFee: BigInt(factoryInfo.entryFee?.toString() || '0'),
-        resolved: resolved ?? false,
-        participantsCount: participantsCount ? BigInt(participantsCount.toString()) : BigInt(0),
-        isPublic: factoryInfo.isPublic,
-        startTime: BigInt(factoryInfo.startTime?.toString() || '0'),
-        homeCount: predictionCounts ? BigInt(predictionCounts[0]?.toString() || '0') : BigInt(0),
-        awayCount: predictionCounts ? BigInt(predictionCounts[1]?.toString() || '0') : BigInt(0),
-        drawCount: predictionCounts ? BigInt(predictionCounts[2]?.toString() || '0') : BigInt(0),
+    return allMarketsData
+      .filter((marketData) => {
+        // Only show public markets
+        if (!marketData.isPublic) return false
+        
+        // Exclude user's own markets
+        if (publicKey && marketData.creator === publicKey.toString()) return false
+        
+        return true
       })
-    })
+      .map((marketData): Market => ({
+        marketAddress: marketData.marketAddress,
+        matchId: BigInt(marketData.matchId),
+        creator: marketData.creator,
+        entryFee: BigInt(marketData.entryFee),
+        resolved: marketData.status === 'Resolved',
+        participantsCount: BigInt(marketData.participantCount),
+        isPublic: marketData.isPublic,
+        startTime: BigInt(marketData.kickoffTime),
+        homeCount: BigInt(marketData.homeCount),
+        awayCount: BigInt(marketData.awayCount),
+        drawCount: BigInt(marketData.drawCount),
+      }))
+  }, [allMarketsData, publicKey])
 
-    return result
-  }, [factoryMarkets, marketDetails, paginatedAddresses])
+  // Apply filters and sorting
+  const filteredMarkets = useFilteredMarkets(markets, filters)
 
-  const isLoading = isLoadingFactory || isLoadingDetails
-
-  // Enable real-time updates
-  useRealtimeMarkets({
-    enabled: true,
-    interval: 10000, // Poll every 10 seconds
-    onUpdate: () => {
-      refetch()
-    },
-  })
-
-  const totalPages = Math.ceil(publicMarketAddresses.length / PAGE_SIZE)
+  // Pagination controls
+  const totalPages = Math.ceil(filteredMarkets.length / PAGE_SIZE)
   const hasMore = currentPage < totalPages - 1
   const hasPrev = currentPage > 0
 
   const handleNextPage = () => {
     if (hasMore) {
       setCurrentPage(prev => prev + 1)
+      refetch()
     }
   }
 
   const handlePrevPage = () => {
     if (hasPrev) {
       setCurrentPage(prev => prev - 1)
+      refetch()
     }
   }
-
-  // Apply filters and sorting - MUST be called before any conditional returns
-  const filteredMarkets = useFilteredMarkets(markets, filters)
 
   const PaginationButton = ({ onClick, disabled, children }: { onClick: () => void, disabled: boolean, children: React.ReactNode }) => (
     <button
@@ -165,7 +97,7 @@ export default function PublicMarkets() {
   }
 
   if (isError) {
-    console.error('Contract read error:', error)
+    console.error('Error loading markets:', error)
     return (
       <div
         className="px-6 py-4 rounded-[16px] text-center"
@@ -177,12 +109,12 @@ export default function PublicMarkets() {
         role="alert"
       >
         <h4 className="font-bold mb-1">Error Loading Markets</h4>
-        <p className="text-sm">{(error as any)?.shortMessage || (error as any)?.message || 'Failed to load markets. Please try again later.'}</p>
+        <p className="text-sm">{(error as any)?.message || 'Failed to load markets. Please try again later.'}</p>
       </div>
     )
   }
 
-  if (!isLoading && publicMarketAddresses.length === 0) {
+  if (!isLoading && markets.length === 0) {
     return (
       <div
         className="text-center py-16 border-2 border-dashed rounded-[16px]"

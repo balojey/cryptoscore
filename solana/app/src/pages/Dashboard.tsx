@@ -2,7 +2,7 @@ import type { FilterOptions } from '../components/market/MarketFilters'
 import type { MarketDashboardInfo } from '../types'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useAccount, useReadContract } from 'wagmi'
+import { useWallet } from '@solana/wallet-adapter-react'
 import EnhancedMarketCard, { EnhancedMarketCardSkeleton } from '../components/cards/EnhancedMarketCard'
 import PortfolioSummary from '../components/cards/PortfolioSummary'
 import PoolTrendChart from '../components/charts/PoolTrendChart'
@@ -11,7 +11,7 @@ import MarketFilters from '../components/market/MarketFilters'
 import PerformanceChart from '../components/PerformanceChart'
 import RecentActivity from '../components/RecentActivity'
 import VirtualMarketList from '../components/VirtualMarketList'
-import { CRYPTO_SCORE_DASHBOARD_ADDRESS, CryptoScoreDashboardABI } from '../config/contracts'
+import { useDashboardData } from '../hooks/useDashboardData'
 import { useFilteredMarkets } from '../hooks/useFilteredMarkets'
 
 function MarketList({ markets, isLoading, emptyMessage, emptyIcon }: {
@@ -64,67 +64,26 @@ function MarketList({ markets, isLoading, emptyMessage, emptyIcon }: {
 }
 
 export function Dashboard() {
-  const { address } = useAccount()
+  const { publicKey } = useWallet()
   const [activeTab, setActiveTab] = useState<'created' | 'joined'>('created')
   const [filters, setFilters] = useState<FilterOptions>({
     status: 'all',
     sortBy: 'newest',
   })
 
-  const { data: allInvolvedCreatedMarkets, isLoading: isLoadingCreated } = useReadContract({
-    abi: CryptoScoreDashboardABI,
-    address: CRYPTO_SCORE_DASHBOARD_ADDRESS,
-    functionName: 'getUserMarketsDashboardPaginated',
-    args: [address as `0x${string}`, 0, 100, true],
-    query: { enabled: !!address },
-  }) as { data: MarketDashboardInfo[] | undefined, isLoading: boolean }
-
-  const { data: allInvolvedJoinedMarkets, isLoading: isLoadingJoined } = useReadContract({
-    abi: CryptoScoreDashboardABI,
-    address: CRYPTO_SCORE_DASHBOARD_ADDRESS,
-    functionName: 'getUserMarketsDashboardPaginated',
-    args: [address as `0x${string}`, 0, 100, false],
-    query: { enabled: !!address },
-  }) as { data: MarketDashboardInfo[] | undefined, isLoading: boolean }
-
-  const allInvolvedMarkets = useMemo(() => {
-    if (!allInvolvedCreatedMarkets && !allInvolvedJoinedMarkets)
-      return []
-
-    const combinedMarkets = [
-      ...(allInvolvedCreatedMarkets || []),
-      ...(allInvolvedJoinedMarkets || []),
-    ]
-
-    // Remove duplicates based on marketAddress
-    const uniqueMarketsMap = new Map<string, MarketDashboardInfo>()
-    combinedMarkets.forEach((market) => {
-      uniqueMarketsMap.set(market.marketAddress, market)
-    })
-
-    // Convert back to array and sort by starting date
-    const uniqueMarkets = Array.from(uniqueMarketsMap.values())
-    uniqueMarkets.sort((a, b) => Number(b.startTime) - Number(a.startTime))
-
-    return uniqueMarkets
-  }, [allInvolvedCreatedMarkets, allInvolvedJoinedMarkets])
-
-  const { createdMarkets, joinedMarkets } = useMemo(() => {
-    // Use the original API responses directly:
-    // - allInvolvedCreatedMarkets: Markets user created
-    // - allInvolvedJoinedMarkets: Markets user participated in (placed predictions)
-    // Note: A market can appear in both if user created it AND participated in it
-    return {
-      createdMarkets: allInvolvedCreatedMarkets || [],
-      joinedMarkets: allInvolvedJoinedMarkets || [],
-    }
-  }, [allInvolvedCreatedMarkets, allInvolvedJoinedMarkets])
+  // Fetch dashboard data using Solana-compatible hook
+  const {
+    createdMarkets,
+    joinedMarkets,
+    allInvolvedMarkets,
+    isLoading,
+  } = useDashboardData(publicKey?.toString())
 
   // Apply filters to markets
   const filteredCreatedMarkets = useFilteredMarkets<MarketDashboardInfo>(createdMarkets, filters)
   const filteredJoinedMarkets = useFilteredMarkets<MarketDashboardInfo>(joinedMarkets, filters)
 
-  if (!address) {
+  if (!publicKey) {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
@@ -141,7 +100,7 @@ export function Dashboard() {
             Connect Your Wallet
           </h1>
           <p className="text-lg mb-6" style={{ color: 'var(--text-secondary)' }}>
-            Please connect your wallet to view your markets and portfolio.
+            Please connect your Solana wallet to view your markets and portfolio.
           </p>
           <Link to="/" className="btn-primary btn-lg">
             <span className="icon-[mdi--home] w-5 h-5" />
@@ -229,7 +188,7 @@ export function Dashboard() {
         {/* Portfolio Summary */}
         <div className="mb-8">
           <PortfolioSummary
-            userAddress={address}
+            userAddress={publicKey.toString()}
             joinedMarkets={joinedMarkets}
           />
         </div>
@@ -291,7 +250,7 @@ export function Dashboard() {
           {activeTab === 'created' && (
             <MarketList
               markets={filteredCreatedMarkets}
-              isLoading={isLoadingCreated || isLoadingJoined}
+              isLoading={isLoading}
               emptyMessage={
                 filters.status !== 'all' || filters.timeRange || filters.minPoolSize || filters.minEntryFee
                   ? 'No markets match your filters'
@@ -307,7 +266,7 @@ export function Dashboard() {
           {activeTab === 'joined' && (
             <MarketList
               markets={filteredJoinedMarkets}
-              isLoading={isLoadingCreated || isLoadingJoined}
+              isLoading={isLoading}
               emptyMessage={
                 filters.status !== 'all' || filters.timeRange || filters.minPoolSize || filters.minEntryFee
                   ? 'No markets match your filters'

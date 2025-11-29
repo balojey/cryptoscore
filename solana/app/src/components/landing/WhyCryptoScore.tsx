@@ -17,7 +17,7 @@ const benefits: BenefitItem[] = [
     icon: 'mdi--shield-lock-outline',
     title: 'No Intermediaries',
     description: 'Your funds, your control. Smart contracts handle everything automatically.',
-    expandedDetails: 'Unlike traditional betting platforms that hold your funds in centralized accounts, CryptoScore uses smart contracts on Polkadot. You maintain full custody until you choose to participate, and payouts are automatic with no withdrawal delays or approval processes.',
+    expandedDetails: 'Unlike traditional betting platforms that hold your funds in centralized accounts, CryptoScore uses smart contracts on Solana. You maintain full custody until you choose to participate, and payouts are automatic with no withdrawal delays or approval processes.',
     color: 'var(--accent-cyan)',
   },
   {

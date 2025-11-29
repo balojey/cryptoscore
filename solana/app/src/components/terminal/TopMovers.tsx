@@ -1,9 +1,9 @@
 import type { Market } from '../../types'
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { formatEther } from 'viem'
 import { Card, CardContent } from '@/components/ui/card'
 import { useMatchData } from '../../hooks/useMatchData'
+import { formatSOL } from '../../utils/formatters'
 
 type ChangeMetric = 'pool' | 'participants' | 'distribution'
 type ChangeDirection = 'up' | 'down'
@@ -37,7 +37,8 @@ function calculateTopMovers(markets: Market[]): TopMover[] {
   const recentHighPoolMarkets = activeMarkets
     .filter(m => Number(m.startTime) >= oneDayAgo)
     .map((market) => {
-      const poolSize = Number(formatEther(market.entryFee)) * Number(market.participantsCount)
+      // Convert lamports to SOL
+      const poolSize = (Number(market.entryFee) * Number(market.participantsCount)) / 1_000_000_000
       // Simulate change percentage based on pool size and participants
       const changePercent = Math.min(100, (Number(market.participantsCount) * 10))
 
@@ -66,7 +67,7 @@ function calculateTopMovers(markets: Market[]): TopMover[] {
         change: participantChange,
         metric: 'participants' as ChangeMetric,
         direction: 'up' as ChangeDirection,
-        poolSize: Number(formatEther(market.entryFee)) * Number(market.participantsCount),
+        poolSize: (Number(market.entryFee) * Number(market.participantsCount)) / 1_000_000_000,
       }
     })
     .sort((a, b) => b.change - a.change)
@@ -100,7 +101,7 @@ function calculateTopMovers(markets: Market[]): TopMover[] {
         change: variance,
         metric: 'distribution' as ChangeMetric,
         direction: 'up' as ChangeDirection,
-        poolSize: Number(formatEther(market.entryFee)) * Number(market.participantsCount),
+        poolSize: (Number(market.entryFee) * Number(market.participantsCount)) / 1_000_000_000,
       }
     })
     .sort((a, b) => b.change - a.change)
@@ -212,7 +213,7 @@ function MoverCard({ mover }: { mover: TopMover }) {
             <span className="font-mono">
               {mover.poolSize.toFixed(2)}
               {' '}
-              PAS
+              SOL
             </span>
           </div>
           <div className="flex items-center gap-1">

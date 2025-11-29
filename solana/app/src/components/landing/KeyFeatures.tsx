@@ -11,7 +11,7 @@ const features: FeatureItem[] = [
   {
     icon: 'mdi--shield-check-outline',
     title: 'Fully Decentralized',
-    description: 'No intermediaries. Your funds are secured by smart contracts on Polkadot',
+    description: 'No intermediaries. Your funds are secured by smart contracts on Solana',
     color: 'var(--accent-cyan)',
   },
   {

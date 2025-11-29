@@ -1,8 +1,8 @@
 import type { MarketProps } from '../../types'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { parseEther, parseEventLogs } from 'viem'
-import { useAccount, useReadContract, useTransactionReceipt, useWriteContract } from 'wagmi'
+import { useWallet } from '@solana/wallet-adapter-react'
+import { LAMPORTS_PER_SOL } from '@solana/web3.js'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
@@ -15,52 +15,38 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { CRYPTO_SCORE_FACTORY_ADDRESS, CryptoScoreFactoryABI } from '../../config/contracts'
+import { useMarketActions } from '../../hooks/useMarketActions'
 import { MarqueeText } from '../MarqueeText'
+import { formatSOL } from '../../utils/formatters'
 
 export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: MarketProps) {
-  const { address: userAddress } = useAccount()
+  const { publicKey: userAddress } = useWallet()
   const [isCreating, setIsCreating] = useState(false)
-  const [newlyCreatedMarket, setNewlyCreatedMarket] = useState<{ matchId: number, address: `0x${string}` } | null>(null)
-  const [entryFee, setEntryFee] = useState('100')
+  const [newlyCreatedMarket, setNewlyCreatedMarket] = useState<{ matchId: number, address: string } | null>(null)
+  const [entryFee, setEntryFee] = useState('0.1') // Default to 0.1 SOL
   const [isPublic, setIsPublic] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [transactionStatus, setTransactionStatus] = useState<{
+    type: 'info' | 'success' | 'error'
+    message: string
+    signature?: string
+  } | null>(null)
 
-  const { data: txHash, writeContract, isPending: isCreateMarketLoading, error: writeContractError } = useWriteContract()
-  const { data: receipt, isLoading: isTxLoading, isSuccess: isTxSuccess } = useTransactionReceipt({
-    hash: txHash,
-  })
+  const { createMarket, isLoading: isCreateMarketLoading } = useMarketActions()
 
-  // When a market is created, parse the logs to find the new market address
+  // Clear transaction status after some time
   useEffect(() => {
-    if (isTxSuccess && receipt) {
-      const logs = parseEventLogs({
-        abi: CryptoScoreFactoryABI,
-        logs: receipt.logs,
-        eventName: 'MarketCreated',
-      }) as any[]
-
-      const marketLog = logs.find((log: any) => log.args?.matchId === BigInt(match.id) && log.args?.creator === userAddress)
-
-      if (marketLog?.args?.marketAddress) {
-        setNewlyCreatedMarket({ matchId: match.id, address: marketLog.args.marketAddress as `0x${string}` })
-      }
-      // Refetch markets to update the parent state
-      refetchMarkets()
-      setIsCreating(false)
+    if (transactionStatus?.type === 'success' || transactionStatus?.type === 'error') {
+      const timer = setTimeout(() => {
+        setTransactionStatus(null)
+        if (transactionStatus.type === 'success') {
+          setIsCreating(false)
+          refetchMarkets()
+        }
+      }, 5000)
+      return () => clearTimeout(timer)
     }
-  }, [isTxSuccess, receipt, refetchMarkets, match.id, userAddress])
-
-  // Fallback: If userHasMarket is true but address is missing, fetch it directly
-  const { data: fetchedMarkets } = useReadContract({
-    address: CRYPTO_SCORE_FACTORY_ADDRESS,
-    abi: CryptoScoreFactoryABI,
-    functionName: 'getMarkets',
-    args: [match.id],
-    query: {
-      enabled: userHasMarket && !marketAddress,
-    },
-  })
+  }, [transactionStatus, refetchMarkets])
 
   const getEffectiveMarketAddress = () => {
     // Priority 1: Newly created market in this component instance
@@ -71,41 +57,61 @@ export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: 
     if (marketAddress) {
       return marketAddress
     }
-    // Priority 3: Fallback fetch for existing markets
-    if (Array.isArray(fetchedMarkets) && fetchedMarkets.length > 0) {
-      return fetchedMarkets[0] // Assuming the first market is the relevant one
-    }
     return undefined
   }
 
   const effectiveMarketAddress = getEffectiveMarketAddress()
   const hasMarket = userHasMarket || !!effectiveMarketAddress
 
-  const handleCreateMarket = () => {
+  const handleCreateMarket = async () => {
     setError(null)
+    setTransactionStatus(null)
+
     if (Number(entryFee) <= 0) {
       setError('Entry fee must be greater than 0.')
       return
     }
 
-    try {
-      const entryFeeWei = parseEther(entryFee)
-      const startTime = Math.floor(new Date(match.utcDate).getTime() / 1000)
-
-      writeContract({
-        address: CRYPTO_SCORE_FACTORY_ADDRESS,
-        abi: CryptoScoreFactoryABI,
-        functionName: 'createMarket',
-        args: [match.id, entryFeeWei, isPublic, startTime],
-      })
+    if (!userAddress) {
+      setError('Please connect your wallet first.')
+      return
     }
-    catch (e) {
-      setError('Invalid entry fee value.')
-      console.error(e)
+
+    try {
+      setTransactionStatus({ type: 'info', message: 'Creating market...' })
+      
+      const entryFeeLamports = Math.floor(Number(entryFee) * LAMPORTS_PER_SOL)
+      const kickoffTime = Math.floor(new Date(match.utcDate).getTime() / 1000)
+      const endTime = kickoffTime + (2 * 60 * 60) // 2 hours after kickoff
+
+      const signature = await createMarket({
+        matchId: match.id.toString(),
+        entryFee: entryFeeLamports,
+        kickoffTime,
+        endTime,
+        isPublic,
+      })
+
+      setTransactionStatus({
+        type: 'success',
+        message: 'Market created successfully!',
+        signature,
+      })
+
+      // Set the newly created market (we'll get the actual address from the program)
+      setNewlyCreatedMarket({ matchId: match.id, address: 'pending' })
+    }
+    catch (e: any) {
+      console.error('Failed to create market:', e)
+      setError(e.message || 'Failed to create market.')
+      setTransactionStatus({
+        type: 'error',
+        message: e.message || 'Failed to create market.',
+      })
     }
   }
 
-  const isLoading = isCreateMarketLoading || isTxLoading
+  const isLoading = isCreateMarketLoading
 
   const TeamDisplay = ({ team }: { team: { name: string, crest: string } }) => (
     <div className="flex flex-col items-center gap-2 w-2/5 text-center">
@@ -193,15 +199,29 @@ export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: 
                 {/* Entry Fee */}
                 <div>
                   <label htmlFor={`entryFee-${match.id}`} className="font-sans text-xs font-medium mb-2 block" style={{ color: 'var(--text-tertiary)' }}>
-                    Entry Fee (PAS)
+                    Entry Fee (SOL)
                   </label>
                   <Input
                     id={`entryFee-${match.id}`}
                     type="number"
+                    step="0.001"
+                    min="0.001"
+                    max="100"
                     value={entryFee}
                     onChange={e => setEntryFee(e.target.value)}
-                    placeholder="e.g., 100"
+                    placeholder="e.g., 0.1"
+                    disabled={isLoading}
                   />
+                  <div className="flex justify-between items-center mt-1">
+                    <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                      Minimum: 0.001 SOL
+                    </p>
+                    {Number(entryFee) > 0 && (
+                      <p className="text-xs font-mono" style={{ color: 'var(--accent-cyan)' }}>
+                        ≈ ${(Number(entryFee) * 100).toFixed(2)} USD
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 {/* Public Toggle */}
@@ -216,16 +236,67 @@ export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: 
                   </label>
                 </div>
 
-                {/* Error Messages */}
+                {/* Status Messages */}
                 {error && (
-                  <p className="text-xs text-center" style={{ color: 'var(--error)' }}>
-                    {error}
-                  </p>
+                  <div className="text-xs text-center p-3 rounded-lg" style={{ 
+                    background: 'rgba(255, 51, 102, 0.1)', 
+                    border: '1px solid var(--accent-red)',
+                    color: 'var(--accent-red)' 
+                  }}>
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="icon-[mdi--alert-circle-outline] w-4 h-4" />
+                      <p>{error}</p>
+                    </div>
+                  </div>
                 )}
-                {writeContractError && (
-                  <p className="text-xs text-center" style={{ color: 'var(--error)' }}>
-                    {(writeContractError as any).shortMessage || 'Transaction failed.'}
-                  </p>
+                {transactionStatus && (
+                  <div 
+                    className="text-xs text-center p-3 rounded-lg space-y-2"
+                    style={{
+                      background: transactionStatus.type === 'success' 
+                        ? 'rgba(0, 255, 136, 0.1)' 
+                        : transactionStatus.type === 'error'
+                          ? 'rgba(255, 51, 102, 0.1)'
+                          : 'rgba(0, 212, 255, 0.1)',
+                      border: `1px solid ${transactionStatus.type === 'success' 
+                        ? 'var(--accent-green)' 
+                        : transactionStatus.type === 'error'
+                          ? 'var(--accent-red)'
+                          : 'var(--accent-cyan)'}`,
+                      color: transactionStatus.type === 'success' 
+                        ? 'var(--accent-green)' 
+                        : transactionStatus.type === 'error'
+                          ? 'var(--accent-red)'
+                          : 'var(--accent-cyan)'
+                    }}
+                  >
+                    <div className="flex items-center justify-center gap-2">
+                      {transactionStatus.type === 'info' && <span className="icon-[mdi--loading] animate-spin w-4 h-4" />}
+                      {transactionStatus.type === 'success' && <span className="icon-[mdi--check-circle-outline] w-4 h-4" />}
+                      {transactionStatus.type === 'error' && <span className="icon-[mdi--alert-circle-outline] w-4 h-4" />}
+                      <p>{transactionStatus.message}</p>
+                    </div>
+                    {transactionStatus.signature && (
+                      <div className="pt-2 border-t" style={{ borderColor: 'currentColor', opacity: 0.3 }}>
+                        <a
+                          href={`https://explorer.solana.com/tx/${transactionStatus.signature}?cluster=${import.meta.env.VITE_SOLANA_NETWORK || 'devnet'}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs hover:underline flex items-center justify-center gap-1"
+                          style={{ color: 'var(--accent-cyan)' }}
+                        >
+                          <span className="icon-[mdi--open-in-new] w-3 h-3" />
+                          View on Solana Explorer
+                        </a>
+                        <div className="mt-1 p-2 rounded font-mono text-xs break-all" style={{ 
+                          background: 'var(--bg-secondary)',
+                          color: 'var(--text-tertiary)'
+                        }}>
+                          {transactionStatus.signature}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
 
@@ -239,11 +310,19 @@ export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: 
                 <Button
                   variant="success"
                   onClick={handleCreateMarket}
-                  disabled={isLoading}
+                  disabled={isLoading || !!transactionStatus}
                   className="gap-2"
                 >
-                  {isLoading && <span className="icon-[mdi--loading] animate-spin" />}
-                  <span>{isLoading ? 'Creating...' : 'Create Market'}</span>
+                  {isLoading && <span className="icon-[mdi--loading] animate-spin w-4 h-4" />}
+                  {transactionStatus?.type === 'success' && <span className="icon-[mdi--check-circle-outline] w-4 h-4" />}
+                  <span>
+                    {isLoading 
+                      ? 'Creating Market...' 
+                      : transactionStatus?.type === 'success'
+                        ? 'Market Created!'
+                        : 'Create Market'
+                    }
+                  </span>
                 </Button>
               </DialogFooter>
             </DialogContent>

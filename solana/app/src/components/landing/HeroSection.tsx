@@ -76,7 +76,7 @@ export default function HeroSection() {
             className="text-lg sm:text-xl md:text-2xl"
             style={{ color: 'var(--text-secondary)' }}
           >
-            Built on Polkadot. Powered by Community.
+            Built on Solana. Powered by Community.
           </p>
         </div>
 

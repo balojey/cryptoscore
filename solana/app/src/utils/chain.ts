@@ -1,19 +1,33 @@
-import type { Client } from 'viem'
-import { addChain, switchChain } from 'viem/actions'
-import { passetHub } from '../config/wagmi'
+// Solana network utilities
+// This file replaces the old Polkadot chain switching utilities
 
-export async function ensurePaseoTestnet(client: Client): Promise<void> {
+import { Connection } from '@solana/web3.js'
+import { currentNetwork, getHealthyConnection } from '../config/solana'
+
+/**
+ * Ensures connection to Solana network
+ * Replaces the old ensurePaseoTestnet function
+ */
+export async function ensureSolanaNetwork(): Promise<Connection> {
   try {
-    // Try to switch to the chain first
-    await switchChain(client, { id: passetHub.id })
+    // Get a healthy connection with automatic fallback
+    const connection = await getHealthyConnection()
+    
+    // Verify connection is working
+    await connection.getLatestBlockhash('confirmed')
+    
+    console.log(`Connected to ${currentNetwork.name}`)
+    return connection
   }
   catch (error) {
-    // If chain doesn't exist, add it
-    if (error instanceof Error && (('code' in error && error.code === 4902) || error.name === 'ChainNotConfiguredError')) {
-      await addChain(client, { chain: passetHub })
-    }
-    else {
-      throw error
-    }
+    console.error('Failed to connect to Solana network:', error)
+    throw new Error(`Unable to connect to ${currentNetwork.name}. Please check your network connection.`)
   }
+}
+
+/**
+ * Get current network info
+ */
+export function getCurrentNetwork() {
+  return currentNetwork
 }

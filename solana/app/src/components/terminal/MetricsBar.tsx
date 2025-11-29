@@ -1,8 +1,6 @@
 import type { Market } from '../../types'
 import { useMemo } from 'react'
-import { formatEther } from 'viem'
-import { useReadContract, useReadContracts } from 'wagmi'
-import { CRYPTO_SCORE_FACTORY_ADDRESS, CryptoScoreFactoryABI, CryptoScoreMarketABI } from '../../config/contracts'
+import { useFactoryMarkets, useMarketDetails } from '../../hooks/useDashboardData'
 import AnimatedNumber from '../ui/AnimatedNumber'
 
 interface MetricCardProps {
@@ -85,68 +83,38 @@ interface MetricsBarProps {
 }
 
 export default function MetricsBar({ error }: MetricsBarProps) {
-  // Fetch all markets from factory (same approach as LiveMetrics)
-  const { data: factoryMarkets, isLoading: isLoadingFactory } = useReadContract({
-    address: CRYPTO_SCORE_FACTORY_ADDRESS,
-    abi: CryptoScoreFactoryABI,
-    functionName: 'getAllMarkets',
-  })
+  // Fetch all markets from Solana factory program
+  const { data: factoryMarkets, isLoading: isLoadingFactory } = useFactoryMarkets()
 
   // Get market addresses for detailed data
   const marketAddresses = useMemo(() => {
     if (!factoryMarkets || !Array.isArray(factoryMarkets))
       return []
-    return factoryMarkets.map((market: any) => market.marketAddress as `0x${string}`)
+    return factoryMarkets.map((market: Market) => market.marketAddress)
   }, [factoryMarkets])
 
-  // Fetch detailed data from individual market contracts
-  const { data: marketDetails, isLoading: isLoadingDetails } = useReadContracts({
-    contracts: marketAddresses.flatMap(address => [
-      {
-        address,
-        abi: CryptoScoreMarketABI as any,
-        functionName: 'getParticipantsCount',
-      },
-      {
-        address,
-        abi: CryptoScoreMarketABI as any,
-        functionName: 'getPredictionCounts',
-      },
-      {
-        address,
-        abi: CryptoScoreMarketABI as any,
-        functionName: 'resolved',
-      },
-    ]),
-  })
+  // Fetch detailed data from individual market accounts
+  const { data: marketDetails, isLoading: isLoadingDetails } = useMarketDetails(marketAddresses)
 
   const isLoading = isLoadingFactory || isLoadingDetails
 
-  // Combine factory data with market details
+  // Use factory markets data directly (already includes all details from Solana)
   const marketsData = useMemo(() => {
-    if (!factoryMarkets || !Array.isArray(factoryMarkets) || !marketDetails)
+    if (!factoryMarkets || !Array.isArray(factoryMarkets))
       return null
 
-    return factoryMarkets.map((factoryMarket: any, index: number) => {
-      const detailsIndex = index * 3
-      const participantsCount = marketDetails[detailsIndex]?.result as bigint | undefined
-      const predictionCounts = marketDetails[detailsIndex + 1]?.result as [bigint, bigint, bigint] | undefined
-      const resolved = marketDetails[detailsIndex + 2]?.result as boolean | undefined
+    // If we have detailed data, merge it; otherwise use factory data
+    if (marketDetails && Array.isArray(marketDetails) && marketDetails.length > 0) {
+      return factoryMarkets.map((market, index) => {
+        const detail = marketDetails[index]
+        if (market && typeof market === 'object' && detail && typeof detail === 'object') {
+          return { ...(market as any), ...(detail as any) } as Market
+        }
+        return market as Market
+      }) as Market[]
+    }
 
-      return {
-        marketAddress: factoryMarket.marketAddress,
-        matchId: factoryMarket.matchId,
-        entryFee: factoryMarket.entryFee,
-        creator: factoryMarket.creator,
-        participantsCount: participantsCount || BigInt(0),
-        resolved: resolved || false,
-        isPublic: factoryMarket.isPublic,
-        startTime: factoryMarket.startTime,
-        homeCount: predictionCounts?.[0] || BigInt(0),
-        awayCount: predictionCounts?.[1] || BigInt(0),
-        drawCount: predictionCounts?.[2] || BigInt(0),
-      } as Market
-    })
+    return factoryMarkets as Market[]
   }, [factoryMarkets, marketDetails])
 
   // Calculate metrics from market data
@@ -172,12 +140,13 @@ export default function MetricsBar({ error }: MetricsBarProps) {
 
     const totalMarkets = marketsData.length
 
-    // Calculate TVL (sum of all pool sizes)
-    const tvlBigInt = marketsData.reduce((sum: bigint, market: Market) => {
+    // Calculate TVL (sum of all pool sizes) - using lamports for Solana
+    const tvlLamports = marketsData.reduce((sum: bigint, market: Market) => {
       const poolSize = BigInt(market.entryFee) * BigInt(market.participantsCount)
       return sum + poolSize
     }, 0n)
-    const totalValueLocked = Number.parseFloat(formatEther(tvlBigInt))
+    // Convert lamports to SOL (1 SOL = 1,000,000,000 lamports)
+    const totalValueLocked = Number(tvlLamports) / 1_000_000_000
 
     // Calculate unique active traders (creators)
     const uniqueTraders = new Set<string>()
@@ -210,7 +179,8 @@ export default function MetricsBar({ error }: MetricsBarProps) {
       }
     })
 
-    const volume24hValue = Number.parseFloat(formatEther(volume24h))
+    // Convert lamports to SOL for volume
+    const volume24hValue = Number(volume24h) / 1_000_000_000
 
     // Calculate trend percentages
     let marketsTrend = '+0%'
@@ -272,7 +242,7 @@ export default function MetricsBar({ error }: MetricsBarProps) {
       <MetricCard
         label="Total Value Locked"
         value={showError ? 0 : metrics.totalValueLocked}
-        suffix=" PAS"
+        suffix=" SOL"
         icon="🔒"
         trend={showError ? undefined : metrics.trends.tvl}
         isLoading={isLoading}
@@ -287,7 +257,7 @@ export default function MetricsBar({ error }: MetricsBarProps) {
       <MetricCard
         label="24h Volume"
         value={showError ? 0 : metrics.volume24h}
-        suffix=" PAS"
+        suffix=" SOL"
         icon="📈"
         trend={showError ? undefined : metrics.trends.volume}
         isLoading={isLoading}

@@ -146,6 +146,7 @@ The current solution uses a **compatibility layer** approach:
 3. `solana/app/src/pages/MarketDetail.tsx` - Added missing args parameter
 4. `solana/app/src/pages/Dashboard.tsx` - Fixed address type assertions
 5. `solana/app/src/components/cards/PortfolioSummary.tsx` - Fixed getPublicClient import
+6. `solana/app/src/components/ui/tooltip.tsx` - Fixed TooltipProvider component (was using `<TooltipPrimitive` instead of `<TooltipPrimitive.Provider`)
 
 ## Conclusion
 

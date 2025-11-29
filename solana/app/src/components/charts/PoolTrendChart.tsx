@@ -1,7 +1,6 @@
 import type { Market, MarketDashboardInfo } from '../../types'
 import { useMemo } from 'react'
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { formatEther } from 'viem'
 
 interface PoolTrendChartProps {
   markets: (Market | MarketDashboardInfo)[]
@@ -24,7 +23,8 @@ export default function PoolTrendChart({ markets }: PoolTrendChartProps) {
       const date = new Date(Number(market.startTime) * 1000)
       const dateKey = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 
-      const poolSize = Number(formatEther(market.entryFee)) * Number(market.participantsCount)
+      // Convert lamports to SOL (1 SOL = 1,000,000,000 lamports)
+      const poolSize = (Number(market.entryFee) / 1_000_000_000) * Number(market.participantsCount)
 
       const existing = dataByDate.get(dateKey) || { total: 0, count: 0 }
       dataByDate.set(dateKey, {
@@ -72,14 +72,14 @@ export default function PoolTrendChart({ markets }: PoolTrendChartProps) {
             {' '}
             {payload[0].value}
             {' '}
-            PAS
+            SOL
           </p>
           <p className="text-xs" style={{ color: 'var(--accent-green)' }}>
             Total:
             {' '}
             {payload[1].value}
             {' '}
-            PAS
+            SOL
           </p>
           <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
             Markets:
@@ -107,7 +107,7 @@ export default function PoolTrendChart({ markets }: PoolTrendChartProps) {
             stroke="var(--text-tertiary)"
             style={{ fontSize: '12px' }}
             label={{
-              value: 'PAS',
+              value: 'SOL',
               angle: -90,
               position: 'insideLeft',
               style: { fill: 'var(--text-tertiary)' },

@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom'
-import { useAccount } from 'wagmi'
+import { useWallet } from '@solana/wallet-adapter-react'
 import Connect from '../Connect'
 
 export default function FinalCTA() {
-  const { isConnected } = useAccount()
+  const { connected } = useWallet()
 
   return (
     <section
@@ -81,7 +81,7 @@ export default function FinalCTA() {
             </Link>
 
             {/* Secondary CTA - Connect Wallet (conditional) */}
-            {!isConnected
+            {!connected
               ? (
                   <Connect />
                 )
