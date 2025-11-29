@@ -8,29 +8,29 @@
   - Create directory structure for Solana utilities (lib/solana/)
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
 
-- [ ] 2. Implement core Solana utility classes
-  - [ ] 2.1 Create TypeScript interfaces for program accounts
+- [x] 2. Implement core Solana utility classes
+  - [x] 2.1 Create TypeScript interfaces for program accounts
     - Define Market, Participant, Factory, UserStats interfaces
     - Define MarketStatus and MatchOutcome enums
     - Define CreateMarketParams and other parameter types
     - Export all types from solana-program-types.ts
     - _Requirements: 15.1, 15.2, 15.3, 15.4, 15.5_
 
-  - [ ] 2.2 Implement TransactionBuilder class
+  - [x] 2.2 Implement TransactionBuilder class
     - Create TransactionBuilder with fluent API
     - Add methods for adding instructions
     - Add compute budget and priority fee support
     - Implement build() method returning Transaction
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
 
-  - [ ] 2.3 Implement Borsh schemas for instruction data
+  - [x] 2.3 Implement Borsh schemas for instruction data
     - Define CreateMarketSchema with all parameters
     - Define JoinMarketSchema with prediction field
     - Define ResolveMarketSchema with outcome field
     - Export all schemas from borsh-schemas.ts
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
 
-  - [ ] 2.4 Implement InstructionEncoder class
+  - [x] 2.4 Implement InstructionEncoder class
     - Create createMarket instruction encoder with discriminator
     - Create joinMarket instruction encoder
     - Create resolveMarket instruction encoder
@@ -38,7 +38,7 @@
     - Add proper account metas for each instruction
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 6.1, 6.2, 6.3, 6.4, 6.5_
 
-  - [ ] 2.5 Implement AccountDecoder class
+  - [x] 2.5 Implement AccountDecoder class
     - Create decodeMarket method with manual buffer parsing
     - Create decodeParticipant method
     - Create decodeFactory method
@@ -46,7 +46,7 @@
     - Handle discriminators and optional fields properly
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
 
-  - [ ] 2.6 Implement PDAUtils class
+  - [x] 2.6 Implement PDAUtils class
     - Create findFactoryPDA method
     - Create findMarketPDA method with factory and matchId seeds
     - Create findParticipantPDA method with market and user seeds
@@ -54,14 +54,14 @@
     - Return both PDA and bump seed from each method
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
 
-  - [ ] 2.7 Implement SolanaErrorHandler class
+  - [x] 2.7 Implement SolanaErrorHandler class
     - Define error code mapping for all program errors
     - Implement parseError method for custom program errors
     - Add parsing for common Solana errors (insufficient funds, rejected, expired)
     - Implement logError method for debugging
     - _Requirements: 13.1, 13.2, 13.3, 13.4, 13.5_
 
-  - [ ] 2.8 Implement SolanaUtils class
+  - [x] 2.8 Implement SolanaUtils class
     - Create lamportsToSol and solToLamports conversion methods
     - Create shortenAddress method for display
     - Create confirmTransaction method with retry logic
