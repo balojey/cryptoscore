@@ -15,168 +15,57 @@ const DISCRIMINATORS = {
   USER_STATS: 3,
 }
 
-// Data classes for deserialization
-class FactoryData {
-  discriminator: number
-  authority: Uint8Array
-  marketCount: bigint
-  totalVolume: bigint
-
-  constructor(fields: any) {
-    this.discriminator = fields.discriminator
-    this.authority = fields.authority
-    this.marketCount = fields.marketCount
-    this.totalVolume = fields.totalVolume
-  }
-}
-
-class MarketData {
-  discriminator: number
-  factory: Uint8Array
-  creator: Uint8Array
-  matchId: string
-  entryFee: bigint
-  kickoffTime: bigint
-  endTime: bigint
-  isPublic: boolean
-  status: number
-  outcome: number
-  totalPool: bigint
-  participantCount: bigint
-  homeCount: bigint
-  drawCount: bigint
-  awayCount: bigint
-
-  constructor(fields: any) {
-    this.discriminator = fields.discriminator
-    this.factory = fields.factory
-    this.creator = fields.creator
-    this.matchId = fields.matchId
-    this.entryFee = fields.entryFee
-    this.kickoffTime = fields.kickoffTime
-    this.endTime = fields.endTime
-    this.isPublic = fields.isPublic
-    this.status = fields.status
-    this.outcome = fields.outcome
-    this.totalPool = fields.totalPool
-    this.participantCount = fields.participantCount
-    this.homeCount = fields.homeCount
-    this.drawCount = fields.drawCount
-    this.awayCount = fields.awayCount
-  }
-}
-
-class ParticipantData {
-  discriminator: number
-  market: Uint8Array
-  user: Uint8Array
-  prediction: number
-  hasWithdrawn: boolean
-  joinedAt: bigint
-
-  constructor(fields: any) {
-    this.discriminator = fields.discriminator
-    this.market = fields.market
-    this.user = fields.user
-    this.prediction = fields.prediction
-    this.hasWithdrawn = fields.hasWithdrawn
-    this.joinedAt = fields.joinedAt
-  }
-}
-
-class UserStatsData {
-  discriminator: number
-  user: Uint8Array
-  totalMarkets: bigint
-  totalWins: bigint
-  totalEarnings: bigint
-  currentStreak: bigint
-
-  constructor(fields: any) {
-    this.discriminator = fields.discriminator
-    this.user = fields.user
-    this.totalMarkets = fields.totalMarkets
-    this.totalWins = fields.totalWins
-    this.totalEarnings = fields.totalEarnings
-    this.currentStreak = fields.currentStreak
-  }
-}
-
 // Borsh schemas for account data
-const FactorySchema = new Map<any, any>([
-  [
-    FactoryData,
-    {
-      kind: 'struct',
-      fields: [
-        ['discriminator', 'u8'],
-        ['authority', [32]],
-        ['marketCount', 'u64'],
-        ['totalVolume', 'u64'],
-      ],
-    },
-  ],
-])
+const FactorySchema = {
+  struct: {
+    discriminator: 'u8',
+    authority: { array: { type: 'u8', len: 32 } },
+    marketCount: 'u64',
+    totalVolume: 'u64',
+  },
+}
 
-const MarketSchema = new Map<any, any>([
-  [
-    MarketData,
-    {
-      kind: 'struct',
-      fields: [
-        ['discriminator', 'u8'],
-        ['factory', [32]],
-        ['creator', [32]],
-        ['matchId', 'string'],
-        ['entryFee', 'u64'],
-        ['kickoffTime', 'u64'],
-        ['endTime', 'u64'],
-        ['isPublic', 'bool'],
-        ['status', 'u8'],
-        ['outcome', 'u8'],
-        ['totalPool', 'u64'],
-        ['participantCount', 'u64'],
-        ['homeCount', 'u64'],
-        ['drawCount', 'u64'],
-        ['awayCount', 'u64'],
-      ],
-    },
-  ],
-])
+const MarketSchema = {
+  struct: {
+    discriminator: 'u8',
+    factory: { array: { type: 'u8', len: 32 } },
+    creator: { array: { type: 'u8', len: 32 } },
+    matchId: 'string',
+    entryFee: 'u64',
+    kickoffTime: 'u64',
+    endTime: 'u64',
+    isPublic: 'bool',
+    status: 'u8',
+    outcome: 'u8',
+    totalPool: 'u64',
+    participantCount: 'u64',
+    homeCount: 'u64',
+    drawCount: 'u64',
+    awayCount: 'u64',
+  },
+}
 
-const ParticipantSchema = new Map<any, any>([
-  [
-    ParticipantData,
-    {
-      kind: 'struct',
-      fields: [
-        ['discriminator', 'u8'],
-        ['market', [32]],
-        ['user', [32]],
-        ['prediction', 'u8'],
-        ['hasWithdrawn', 'bool'],
-        ['joinedAt', 'u64'],
-      ],
-    },
-  ],
-])
+const ParticipantSchema = {
+  struct: {
+    discriminator: 'u8',
+    market: { array: { type: 'u8', len: 32 } },
+    user: { array: { type: 'u8', len: 32 } },
+    prediction: 'u8',
+    hasWithdrawn: 'bool',
+    joinedAt: 'u64',
+  },
+}
 
-const UserStatsSchema = new Map<any, any>([
-  [
-    UserStatsData,
-    {
-      kind: 'struct',
-      fields: [
-        ['discriminator', 'u8'],
-        ['user', [32]],
-        ['totalMarkets', 'u64'],
-        ['totalWins', 'u64'],
-        ['totalEarnings', 'u64'],
-        ['currentStreak', 'u64'],
-      ],
-    },
-  ],
-])
+const UserStatsSchema = {
+  struct: {
+    discriminator: 'u8',
+    user: { array: { type: 'u8', len: 32 } },
+    totalMarkets: 'u64',
+    totalWins: 'u64',
+    totalEarnings: 'u64',
+    currentStreak: 'u64',
+  },
+}
 
 export interface Factory {
   authority: PublicKey
@@ -222,11 +111,11 @@ export class AccountDecoder {
    * Decode Factory account data
    */
   static decodeFactory(data: Buffer): Factory {
-    const decoded = deserialize(FactorySchema, FactoryData, data) as FactoryData
+    const decoded = deserialize(FactorySchema, data) as any
     return {
       authority: new PublicKey(decoded.authority),
-      marketCount: decoded.marketCount,
-      totalVolume: decoded.totalVolume,
+      marketCount: BigInt(decoded.marketCount),
+      totalVolume: BigInt(decoded.totalVolume),
     }
   }
 
@@ -234,22 +123,22 @@ export class AccountDecoder {
    * Decode Market account data
    */
   static decodeMarket(data: Buffer): Market {
-    const decoded = deserialize(MarketSchema, MarketData, data) as MarketData
+    const decoded = deserialize(MarketSchema, data) as any
     return {
       factory: new PublicKey(decoded.factory),
       creator: new PublicKey(decoded.creator),
       matchId: decoded.matchId,
-      entryFee: decoded.entryFee,
-      kickoffTime: decoded.kickoffTime,
-      endTime: decoded.endTime,
+      entryFee: BigInt(decoded.entryFee),
+      kickoffTime: BigInt(decoded.kickoffTime),
+      endTime: BigInt(decoded.endTime),
       isPublic: decoded.isPublic,
       status: decoded.status,
       outcome: decoded.outcome,
-      totalPool: decoded.totalPool,
-      participantCount: decoded.participantCount,
-      homeCount: decoded.homeCount,
-      drawCount: decoded.drawCount,
-      awayCount: decoded.awayCount,
+      totalPool: BigInt(decoded.totalPool),
+      participantCount: BigInt(decoded.participantCount),
+      homeCount: BigInt(decoded.homeCount),
+      drawCount: BigInt(decoded.drawCount),
+      awayCount: BigInt(decoded.awayCount),
     }
   }
 
@@ -257,13 +146,13 @@ export class AccountDecoder {
    * Decode Participant account data
    */
   static decodeParticipant(data: Buffer): Participant {
-    const decoded = deserialize(ParticipantSchema, ParticipantData, data) as ParticipantData
+    const decoded = deserialize(ParticipantSchema, data) as any
     return {
       market: new PublicKey(decoded.market),
       user: new PublicKey(decoded.user),
       prediction: decoded.prediction,
       hasWithdrawn: decoded.hasWithdrawn,
-      joinedAt: decoded.joinedAt,
+      joinedAt: BigInt(decoded.joinedAt),
     }
   }
 
@@ -271,13 +160,13 @@ export class AccountDecoder {
    * Decode UserStats account data
    */
   static decodeUserStats(data: Buffer): UserStats {
-    const decoded = deserialize(UserStatsSchema, UserStatsData, data) as UserStatsData
+    const decoded = deserialize(UserStatsSchema, data) as any
     return {
       user: new PublicKey(decoded.user),
-      totalMarkets: decoded.totalMarkets,
-      totalWins: decoded.totalWins,
-      totalEarnings: decoded.totalEarnings,
-      currentStreak: decoded.currentStreak,
+      totalMarkets: BigInt(decoded.totalMarkets),
+      totalWins: BigInt(decoded.totalWins),
+      totalEarnings: BigInt(decoded.totalEarnings),
+      currentStreak: BigInt(decoded.currentStreak),
     }
   }
 

@@ -137,28 +137,28 @@
     - Handle cases where participant account doesn't exist
     - _Requirements: 11.1, 11.2, 11.3, 11.4, 11.5_
 
-- [ ] 4. Update UI components for Anchor-free integration
-  - [ ] 4.1 Update wallet connection components
+- [x] 4. Update UI components for Anchor-free integration
+  - [x] 4.1 Update wallet connection components
     - Ensure Connect.tsx uses wallet adapter hooks correctly
     - Update Account.tsx to display SOL balance
     - Update Balance.tsx for SOL instead of PAS
     - Test wallet connection and disconnection flows
     - _Requirements: 17.1, 17.2, 17.3, 17.4, 17.5_
 
-  - [ ] 4.2 Update market display components
+  - [x] 4.2 Update market display components
     - Ensure EnhancedMarketCard displays SOL amounts correctly
     - Update PortfolioSummary for SOL-based metrics
     - Verify all market-related components handle new data structure
     - _Requirements: 17.1, 17.2, 17.3, 17.4, 17.5_
 
-  - [ ] 4.3 Update transaction handling in Market.tsx
+  - [x] 4.3 Update transaction handling in Market.tsx
     - Update market creation modal to use new useMarketActions hook
     - Ensure loading states work correctly
     - Verify error handling displays properly
     - Test transaction confirmation flow
     - _Requirements: 17.1, 17.2, 17.3, 17.4, 17.5_
 
-  - [ ] 4.4 Update transaction handling in MarketDetail.tsx
+  - [x] 4.4 Update transaction handling in MarketDetail.tsx
     - Update join market functionality
     - Update withdraw functionality
     - Add transaction signature display
