@@ -1,10 +1,39 @@
 /**
  * Borsh Schemas - Type definitions for instruction serialization
  * 
- * Defines Borsh schemas for all program instructions.
+ * This module defines Borsh schemas for all program instructions.
+ * Borsh (Binary Object Representation Serializer for Hashing) is used
+ * by Solana programs for efficient binary serialization.
+ * 
+ * @module borsh-schemas
+ * 
+ * @example
+ * ```typescript
+ * import { CreateMarketData, CreateMarketSchema } from './borsh-schemas'
+ * import { serialize } from 'borsh'
+ * 
+ * const data = new CreateMarketData({
+ *   matchId: 'MATCH_123',
+ *   entryFee: BigInt(1_000_000_000),
+ *   kickoffTime: BigInt(Date.now() / 1000 + 3600),
+ *   endTime: BigInt(Date.now() / 1000 + 7200),
+ *   isPublic: true,
+ * })
+ * 
+ * const serialized = serialize(CreateMarketSchema, data)
+ * ```
  */
 
-// Data classes for serialization (must be declared before schemas)
+/**
+ * Data class for CreateMarket instruction
+ * 
+ * @class CreateMarketData
+ * @property {string} matchId - Unique identifier for the football match
+ * @property {bigint} entryFee - Entry fee in lamports (1 SOL = 1_000_000_000 lamports)
+ * @property {bigint} kickoffTime - Match kickoff time as Unix timestamp
+ * @property {bigint} endTime - Market end time as Unix timestamp
+ * @property {boolean} isPublic - Whether the market is public or private
+ */
 export class CreateMarketData {
   matchId: string
   entryFee: bigint
@@ -21,6 +50,12 @@ export class CreateMarketData {
   }
 }
 
+/**
+ * Data class for JoinMarket instruction
+ * 
+ * @class JoinMarketData
+ * @property {number} prediction - User's prediction (0 = HOME, 1 = DRAW, 2 = AWAY)
+ */
 export class JoinMarketData {
   prediction: number
 
@@ -29,6 +64,12 @@ export class JoinMarketData {
   }
 }
 
+/**
+ * Data class for ResolveMarket instruction
+ * 
+ * @class ResolveMarketData
+ * @property {number} outcome - Match outcome (0 = HOME, 1 = DRAW, 2 = AWAY)
+ */
 export class ResolveMarketData {
   outcome: number
 
@@ -37,69 +78,87 @@ export class ResolveMarketData {
   }
 }
 
+/**
+ * Data class for Withdraw instruction
+ * 
+ * @class WithdrawData
+ * @description Withdraw instruction has no parameters
+ */
 export class WithdrawData {
   constructor() {}
 }
 
 /**
- * Schema for CreateMarket instruction
+ * Borsh schema for CreateMarket instruction
+ * 
+ * @constant CreateMarketSchema
+ * @description Defines the binary layout for CreateMarket instruction data
+ * 
+ * Field types:
+ * - string: Variable-length UTF-8 string
+ * - u64: 64-bit unsigned integer (bigint in TypeScript)
+ * - bool: Boolean value (1 byte)
  */
-export const CreateMarketSchema = new Map<any, any>([
-  [
-    CreateMarketData,
-    {
-      kind: 'struct',
-      fields: [
-        ['matchId', 'string'],
-        ['entryFee', 'u64'],
-        ['kickoffTime', 'u64'],
-        ['endTime', 'u64'],
-        ['isPublic', 'bool'],
-      ],
-    },
-  ],
-])
+export const CreateMarketSchema = {
+  struct: {
+    matchId: 'string',
+    entryFee: 'u64',
+    kickoffTime: 'u64',
+    endTime: 'u64',
+    isPublic: 'bool',
+  },
+}
 
 /**
- * Schema for JoinMarket instruction
+ * Borsh schema for JoinMarket instruction
+ * 
+ * @constant JoinMarketSchema
+ * @description Defines the binary layout for JoinMarket instruction data
+ * 
+ * Field types:
+ * - u8: 8-bit unsigned integer (0-255)
  */
-export const JoinMarketSchema = new Map<any, any>([
-  [
-    JoinMarketData,
-    {
-      kind: 'struct',
-      fields: [['prediction', 'u8']],
-    },
-  ],
-])
+export const JoinMarketSchema = {
+  struct: {
+    prediction: 'u8',
+  },
+}
 
 /**
- * Schema for ResolveMarket instruction
+ * Borsh schema for ResolveMarket instruction
+ * 
+ * @constant ResolveMarketSchema
+ * @description Defines the binary layout for ResolveMarket instruction data
+ * 
+ * Field types:
+ * - u8: 8-bit unsigned integer (0-255)
  */
-export const ResolveMarketSchema = new Map<any, any>([
-  [
-    ResolveMarketData,
-    {
-      kind: 'struct',
-      fields: [['outcome', 'u8']],
-    },
-  ],
-])
+export const ResolveMarketSchema = {
+  struct: {
+    outcome: 'u8',
+  },
+}
 
 /**
- * Schema for Withdraw instruction (no parameters needed)
+ * Borsh schema for Withdraw instruction
+ * 
+ * @constant WithdrawSchema
+ * @description Empty schema as Withdraw instruction has no parameters
  */
-export const WithdrawSchema = new Map<any, any>([
-  [
-    WithdrawData,
-    {
-      kind: 'struct',
-      fields: [],
-    },
-  ],
-])
+export const WithdrawSchema = {
+  struct: {},
+}
 
-// Export types for TypeScript
+/**
+ * TypeScript type for CreateMarket instruction parameters
+ * 
+ * @typedef {Object} CreateMarketParams
+ * @property {string} matchId - Unique identifier for the football match
+ * @property {bigint} entryFee - Entry fee in lamports
+ * @property {bigint} kickoffTime - Match kickoff time as Unix timestamp
+ * @property {bigint} endTime - Market end time as Unix timestamp
+ * @property {boolean} isPublic - Whether the market is public or private
+ */
 export type CreateMarketParams = {
   matchId: string
   entryFee: bigint
@@ -108,10 +167,22 @@ export type CreateMarketParams = {
   isPublic: boolean
 }
 
+/**
+ * TypeScript type for JoinMarket instruction parameters
+ * 
+ * @typedef {Object} JoinMarketParams
+ * @property {number} prediction - User's prediction (0 = HOME, 1 = DRAW, 2 = AWAY)
+ */
 export type JoinMarketParams = {
   prediction: number
 }
 
+/**
+ * TypeScript type for ResolveMarket instruction parameters
+ * 
+ * @typedef {Object} ResolveMarketParams
+ * @property {number} outcome - Match outcome (0 = HOME, 1 = DRAW, 2 = AWAY)
+ */
 export type ResolveMarketParams = {
   outcome: number
 }

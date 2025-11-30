@@ -2,15 +2,50 @@
  * TransactionBuilder - Utility for constructing Solana transactions without Anchor
  * 
  * Provides a fluent API for building transactions with compute budget and priority fees.
+ * 
+ * @module transaction-builder
+ * 
+ * @example
+ * ```typescript
+ * const builder = new TransactionBuilder({
+ *   computeUnitLimit: 200_000,
+ *   computeUnitPrice: 1000,
+ * })
+ * 
+ * builder
+ *   .addInstruction(instruction1)
+ *   .addInstruction(instruction2)
+ * 
+ * const feeEstimate = await builder.previewFee(connection, feePayer)
+ * console.log(`Fee: ${feeEstimate.feeInSol} SOL`)
+ * 
+ * const transaction = await builder.build(connection)
+ * ```
  */
 
 import { Connection, Transaction, TransactionInstruction, ComputeBudgetProgram, PublicKey, VersionedTransaction, Message } from '@solana/web3.js'
 
+/**
+ * Options for configuring transaction compute budget
+ * 
+ * @interface TransactionBuilderOptions
+ * @property {number} [computeUnitLimit] - Maximum compute units for transaction (default: 200,000)
+ * @property {number} [computeUnitPrice] - Priority fee in microLamports per compute unit
+ */
 export interface TransactionBuilderOptions {
   computeUnitLimit?: number
   computeUnitPrice?: number
 }
 
+/**
+ * Result of fee estimation
+ * 
+ * @interface FeeEstimate
+ * @property {number} fee - Transaction fee in lamports
+ * @property {number} feeInSol - Transaction fee in SOL
+ * @property {boolean} success - Whether estimation succeeded
+ * @property {string} [error] - Error message if estimation failed
+ */
 export interface FeeEstimate {
   fee: number // in lamports
   feeInSol: number // in SOL
@@ -18,16 +53,42 @@ export interface FeeEstimate {
   error?: string
 }
 
+/**
+ * TransactionBuilder class for constructing Solana transactions
+ * 
+ * @class TransactionBuilder
+ * 
+ * @example
+ * ```typescript
+ * const builder = new TransactionBuilder()
+ * builder.addInstruction(createMarketIx)
+ * builder.setComputeUnitLimit(200_000)
+ * const tx = await builder.build(connection)
+ * ```
+ */
 export class TransactionBuilder {
   private instructions: TransactionInstruction[] = []
   private options: TransactionBuilderOptions
 
+  /**
+   * Create a new TransactionBuilder
+   * 
+   * @param {TransactionBuilderOptions} options - Configuration options
+   */
   constructor(options: TransactionBuilderOptions = {}) {
     this.options = options
   }
 
   /**
    * Add an instruction to the transaction
+   * 
+   * @param {TransactionInstruction} instruction - Instruction to add
+   * @returns {this} Builder instance for chaining
+   * 
+   * @example
+   * ```typescript
+   * builder.addInstruction(createMarketIx)
+   * ```
    */
   addInstruction(instruction: TransactionInstruction): this {
     this.instructions.push(instruction)
@@ -36,6 +97,14 @@ export class TransactionBuilder {
 
   /**
    * Add multiple instructions to the transaction
+   * 
+   * @param {TransactionInstruction[]} instructions - Array of instructions to add
+   * @returns {this} Builder instance for chaining
+   * 
+   * @example
+   * ```typescript
+   * builder.addInstructions([ix1, ix2, ix3])
+   * ```
    */
   addInstructions(instructions: TransactionInstruction[]): this {
     this.instructions.push(...instructions)
@@ -43,7 +112,15 @@ export class TransactionBuilder {
   }
 
   /**
-   * Set compute budget limit
+   * Set compute budget limit for the transaction
+   * 
+   * @param {number} units - Maximum compute units (typical: 200,000)
+   * @returns {this} Builder instance for chaining
+   * 
+   * @example
+   * ```typescript
+   * builder.setComputeUnitLimit(200_000)
+   * ```
    */
   setComputeUnitLimit(units: number): this {
     this.options.computeUnitLimit = units
@@ -51,7 +128,15 @@ export class TransactionBuilder {
   }
 
   /**
-   * Set compute unit price (priority fee)
+   * Set compute unit price (priority fee) for the transaction
+   * 
+   * @param {number} microLamports - Price in microLamports per compute unit
+   * @returns {this} Builder instance for chaining
+   * 
+   * @example
+   * ```typescript
+   * builder.setComputeUnitPrice(1000) // 0.001 lamports per CU
+   * ```
    */
   setComputeUnitPrice(microLamports: number): this {
     this.options.computeUnitPrice = microLamports
@@ -59,7 +144,17 @@ export class TransactionBuilder {
   }
 
   /**
-   * Build the final transaction
+   * Build the final transaction with all instructions and compute budget
+   * 
+   * @param {Connection} connection - Solana connection instance
+   * @returns {Promise<Transaction>} Built transaction ready for signing
+   * 
+   * @example
+   * ```typescript
+   * const transaction = await builder.build(connection)
+   * transaction.feePayer = wallet.publicKey
+   * const signed = await wallet.signTransaction(transaction)
+   * ```
    */
   async build(connection: Connection): Promise<Transaction> {
     const transaction = new Transaction()
@@ -213,7 +308,14 @@ export class TransactionBuilder {
   }
 
   /**
-   * Clear all instructions
+   * Clear all instructions from the builder
+   * 
+   * @returns {this} Builder instance for chaining
+   * 
+   * @example
+   * ```typescript
+   * builder.clear().addInstruction(newInstruction)
+   * ```
    */
   clear(): this {
     this.instructions = []

@@ -1,18 +1,16 @@
 /**
  * Solana Program Helper Utilities
  * Provides type-safe wrappers for interacting with CryptoScore Solana programs
+ * 
+ * NOTE: This file contains legacy Anchor-based helpers.
+ * For new code, use the Anchor-free utilities in lib/solana/
  */
 
-import { PublicKey, Connection } from '@solana/web3.js'
-import { AnchorProvider, Program } from '@coral-xyz/anchor'
-import type { AnchorWallet } from '@solana/wallet-adapter-react'
+import { PublicKey } from '@solana/web3.js'
 import {
   FACTORY_PROGRAM_ID,
   MARKET_PROGRAM_ID,
   DASHBOARD_PROGRAM_ID,
-  FactoryIDL,
-  MarketIDL,
-  DashboardIDL,
 } from '../config/programs'
 import type { Market, MarketDashboardInfo } from '../types'
 
@@ -46,28 +44,9 @@ export enum SortOption {
 }
 
 /**
- * Get Factory program instance
+ * DEPRECATED: Use PDAUtils from lib/solana/pda-utils.ts instead
+ * These Anchor-based program helpers are no longer needed
  */
-export function getFactoryProgram(connection: Connection, wallet: AnchorWallet) {
-  const provider = new AnchorProvider(connection, wallet, { commitment: 'confirmed' })
-  return new Program(FactoryIDL as any, provider)
-}
-
-/**
- * Get Market program instance
- */
-export function getMarketProgram(connection: Connection, wallet: AnchorWallet) {
-  const provider = new AnchorProvider(connection, wallet, { commitment: 'confirmed' })
-  return new Program(MarketIDL as any, provider)
-}
-
-/**
- * Get Dashboard program instance
- */
-export function getDashboardProgram(connection: Connection, wallet: AnchorWallet) {
-  const provider = new AnchorProvider(connection, wallet, { commitment: 'confirmed' })
-  return new Program(DashboardIDL as any, provider)
-}
 
 /**
  * Derive Factory PDA

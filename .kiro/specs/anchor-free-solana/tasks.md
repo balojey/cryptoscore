@@ -181,8 +181,8 @@
     - Allow users to proceed or cancel based on simulation
     - _Requirements: 16.5_
 
-- [ ] 7. Testing and validation
-  - [ ] 7.1 Test all utility classes
+- [x] 7. Testing and validation
+  - [x] 7.1 Test all utility classes
     - Test TransactionBuilder with various instruction combinations
     - Test InstructionEncoder with different parameters
     - Test AccountDecoder with mock account data
@@ -190,7 +190,7 @@
     - Test SolanaErrorHandler with various error types
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 3.1, 3.2, 3.3, 3.4, 3.5, 4.1, 4.2, 4.3, 4.4, 4.5, 5.1, 5.2, 5.3, 5.4, 5.5, 13.1, 13.2, 13.3, 13.4, 13.5_
 
-  - [ ] 7.2 Test market creation flow end-to-end
+  - [x] 7.2 Test market creation flow end-to-end
     - Connect wallet on devnet
     - Create a test market with valid parameters
     - Verify market account is created on-chain
@@ -198,14 +198,14 @@
     - Test error scenarios (insufficient funds, invalid parameters)
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5_
 
-  - [ ] 7.3 Test market joining flow end-to-end
+  - [x] 7.3 Test market joining flow end-to-end
     - Join a market with each prediction choice (HOME/DRAW/AWAY)
     - Verify participant account is created
     - Verify market participant counts update
     - Test error scenarios (already joined, market started, insufficient funds)
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5_
 
-  - [ ] 7.4 Test market resolution and withdrawal flow
+  - [x] 7.4 Test market resolution and withdrawal flow
     - Resolve a market with outcome
     - Verify market status updates
     - Withdraw rewards as winner
@@ -213,15 +213,15 @@
     - Test error scenarios (not a winner, already withdrawn)
     - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 9.1, 9.2, 9.3, 9.4, 9.5_
 
-  - [ ] 7.5 Test real-time updates via WebSocket
+  - [x] 7.5 Test real-time updates via WebSocket
     - Subscribe to market account changes
     - Trigger updates from another wallet/browser
     - Verify UI updates automatically
     - Test reconnection after disconnect
     - _Requirements: 12.1, 12.2, 12.3, 12.4, 12.5_
 
-- [ ] 8. Documentation and cleanup
-  - [ ] 8.1 Create comprehensive README
+- [-] 8. Documentation and cleanup
+  - [x] 8.1 Create comprehensive README
     - Document Anchor-free architecture
     - Provide usage examples for each operation
     - Explain Borsh serialization schemas
@@ -229,14 +229,14 @@
     - Add troubleshooting section
     - _Requirements: 18.1, 18.2, 18.3, 18.4, 18.5_
 
-  - [ ] 8.2 Add inline code documentation
+  - [x] 8.2 Add inline code documentation
     - Add JSDoc comments to all utility classes
     - Document function parameters and return types
     - Add usage examples in comments
     - Document error scenarios
     - _Requirements: 18.1, 18.2, 18.3, 18.4, 18.5_
 
-  - [ ] 8.3 Clean up unused Anchor code
+  - [x] 8.3 Clean up unused Anchor code
     - Remove any remaining Anchor imports
     - Remove Anchor-specific configuration
     - Update environment variables if needed

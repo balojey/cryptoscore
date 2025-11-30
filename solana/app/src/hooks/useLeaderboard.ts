@@ -1,9 +1,17 @@
+/**
+ * DEPRECATED: This hook uses Anchor framework which has been removed.
+ * 
+ * This hook is kept for backward compatibility but will not function correctly
+ * without Anchor. Consider implementing an Anchor-free version using:
+ * - lib/solana/account-decoder.ts for decoding UserStats accounts
+ * - Connection.getProgramAccounts() for fetching all UserStats
+ */
+
 import { useCallback, useRef } from 'react'
 import { PublicKey } from '@solana/web3.js'
-import { AnchorProvider, Program } from '@coral-xyz/anchor'
 import { useConnection, useWallet } from '@solana/wallet-adapter-react'
 import { useQuery } from '@tanstack/react-query'
-import { DASHBOARD_PROGRAM_ID, DashboardIDL } from '../config/programs'
+import { DASHBOARD_PROGRAM_ID } from '../config/programs'
 
 export interface UserStatsData {
   address: string
@@ -20,6 +28,7 @@ export interface UserStatsData {
 }
 
 /**
+ * @deprecated Anchor framework removed - this hook will not function
  * Hook for fetching leaderboard data from UserStats accounts
  * Fetches all UserStats accounts from the Dashboard program
  */
@@ -31,78 +40,9 @@ export function useLeaderboard(options: { enabled?: boolean } = {}) {
   const rateLimitDelay = 2000
 
   const fetchLeaderboardData = useCallback(async (): Promise<UserStatsData[]> => {
-    try {
-      // Rate limiting
-      const now = Date.now()
-      const timeSinceLastFetch = now - lastFetchTime.current
-      if (timeSinceLastFetch < rateLimitDelay) {
-        await new Promise(resolve => setTimeout(resolve, rateLimitDelay - timeSinceLastFetch))
-      }
-      lastFetchTime.current = Date.now()
-
-      console.log('Fetching leaderboard data from Dashboard program')
-
-      // Create provider and program instance
-      const provider = new AnchorProvider(
-        connection,
-        wallet as any,
-        { commitment: 'confirmed' }
-      )
-      const dashboardProgram = new Program(DashboardIDL as any, provider)
-
-      // Fetch all UserStats accounts
-      const userStatsAccounts = await (dashboardProgram.account as any).userStats.all()
-
-      console.log('Fetched UserStats accounts:', userStatsAccounts.length)
-
-      // Transform to UserStatsData
-      const leaderboardData: UserStatsData[] = userStatsAccounts.map((account: any) => {
-        const stats = account.account
-        const totalMarkets = stats.totalMarkets
-        const wins = stats.wins
-        const losses = stats.losses
-        const totalWagered = BigInt(stats.totalWagered.toString())
-        const totalWon = BigInt(stats.totalWon.toString())
-        
-        // Calculate win rate
-        const winRate = totalMarkets > 0 ? (wins / totalMarkets) * 100 : 0
-        
-        // Calculate net profit
-        const netProfit = totalWon - totalWagered
-
-        return {
-          address: stats.user.toString(),
-          totalMarkets,
-          wins,
-          losses,
-          totalWagered,
-          totalWon,
-          currentStreak: stats.currentStreak,
-          bestStreak: stats.bestStreak,
-          lastUpdated: BigInt(stats.lastUpdated.toString()),
-          winRate,
-          netProfit,
-        }
-      })
-
-      // Filter out users with no activity
-      const activeUsers = leaderboardData.filter(user => user.totalMarkets > 0)
-
-      console.log('Active users:', activeUsers.length)
-      return activeUsers
-    }
-    catch (error) {
-      const errorMessage = error?.toString() || ''
-      
-      // Handle rate limiting gracefully
-      if (errorMessage.includes('429') || errorMessage.includes('Too Many Requests')) {
-        console.warn('Rate limit hit on leaderboard data')
-        return []
-      }
-      
-      console.error('Error fetching leaderboard data:', error)
-      throw error
-    }
+    console.warn('useLeaderboard: Anchor framework has been removed. This hook will not function correctly.')
+    console.warn('Please implement an Anchor-free version using lib/solana/account-decoder.ts')
+    return []
   }, [connection, wallet])
 
   return useQuery({
@@ -117,6 +57,7 @@ export function useLeaderboard(options: { enabled?: boolean } = {}) {
 }
 
 /**
+ * @deprecated Anchor framework removed - this hook will not function
  * Hook for fetching a specific user's stats
  */
 export function useUserStats(userAddress?: string, options: { enabled?: boolean } = {}) {
@@ -125,62 +66,8 @@ export function useUserStats(userAddress?: string, options: { enabled?: boolean 
   const wallet = useWallet()
 
   const fetchUserStats = useCallback(async (): Promise<UserStatsData | null> => {
-    try {
-      if (!userAddress) {
-        return null
-      }
-
-      console.log('Fetching user stats for:', userAddress)
-
-      // Create provider and program instance
-      const provider = new AnchorProvider(
-        connection,
-        wallet as any,
-        { commitment: 'confirmed' }
-      )
-      const dashboardProgram = new Program(DashboardIDL as any, provider)
-
-      // Derive UserStats PDA
-      const userPubkey = new PublicKey(userAddress)
-      const [userStatsPda] = PublicKey.findProgramAddressSync(
-        [Buffer.from('user_stats'), userPubkey.toBuffer()],
-        new PublicKey(DASHBOARD_PROGRAM_ID)
-      )
-
-      // Fetch UserStats account
-      const stats = await (dashboardProgram.account as any).userStats.fetch(userStatsPda)
-
-      const totalMarkets = stats.totalMarkets
-      const wins = stats.wins
-      const losses = stats.losses
-      const totalWagered = BigInt(stats.totalWagered.toString())
-      const totalWon = BigInt(stats.totalWon.toString())
-      
-      // Calculate win rate
-      const winRate = totalMarkets > 0 ? (wins / totalMarkets) * 100 : 0
-      
-      // Calculate net profit
-      const netProfit = totalWon - totalWagered
-
-      return {
-        address: stats.user.toString(),
-        totalMarkets,
-        wins,
-        losses,
-        totalWagered,
-        totalWon,
-        currentStreak: stats.currentStreak,
-        bestStreak: stats.bestStreak,
-        lastUpdated: BigInt(stats.lastUpdated.toString()),
-        winRate,
-        netProfit,
-      }
-    }
-    catch (error) {
-      // Account might not exist yet
-      console.warn('User stats not found for:', userAddress)
-      return null
-    }
+    console.warn('useUserStats: Anchor framework has been removed. This hook will not function correctly.')
+    return null
   }, [connection, wallet, userAddress])
 
   return useQuery({

@@ -2,13 +2,41 @@
  * SolanaUtils - Common utility functions for Solana operations
  * 
  * Provides helper functions for conversions, formatting, and transaction handling.
+ * 
+ * @module utils
+ * 
+ * @example
+ * ```typescript
+ * // Convert lamports to SOL
+ * const sol = SolanaUtils.lamportsToSol(1_000_000_000) // 1.0
+ * 
+ * // Shorten address
+ * const short = SolanaUtils.shortenAddress(publicKey) // "5Fwq...3xYz"
+ * 
+ * // Get explorer URL
+ * const url = SolanaUtils.getExplorerUrl(signature, 'devnet')
+ * ```
  */
 
 import { Connection, PublicKey, Transaction, TransactionSignature, Commitment } from '@solana/web3.js'
 
+/**
+ * SolanaUtils class with static utility methods
+ * 
+ * @class SolanaUtils
+ */
 export class SolanaUtils {
   /**
    * Convert lamports to SOL
+   * 
+   * @param {bigint | number} lamports - Amount in lamports
+   * @returns {number} Amount in SOL
+   * 
+   * @example
+   * ```typescript
+   * const sol = SolanaUtils.lamportsToSol(1_000_000_000) // 1.0
+   * const sol2 = SolanaUtils.lamportsToSol(BigInt(500_000_000)) // 0.5
+   * ```
    */
   static lamportsToSol(lamports: bigint | number): number {
     const lamportsNum = typeof lamports === 'bigint' ? Number(lamports) : lamports
@@ -17,6 +45,14 @@ export class SolanaUtils {
 
   /**
    * Convert SOL to lamports
+   * 
+   * @param {number} sol - Amount in SOL
+   * @returns {bigint} Amount in lamports
+   * 
+   * @example
+   * ```typescript
+   * const lamports = SolanaUtils.solToLamports(1.5) // 1_500_000_000n
+   * ```
    */
   static solToLamports(sol: number): bigint {
     return BigInt(Math.floor(sol * 1_000_000_000))
@@ -24,6 +60,16 @@ export class SolanaUtils {
 
   /**
    * Shorten address for display
+   * 
+   * @param {PublicKey | string} address - Public key or base58 string
+   * @param {number} [chars=4] - Number of characters to show on each end
+   * @returns {string} Shortened address (e.g., "5Fwq...3xYz")
+   * 
+   * @example
+   * ```typescript
+   * const short = SolanaUtils.shortenAddress(publicKey) // "5Fwq...3xYz"
+   * const short2 = SolanaUtils.shortenAddress(publicKey, 6) // "5FwqAB...CD3xYz"
+   * ```
    */
   static shortenAddress(address: PublicKey | string, chars = 4): string {
     const addressStr = typeof address === 'string' ? address : address.toBase58()
@@ -110,6 +156,16 @@ export class SolanaUtils {
 
   /**
    * Get Solana Explorer URL for transaction
+   * 
+   * @param {string} signature - Transaction signature
+   * @param {string} [cluster='devnet'] - Network cluster
+   * @returns {string} Explorer URL
+   * 
+   * @example
+   * ```typescript
+   * const url = SolanaUtils.getExplorerUrl(signature, 'devnet')
+   * // https://explorer.solana.com/tx/...?cluster=devnet
+   * ```
    */
   static getExplorerUrl(
     signature: string,
@@ -121,6 +177,16 @@ export class SolanaUtils {
 
   /**
    * Get Solana Explorer URL for address
+   * 
+   * @param {PublicKey | string} address - Public key or base58 string
+   * @param {string} [cluster='devnet'] - Network cluster
+   * @returns {string} Explorer URL
+   * 
+   * @example
+   * ```typescript
+   * const url = SolanaUtils.getExplorerAddressUrl(marketPDA, 'devnet')
+   * // https://explorer.solana.com/address/...?cluster=devnet
+   * ```
    */
   static getExplorerAddressUrl(
     address: PublicKey | string,
@@ -133,6 +199,16 @@ export class SolanaUtils {
 
   /**
    * Format SOL amount for display
+   * 
+   * @param {bigint | number} lamports - Amount in lamports
+   * @param {number} [decimals=4] - Number of decimal places
+   * @returns {string} Formatted SOL amount
+   * 
+   * @example
+   * ```typescript
+   * const formatted = SolanaUtils.formatSol(1_500_000_000) // "1.5000"
+   * const formatted2 = SolanaUtils.formatSol(1_500_000_000, 2) // "1.50"
+   * ```
    */
   static formatSol(lamports: bigint | number, decimals = 4): string {
     const sol = this.lamportsToSol(lamports)
@@ -140,7 +216,17 @@ export class SolanaUtils {
   }
 
   /**
-   * Check if public key is valid
+   * Check if public key string is valid
+   * 
+   * @param {string} address - Base58 encoded public key
+   * @returns {boolean} True if valid
+   * 
+   * @example
+   * ```typescript
+   * if (SolanaUtils.isValidPublicKey(addressString)) {
+   *   const pubkey = new PublicKey(addressString)
+   * }
+   * ```
    */
   static isValidPublicKey(address: string): boolean {
     try {
@@ -154,6 +240,14 @@ export class SolanaUtils {
 
   /**
    * Sleep utility for delays
+   * 
+   * @param {number} ms - Milliseconds to sleep
+   * @returns {Promise<void>}
+   * 
+   * @example
+   * ```typescript
+   * await SolanaUtils.sleep(1000) // Wait 1 second
+   * ```
    */
   static async sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms))

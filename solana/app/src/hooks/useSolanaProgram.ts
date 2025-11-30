@@ -1,9 +1,21 @@
-import { AnchorProvider, Program } from '@coral-xyz/anchor'
+/**
+ * DEPRECATED: This hook uses Anchor framework which has been removed.
+ * 
+ * For new code, use the Anchor-free utilities:
+ * - lib/solana/transaction-builder.ts for building transactions
+ * - lib/solana/instruction-encoder.ts for encoding instructions
+ * - lib/solana/account-decoder.ts for decoding accounts
+ * - hooks/useMarketData.ts for fetching market data
+ * - hooks/useMarketActions.ts for market operations
+ * 
+ * This hook is kept for backward compatibility with legacy code only.
+ */
+
 import { useConnection, useWallet } from '@solana/wallet-adapter-react'
 import { useMemo } from 'react'
-import { DashboardIDL, FactoryIDL, MarketIDL } from '../config/programs'
 
 /**
+ * @deprecated Use Anchor-free utilities instead
  * Hook for managing Solana program instances
  * Provides program instances for Factory, Market, and Dashboard programs
  */
@@ -11,74 +23,14 @@ export function useSolanaProgram() {
   const { connection } = useConnection()
   const wallet = useWallet()
 
-  // Create Anchor provider
-  const provider = useMemo(() => {
-    if (!wallet.publicKey || !wallet.signTransaction || !wallet.signAllTransactions) {
-      return null
-    }
-
-    return new AnchorProvider(
-      connection,
-      {
-        publicKey: wallet.publicKey,
-        signTransaction: wallet.signTransaction.bind(wallet),
-        signAllTransactions: wallet.signAllTransactions.bind(wallet),
-      },
-      { commitment: 'confirmed' },
-    )
-  }, [connection, wallet])
-
-  // Create program instances with IDLs
-  // All IDLs now have metadata.address, so we don't need to pass programId explicitly
-  // This ensures the program IDs always match what's in the IDL (from declare_id! in Rust)
-  // Note: We use 'as any' because the JSON IDL structure doesn't match Anchor's Idl type exactly
-  const factoryProgram = useMemo(() => {
-    if (!provider)
-      return null
-    
-    try {
-      return new Program(
-        FactoryIDL as any,
-        provider,
-      ) as any
-    }
-    catch (error) {
-      console.error('Error initializing Factory program:', error)
-      return null
-    }
-  }, [provider])
-
-  const marketProgram = useMemo(() => {
-    if (!provider)
-      return null
-    
-    try {
-      return new Program(
-        MarketIDL as any,
-        provider,
-      ) as any
-    }
-    catch (error) {
-      console.error('Error initializing Market program:', error)
-      return null
-    }
-  }, [provider])
-
-  const dashboardProgram = useMemo(() => {
-    if (!provider)
-      return null
-    
-    try {
-      return new Program(
-        DashboardIDL as any,
-        provider,
-      ) as any
-    }
-    catch (error) {
-      console.error('Error initializing Dashboard program:', error)
-      return null
-    }
-  }, [provider])
+  // DEPRECATED: Anchor provider and program instances removed
+  // This hook now returns null values for backward compatibility
+  // Migrate to Anchor-free utilities for new code
+  
+  const provider = null
+  const factoryProgram = null
+  const marketProgram = null
+  const dashboardProgram = null
 
   return {
     connection,
@@ -87,6 +39,6 @@ export function useSolanaProgram() {
     factoryProgram,
     marketProgram,
     dashboardProgram,
-    isReady: !!provider,
+    isReady: false, // Always false since Anchor is removed
   }
 }

@@ -1,9 +1,31 @@
 /**
  * SolanaErrorHandler - Parses and handles Solana program errors
  * 
- * Maps error codes to user-friendly messages.
+ * Maps error codes to user-friendly messages and provides utilities
+ * for error logging and debugging.
+ * 
+ * @module error-handler
+ * 
+ * @example
+ * ```typescript
+ * try {
+ *   await sendTransaction(tx)
+ * } catch (error) {
+ *   const message = SolanaErrorHandler.getUserMessage(error)
+ *   toast.error(message)
+ *   SolanaErrorHandler.logError(error, 'createMarket')
+ * }
+ * ```
  */
 
+/**
+ * Parsed program error structure
+ * 
+ * @interface ProgramError
+ * @property {number} code - Error code (-1 for non-program errors)
+ * @property {string} message - User-friendly error message
+ * @property {string[]} [logs] - Transaction logs for debugging
+ */
 export interface ProgramError {
   code: number
   message: string
@@ -39,9 +61,32 @@ const SOLANA_ERRORS: Record<string, string> = {
   'Transaction was not confirmed': 'Transaction timed out - it may still succeed',
 }
 
+/**
+ * SolanaErrorHandler class for parsing and handling errors
+ * 
+ * @class SolanaErrorHandler
+ * 
+ * @example
+ * ```typescript
+ * const parsed = SolanaErrorHandler.parseError(error)
+ * console.log('Error code:', parsed.code)
+ * console.log('Message:', parsed.message)
+ * ```
+ */
 export class SolanaErrorHandler {
   /**
    * Parse program error from transaction error
+   * 
+   * @param {any} error - Error object from transaction
+   * @returns {ProgramError} Parsed error with code and message
+   * 
+   * @example
+   * ```typescript
+   * const parsed = SolanaErrorHandler.parseError(error)
+   * if (parsed.code === 6006) {
+   *   console.log('User already joined')
+   * }
+   * ```
    */
   static parseError(error: any): ProgramError {
     // Extract error message
@@ -76,6 +121,10 @@ export class SolanaErrorHandler {
 
   /**
    * Extract program error from transaction logs
+   * 
+   * @private
+   * @param {string[]} logs - Transaction logs
+   * @returns {ProgramError | null} Parsed error or null if not found
    */
   private static extractProgramError(logs: string[]): ProgramError | null {
     for (const log of logs) {
@@ -92,6 +141,15 @@ export class SolanaErrorHandler {
 
   /**
    * Get user-friendly error message
+   * 
+   * @param {any} error - Error object from transaction
+   * @returns {string} User-friendly error message
+   * 
+   * @example
+   * ```typescript
+   * const message = SolanaErrorHandler.getUserMessage(error)
+   * toast.error(message)
+   * ```
    */
   static getUserMessage(error: any): string {
     const parsed = this.parseError(error)
@@ -99,7 +157,16 @@ export class SolanaErrorHandler {
   }
 
   /**
-   * Log error for debugging
+   * Log error for debugging with full details
+   * 
+   * @param {any} error - Error object from transaction
+   * @param {string} [context] - Optional context (e.g., 'createMarket')
+   * 
+   * @example
+   * ```typescript
+   * SolanaErrorHandler.logError(error, 'joinMarket')
+   * // Logs: [SolanaError - joinMarket] { code, message, logs, originalError }
+   * ```
    */
   static logError(error: any, context?: string): void {
     const parsed = this.parseError(error)
@@ -112,7 +179,18 @@ export class SolanaErrorHandler {
   }
 
   /**
-   * Check if error is a specific program error
+   * Check if error matches a specific program error code
+   * 
+   * @param {any} error - Error object from transaction
+   * @param {number} code - Error code to check (e.g., 6006)
+   * @returns {boolean} True if error code matches
+   * 
+   * @example
+   * ```typescript
+   * if (SolanaErrorHandler.isErrorCode(error, 6006)) {
+   *   console.log('User already joined this market')
+   * }
+   * ```
    */
   static isErrorCode(error: any, code: number): boolean {
     const parsed = this.parseError(error)
