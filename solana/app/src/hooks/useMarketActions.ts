@@ -42,7 +42,7 @@ export interface SimulationResult {
 }
 
 export function useMarketActions() {
-  const { connection, publicKey, signTransaction } = useSolanaConnection()
+  const { connection, publicKey, sendTransaction } = useSolanaConnection()
   const queryClient = useQueryClient()
   const [isLoading, setIsLoading] = useState(false)
   const [txSignature, setTxSignature] = useState<string | null>(null)
@@ -90,7 +90,7 @@ export function useMarketActions() {
    * Create a new prediction market
    */
   const createMarket = useCallback(async (params: CreateMarketParams) => {
-    if (!publicKey || !signTransaction) {
+    if (!publicKey || !sendTransaction) {
       toast.error('Wallet not connected')
       return null
     }
@@ -160,9 +160,8 @@ export function useMarketActions() {
         return null
       }
 
-      // Sign and send transaction using wallet adapter
-      const signedTransaction = await signTransaction(transaction)
-      const signature = await connection.sendRawTransaction(signedTransaction.serialize())
+      // Send transaction using wallet adapter (handles signing internally)
+      const signature = await sendTransaction(transaction, connection)
 
       console.log('Transaction sent:', signature)
 
@@ -191,13 +190,13 @@ export function useMarketActions() {
     finally {
       setIsLoading(false)
     }
-  }, [connection, publicKey, signTransaction, queryClient, simulateBeforeSend])
+  }, [connection, publicKey, sendTransaction, queryClient, simulateBeforeSend])
 
   /**
    * Join an existing market with a prediction
    */
   const joinMarket = useCallback(async (params: JoinMarketParams) => {
-    if (!publicKey || !signTransaction) {
+    if (!publicKey || !sendTransaction) {
       toast.error('Wallet not connected')
       return null
     }
@@ -263,8 +262,7 @@ export function useMarketActions() {
         return null
       }
 
-      const signedTransaction = await signTransaction(transaction)
-      const signature = await connection.sendRawTransaction(signedTransaction.serialize())
+      const signature = await sendTransaction(transaction, connection)
 
       console.log('Transaction sent:', signature)
 
@@ -292,13 +290,13 @@ export function useMarketActions() {
     finally {
       setIsLoading(false)
     }
-  }, [connection, publicKey, signTransaction, queryClient, simulateBeforeSend])
+  }, [connection, publicKey, sendTransaction, queryClient, simulateBeforeSend])
 
   /**
    * Resolve a market with the match outcome
    */
   const resolveMarket = useCallback(async (params: ResolveMarketParams) => {
-    if (!publicKey || !signTransaction) {
+    if (!publicKey || !sendTransaction) {
       toast.error('Wallet not connected')
       return null
     }
@@ -356,8 +354,7 @@ export function useMarketActions() {
         return null
       }
 
-      const signedTransaction = await signTransaction(transaction)
-      const signature = await connection.sendRawTransaction(signedTransaction.serialize())
+      const signature = await sendTransaction(transaction, connection)
 
       console.log('Transaction sent:', signature)
 
@@ -385,13 +382,13 @@ export function useMarketActions() {
     finally {
       setIsLoading(false)
     }
-  }, [connection, publicKey, signTransaction, queryClient, simulateBeforeSend])
+  }, [connection, publicKey, sendTransaction, queryClient, simulateBeforeSend])
 
   /**
    * Withdraw rewards from a resolved market
    */
   const withdrawRewards = useCallback(async (marketAddress: string) => {
-    if (!publicKey || !signTransaction) {
+    if (!publicKey || !sendTransaction) {
       toast.error('Wallet not connected')
       return null
     }
@@ -447,8 +444,7 @@ export function useMarketActions() {
         return null
       }
 
-      const signedTransaction = await signTransaction(transaction)
-      const signature = await connection.sendRawTransaction(signedTransaction.serialize())
+      const signature = await sendTransaction(transaction, connection)
 
       console.log('Transaction sent:', signature)
 
@@ -477,7 +473,7 @@ export function useMarketActions() {
     finally {
       setIsLoading(false)
     }
-  }, [connection, publicKey, signTransaction, queryClient, simulateBeforeSend])
+  }, [connection, publicKey, sendTransaction, queryClient, simulateBeforeSend])
 
   /**
    * Get Solana Explorer link for a transaction

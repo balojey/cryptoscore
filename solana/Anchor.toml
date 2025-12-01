@@ -28,11 +28,12 @@ cryptoscore_dashboard = "MainnetDashboardId11111111111111111111111"
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "https://api.devnet.solana.com"
+cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+initialize-factory = "ts-node scripts/initialize-factory.ts"
 
 [test]
 startup_wait = 5000

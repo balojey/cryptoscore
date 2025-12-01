@@ -4,6 +4,7 @@ import {
   PhantomWalletAdapter,
   SolflareWalletAdapter,
 } from '@solana/wallet-adapter-wallets'
+import type { WalletAdapterNetwork } from '@solana/wallet-adapter-base'
 import { clusterApiUrl } from '@solana/web3.js'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React, { useMemo } from 'react'
@@ -17,19 +18,22 @@ import '@solana/wallet-adapter-react-ui/styles.css'
 const queryClient = new QueryClient()
 
 function Root() {
+  // Get network from environment
+  const network = (import.meta.env.VITE_SOLANA_NETWORK || 'devnet') as WalletAdapterNetwork
+
   // Get RPC endpoint from environment or use devnet
   const endpoint = useMemo(
-    () => import.meta.env.VITE_SOLANA_RPC_URL || clusterApiUrl('devnet'),
-    [],
+    () => import.meta.env.VITE_SOLANA_RPC_URL || clusterApiUrl(network),
+    [network],
   )
 
-  // Initialize wallet adapters
+  // Initialize wallet adapters with explicit network configuration
   const wallets = useMemo(
     () => [
       new PhantomWalletAdapter(),
-      new SolflareWalletAdapter(),
+      new SolflareWalletAdapter({ network }),
     ],
-    [],
+    [network],
   )
 
   return (

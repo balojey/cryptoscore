@@ -14,6 +14,7 @@ export interface UseSolanaConnectionReturn {
   isConnected: boolean
   signTransaction: ((transaction: Transaction) => Promise<Transaction>) | undefined
   signAllTransactions: ((transactions: Transaction[]) => Promise<Transaction[]>) | undefined
+  sendTransaction: ((transaction: Transaction, connection: Connection) => Promise<string>) | undefined
 }
 
 /**
@@ -32,5 +33,6 @@ export function useSolanaConnection(): UseSolanaConnectionReturn {
     isConnected: wallet.connected && !!wallet.publicKey,
     signTransaction: wallet.signTransaction,
     signAllTransactions: wallet.signAllTransactions,
+    sendTransaction: wallet.sendTransaction,
   }
 }
