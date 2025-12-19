@@ -21,14 +21,14 @@
   - **Property 3: EVM Wallet Creation**
   - **Validates: Requirements 2.2**
 
-- [ ] 3. Create Supabase client configuration and service layer
+- [x] 3. Create Supabase client configuration and service layer
   - Set up Supabase client configuration with environment variables
   - Create database service classes (UserService, MarketService, etc.)
   - Implement CRUD operations for all entities
   - Add proper error handling and type safety
   - _Requirements: 3.1, 3.2, 3.3, 3.4_
 
-- [ ] 3.1 Write property test for database operations
+- [x] 3.1 Write property test for database operations
   - **Property 2: Database Storage Consistency**
   - **Validates: Requirements 1.2, 3.1, 3.2, 3.3**
 

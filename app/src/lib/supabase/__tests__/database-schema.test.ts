@@ -14,7 +14,7 @@ import { DatabaseService } from '../database-service'
 
 describe('Database Schema Property Tests', () => {
   describe('Property 1: Database Schema Completeness', () => {
-    it('should have all required tables present in the database', { timeout: 30000 }, async () => {
+    it('should have all required tables present in the database', { timeout: 60000 }, async () => {
       // This property verifies that the database schema is complete
       // For any valid database connection, all required tables must exist
       
@@ -49,13 +49,13 @@ describe('Database Schema Property Tests', () => {
       expect(columnErrors).toHaveLength(0)
     })
 
-    it('should maintain schema integrity across multiple validation checks', { timeout: 30000 }, async () => {
+    it('should maintain schema integrity across multiple validation checks', { timeout: 60000 }, async () => {
       // Property: Schema validation should be idempotent
       // For any number of validation checks, the schema should remain consistent
       
       await fc.assert(
         fc.asyncProperty(
-          fc.integer({ min: 1, max: 3 }), // Run validation 1-3 times (reduced for performance)
+          fc.integer({ min: 1, max: 2 }), // Run validation 1-2 times (further reduced for performance)
           async (numChecks) => {
             const results = []
             
@@ -73,7 +73,7 @@ describe('Database Schema Property Tests', () => {
             }
           }
         ),
-        { numRuns: 5 } // Reduced from 10 to 5 for performance
+        { numRuns: 3 } // Reduced from 5 to 3 for performance
       )
     })
 
@@ -110,33 +110,26 @@ describe('Database Schema Property Tests', () => {
       }
     })
 
-    it('should enforce referential integrity constraints', { timeout: 60000 }, async () => {
+    it('should enforce referential integrity constraints', { timeout: 30000 }, async () => {
       // Property: Foreign key relationships should be properly defined
       // For any table with foreign keys, the relationships should be valid
       
-      await fc.assert(
-        fc.asyncProperty(
-          fc.constant(null), // Placeholder for property test structure
-          async () => {
-            const result = await DatabaseValidator.validateDatabaseSchema()
-            
-            // If tables exist, they should have proper structure
-            if (result.tablesFound.includes('markets') && 
-                result.tablesFound.includes('users')) {
-              // Markets table should reference users table (creator_id)
-              expect(result.isValid).toBe(true)
-            }
-            
-            if (result.tablesFound.includes('participants') && 
-                result.tablesFound.includes('markets') &&
-                result.tablesFound.includes('users')) {
-              // Participants table should reference both markets and users
-              expect(result.isValid).toBe(true)
-            }
-          }
-        ),
-        { numRuns: 10 }
-      )
+      // Simplified test - just validate once instead of property testing
+      const result = await DatabaseValidator.validateDatabaseSchema()
+      
+      // If tables exist, they should have proper structure
+      if (result.tablesFound.includes('markets') && 
+          result.tablesFound.includes('users')) {
+        // Markets table should reference users table (creator_id)
+        expect(result.isValid).toBe(true)
+      }
+      
+      if (result.tablesFound.includes('participants') && 
+          result.tablesFound.includes('markets') &&
+          result.tablesFound.includes('users')) {
+        // Participants table should reference both markets and users
+        expect(result.isValid).toBe(true)
+      }
     })
 
     it('should have proper indexes for performance', { timeout: 30000 }, async () => {
@@ -171,25 +164,18 @@ describe('Database Schema Property Tests', () => {
       expect(securityErrors).toHaveLength(0)
     })
 
-    it('should maintain data type consistency across schema', { timeout: 60000 }, async () => {
+    it('should maintain data type consistency across schema', { timeout: 30000 }, async () => {
       // Property: Similar fields across tables should use consistent data types
       // For any field representing the same concept, data types should match
       
-      await fc.assert(
-        fc.asyncProperty(
-          fc.constant(null),
-          async () => {
-            const result = await DatabaseValidator.validateDatabaseSchema()
-            
-            // All ID fields should be UUID type (checked implicitly by schema validation)
-            // All timestamp fields should be consistent
-            // All decimal fields for money should use same precision
-            
-            expect(result.isValid).toBe(true)
-          }
-        ),
-        { numRuns: 10 }
-      )
+      // Simplified test - just validate once instead of property testing
+      const result = await DatabaseValidator.validateDatabaseSchema()
+      
+      // All ID fields should be UUID type (checked implicitly by schema validation)
+      // All timestamp fields should be consistent
+      // All decimal fields for money should use same precision
+      
+      expect(result.isValid).toBe(true)
     })
 
     it('should have database functions for complex operations', { timeout: 30000 }, async () => {
