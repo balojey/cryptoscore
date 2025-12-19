@@ -1,0 +1,16 @@
+{
+  "network": "devnet",
+  "deployedAt": "2024-11-27T18:00:00.000Z",
+  "programIds": {
+    "factory": "5zADKCecxATSEsCuH5MJa1JdfXGeBLNwEYnkCbqdaYmZ",
+    "market": "BJmMs142koLJvkutSzWchPGn2CJNGqTtGQV5g3Xt87PU",
+    "dashboard": "DHJASkp8vNuyR5xPSyj1G66xExRjnPBUuUN4QKiTnadZ"
+  },
+  "txSignatures": {
+    "factory": "2wMNhUaCrd6wxhnFjvKq8Y9DcYaTm83u8jHGigt5Mzh3jpdbozHr9ayASkUks8UN756xJbFqq9yN89t3f7KTf9W9",
+    "market": "4mZ3R1hJwYbSUpz2PTVMkRPpHXXH5zhEA2WP8kBDjYQakGMRoG6szFsRJWZeBsh3Kx8b91dv2TqtveE2UmyWWDdV",
+    "dashboard": "2kpdSJkVi9sNCmM9dEJDtzdAWCS5uvDcSgNMV7JySeEXnXcwu4cKLY7DWtZRJW8cAkXaqfHfV7qH6S8peYsdKF3A"
+  },
+  "rpcUrl": "https://api.devnet.solana.com",
+  "wallet": "FfvcPApER7GX7C1Rt1xHKQY6kR5cgoFDUv2gNMnsjCFp"
+}

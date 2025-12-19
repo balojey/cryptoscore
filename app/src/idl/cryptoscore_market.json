@@ -1,0 +1,466 @@
+{
+  "version": "0.1.0",
+  "name": "cryptoscore_market",
+  "instructions": [
+    {
+      "name": "initializeMarket",
+      "accounts": [
+        {
+          "name": "market",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "factory",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "creator",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "matchId",
+          "type": "string"
+        },
+        {
+          "name": "entryFee",
+          "type": "u64"
+        },
+        {
+          "name": "kickoffTime",
+          "type": "i64"
+        },
+        {
+          "name": "endTime",
+          "type": "i64"
+        },
+        {
+          "name": "isPublic",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "joinMarket",
+      "accounts": [
+        {
+          "name": "market",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "participant",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "user",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "prediction",
+          "type": {
+            "defined": "MatchOutcome"
+          }
+        }
+      ]
+    },
+    {
+      "name": "resolveMarket",
+      "accounts": [
+        {
+          "name": "market",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "creator",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "outcome",
+          "type": {
+            "defined": "MatchOutcome"
+          }
+        }
+      ]
+    },
+    {
+      "name": "withdrawRewards",
+      "accounts": [
+        {
+          "name": "market",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "participant",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "user",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Market",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "factory",
+            "type": "publicKey"
+          },
+          {
+            "name": "creator",
+            "type": "publicKey"
+          },
+          {
+            "name": "matchId",
+            "type": "string"
+          },
+          {
+            "name": "entryFee",
+            "type": "u64"
+          },
+          {
+            "name": "kickoffTime",
+            "type": "i64"
+          },
+          {
+            "name": "endTime",
+            "type": "i64"
+          },
+          {
+            "name": "status",
+            "type": {
+              "defined": "MarketStatus"
+            }
+          },
+          {
+            "name": "outcome",
+            "type": {
+              "option": {
+                "defined": "MatchOutcome"
+              }
+            }
+          },
+          {
+            "name": "totalPool",
+            "type": "u64"
+          },
+          {
+            "name": "participantCount",
+            "type": "u32"
+          },
+          {
+            "name": "homeCount",
+            "type": "u32"
+          },
+          {
+            "name": "drawCount",
+            "type": "u32"
+          },
+          {
+            "name": "awayCount",
+            "type": "u32"
+          },
+          {
+            "name": "isPublic",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Participant",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "market",
+            "type": "publicKey"
+          },
+          {
+            "name": "user",
+            "type": "publicKey"
+          },
+          {
+            "name": "prediction",
+            "type": {
+              "defined": "MatchOutcome"
+            }
+          },
+          {
+            "name": "joinedAt",
+            "type": "i64"
+          },
+          {
+            "name": "hasWithdrawn",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "MarketStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Open"
+          },
+          {
+            "name": "Live"
+          },
+          {
+            "name": "Resolved"
+          },
+          {
+            "name": "Cancelled"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MatchOutcome",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Home"
+          },
+          {
+            "name": "Draw"
+          },
+          {
+            "name": "Away"
+          }
+        ]
+      }
+    }
+  ],
+  "events": [
+    {
+      "name": "PredictionMade",
+      "fields": [
+        {
+          "name": "market",
+          "type": "publicKey",
+          "index": true
+        },
+        {
+          "name": "user",
+          "type": "publicKey",
+          "index": true
+        },
+        {
+          "name": "prediction",
+          "type": {
+            "defined": "MatchOutcome"
+          },
+          "index": false
+        },
+        {
+          "name": "timestamp",
+          "type": "i64",
+          "index": false
+        }
+      ]
+    },
+    {
+      "name": "MarketResolved",
+      "fields": [
+        {
+          "name": "market",
+          "type": "publicKey",
+          "index": true
+        },
+        {
+          "name": "outcome",
+          "type": {
+            "defined": "MatchOutcome"
+          },
+          "index": false
+        },
+        {
+          "name": "winnerCount",
+          "type": "u32",
+          "index": false
+        },
+        {
+          "name": "totalPool",
+          "type": "u64",
+          "index": false
+        }
+      ]
+    },
+    {
+      "name": "RewardClaimed",
+      "fields": [
+        {
+          "name": "market",
+          "type": "publicKey",
+          "index": true
+        },
+        {
+          "name": "user",
+          "type": "publicKey",
+          "index": true
+        },
+        {
+          "name": "amount",
+          "type": "u64",
+          "index": false
+        }
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidMatchId",
+      "msg": "Match ID cannot be empty"
+    },
+    {
+      "code": 6001,
+      "name": "MatchIdTooLong",
+      "msg": "Match ID is too long (max 64 characters)"
+    },
+    {
+      "code": 6002,
+      "name": "ZeroEntryFee",
+      "msg": "Entry fee must be greater than zero"
+    },
+    {
+      "code": 6003,
+      "name": "InvalidKickoffTime",
+      "msg": "Kickoff time must be in the future"
+    },
+    {
+      "code": 6004,
+      "name": "InvalidEndTime",
+      "msg": "End time must be after kickoff time"
+    },
+    {
+      "code": 6005,
+      "name": "MarketNotOpen",
+      "msg": "Market is not open for joining"
+    },
+    {
+      "code": 6006,
+      "name": "MarketAlreadyStarted",
+      "msg": "Market has already started"
+    },
+    {
+      "code": 6007,
+      "name": "PoolOverflow",
+      "msg": "Pool amount overflow"
+    },
+    {
+      "code": 6008,
+      "name": "ParticipantOverflow",
+      "msg": "Participant count overflow"
+    },
+    {
+      "code": 6009,
+      "name": "CountOverflow",
+      "msg": "Prediction count overflow"
+    },
+    {
+      "code": 6010,
+      "name": "UnauthorizedResolver",
+      "msg": "Only market creator can resolve"
+    },
+    {
+      "code": 6011,
+      "name": "MarketAlreadyResolved",
+      "msg": "Market is already resolved"
+    },
+    {
+      "code": 6012,
+      "name": "MarketNotEnded",
+      "msg": "Market has not ended yet"
+    },
+    {
+      "code": 6013,
+      "name": "MarketNotResolved",
+      "msg": "Market is not resolved yet"
+    },
+    {
+      "code": 6014,
+      "name": "AlreadyWithdrawn",
+      "msg": "Rewards already withdrawn"
+    },
+    {
+      "code": 6015,
+      "name": "NoOutcome",
+      "msg": "No outcome set for market"
+    },
+    {
+      "code": 6016,
+      "name": "NotAWinner",
+      "msg": "User is not a winner"
+    },
+    {
+      "code": 6017,
+      "name": "NoWinners",
+      "msg": "No winners in this market"
+    },
+    {
+      "code": 6018,
+      "name": "CalculationError",
+      "msg": "Calculation error"
+    },
+    {
+      "code": 6019,
+      "name": "InsufficientFunds",
+      "msg": "Insufficient funds in market"
+    }
+  ],
+  "metadata": {
+    "address": "94CjfuYYswDbcjasA1PTUmHhsqFsBQC4JnsiKB8nKJhQ"
+  },
+  "address": "94CjfuYYswDbcjasA1PTUmHhsqFsBQC4JnsiKB8nKJhQ"
+}

@@ -1,0 +1,51 @@
+{
+  "name": "cryptoscore-solana",
+  "version": "0.1.0",
+  "description": "CryptoScore Solana Workspace - Prediction markets on Solana",
+  "license": "ISC",
+  "scripts": {
+    "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
+    "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
+    "build": "anchor build",
+    "build:verify": "ts-node scripts/build-verify.ts build",
+    "verify": "ts-node scripts/build-verify.ts verify",
+    "test": "anchor test",
+    "deploy": "anchor deploy",
+    "deploy:localnet": "ts-node scripts/deploy.ts localnet",
+    "deploy:devnet": "ts-node scripts/deploy.ts devnet",
+    "deploy:testnet": "ts-node scripts/deploy.ts testnet",
+    "deploy:mainnet": "ts-node scripts/deploy.ts mainnet-beta",
+    "configure:localnet": "ts-node scripts/configure-network.ts set localnet",
+    "configure:devnet": "ts-node scripts/configure-network.ts set devnet",
+    "configure:testnet": "ts-node scripts/configure-network.ts set testnet",
+    "configure:mainnet": "ts-node scripts/configure-network.ts set mainnet-beta",
+    "configure:list": "ts-node scripts/configure-network.ts list",
+    "configure:current": "ts-node scripts/configure-network.ts current",
+    "initialize:factory": "ts-node scripts/initialize-factory-native.ts",
+    "setup:localnet": "./scripts/setup-localnet.sh",
+    "start:validator": "solana-test-validator",
+    "stop:validator": "pkill solana-test-validator",
+    "reset:localnet": "pkill solana-test-validator; rm -rf .anchor/test-ledger; npm run setup:localnet",
+    "idl:export": "ts-node scripts/export-idls.ts export",
+    "idl:build": "ts-node scripts/export-idls.ts build",
+    "idl:list": "ts-node scripts/export-idls.ts list",
+    "idl:verify": "./scripts/verify-idls.sh",
+    "idl:sync": "cp target/idl/*.json app/src/idl/",
+    "localnet": "solana-test-validator",
+    "logs": "solana logs"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.30.1"
+  },
+  "devDependencies": {
+    "@types/bn.js": "^5.1.0",
+    "@types/chai": "^4.3.0",
+    "@types/mocha": "^9.0.0",
+    "@types/node": "^24.10.1",
+    "chai": "^4.3.4",
+    "mocha": "^9.0.3",
+    "prettier": "^2.6.2",
+    "ts-mocha": "^10.0.0",
+    "typescript": "^4.3.5"
+  }
+}

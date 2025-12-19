@@ -1,0 +1,22 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="512" height="512" rx="64" fill="#0B0E11"/>
+  
+  <!-- Polkadot-style hexagon icon (centered and scaled) -->
+  <g transform="translate(256, 256) scale(14.5)">
+    <!-- Main hexagon structure -->
+    <path d="M0 -10L-8.66 -5V5L0 10L8.66 5V-5L0 -10Z" stroke="#00D4FF" stroke-width="1.5" stroke-linejoin="round" fill="none"/>
+    
+    <!-- Top-right connection -->
+    <path d="M0 0L8.66 -5" stroke="#00D4FF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    
+    <!-- Vertical center line -->
+    <path d="M0 0V10" stroke="#00D4FF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    
+    <!-- Top-left connection -->
+    <path d="M0 0L-8.66 -5" stroke="#00D4FF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  
+  <!-- App name -->
+  <text x="256" y="440" text-anchor="middle" fill="#00D4FF" font-family="Arial, sans-serif" font-size="42" font-weight="bold">CryptoScore</text>
+</svg>

@@ -1,0 +1,268 @@
+{
+  "version": "0.1.0",
+  "name": "cryptoscore_factory",
+  "instructions": [
+    {
+      "name": "initializeFactory",
+      "accounts": [
+        {
+          "name": "factory",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "platformFeeBps",
+          "type": "u16"
+        }
+      ]
+    },
+    {
+      "name": "createMarket",
+      "accounts": [
+        {
+          "name": "factory",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "marketRegistry",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "marketAccount",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "creator",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "matchId",
+          "type": "string"
+        },
+        {
+          "name": "entryFee",
+          "type": "u64"
+        },
+        {
+          "name": "kickoffTime",
+          "type": "i64"
+        },
+        {
+          "name": "endTime",
+          "type": "i64"
+        },
+        {
+          "name": "isPublic",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "getMarkets",
+      "accounts": [
+        {
+          "name": "factory",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "filterCreator",
+          "type": {
+            "option": "publicKey"
+          }
+        },
+        {
+          "name": "filterPublic",
+          "type": {
+            "option": "bool"
+          }
+        },
+        {
+          "name": "page",
+          "type": "u32"
+        },
+        {
+          "name": "pageSize",
+          "type": "u32"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "factory",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "marketCount",
+            "type": "u64"
+          },
+          {
+            "name": "platformFeeBps",
+            "type": "u16"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "marketRegistry",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "factory",
+            "type": "publicKey"
+          },
+          {
+            "name": "marketAddress",
+            "type": "publicKey"
+          },
+          {
+            "name": "creator",
+            "type": "publicKey"
+          },
+          {
+            "name": "matchId",
+            "type": "string"
+          },
+          {
+            "name": "createdAt",
+            "type": "i64"
+          },
+          {
+            "name": "isPublic",
+            "type": "bool"
+          },
+          {
+            "name": "entryFee",
+            "type": "u64"
+          },
+          {
+            "name": "kickoffTime",
+            "type": "i64"
+          },
+          {
+            "name": "endTime",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    }
+  ],
+  "events": [
+    {
+      "name": "MarketCreated",
+      "fields": [
+        {
+          "name": "market",
+          "type": "publicKey",
+          "index": true
+        },
+        {
+          "name": "creator",
+          "type": "publicKey",
+          "index": true
+        },
+        {
+          "name": "matchId",
+          "type": "string",
+          "index": false
+        },
+        {
+          "name": "entryFee",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "kickoffTime",
+          "type": "i64",
+          "index": false
+        },
+        {
+          "name": "isPublic",
+          "type": "bool",
+          "index": false
+        }
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidPlatformFee",
+      "msg": "Platform fee cannot exceed 10% (1000 bps)"
+    },
+    {
+      "code": 6001,
+      "name": "InvalidMatchId",
+      "msg": "Match ID cannot be empty"
+    },
+    {
+      "code": 6002,
+      "name": "MatchIdTooLong",
+      "msg": "Match ID is too long (max 64 characters)"
+    },
+    {
+      "code": 6003,
+      "name": "ZeroEntryFee",
+      "msg": "Entry fee must be greater than zero"
+    },
+    {
+      "code": 6004,
+      "name": "InvalidKickoffTime",
+      "msg": "Kickoff time must be in the future"
+    },
+    {
+      "code": 6005,
+      "name": "InvalidEndTime",
+      "msg": "End time must be after kickoff time"
+    },
+    {
+      "code": 6006,
+      "name": "MarketCountOverflow",
+      "msg": "Market count overflow"
+    }
+  ],
+  "address": "93CjfuYYswDbcjasA1PTUmHhsqFsBQC4JnsiKB8nKJhP",
+  "metadata": {
+    "address": "93CjfuYYswDbcjasA1PTUmHhsqFsBQC4JnsiKB8nKJhP"
+  }
+}

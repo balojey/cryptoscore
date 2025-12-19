@@ -1,0 +1,20 @@
+[package]
+name = "cryptoscore-factory"
+version = "0.1.0"
+description = "CryptoScore Factory Program - Creates and manages prediction markets"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "cryptoscore_factory"
+
+[features]
+default = []
+cpi = ["no-entrypoint"]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+idl-build = ["anchor-lang/idl-build"]
+
+[dependencies]
+anchor-lang = "0.30.1"
