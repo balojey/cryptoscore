@@ -9,6 +9,11 @@ type Transaction = Tables['transactions']['Row']
 type PlatformConfig = Tables['platform_config']['Row']
 
 export class DatabaseService {
+  // Expose supabase client for advanced operations
+  static get supabase() {
+    return supabase
+  }
+
   // User operations
   static async createUser(userData: Tables['users']['Insert']): Promise<User> {
     const { data, error } = await supabase

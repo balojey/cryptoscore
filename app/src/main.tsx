@@ -30,6 +30,7 @@ import {
   validateCrossmintConfiguration,
 } from './lib/crossmint/config-validator'
 import { UnifiedWalletProvider } from './contexts/UnifiedWalletContext'
+import { AuthProvider } from './contexts/AuthContext'
 
 import './style.css'
 import '@solana/wallet-adapter-react-ui/styles.css'
@@ -106,9 +107,9 @@ function Root() {
           >
             <CrossmintWalletProvider 
               createOnLogin={{
-                chain: 'solana',
+                chain: 'ethereum',
                 signer: {
-                  type: 'email',
+                  type: 'passkey',
                 },
               }}
             >
@@ -116,9 +117,11 @@ function Root() {
                 <WalletProvider wallets={wallets} autoConnect>
                   <WalletModalProvider>
                     <UnifiedWalletProvider>
-                      <QueryClientProvider client={queryClient}>
-                        <App />
-                      </QueryClientProvider>
+                      <AuthProvider>
+                        <QueryClientProvider client={queryClient}>
+                          <App />
+                        </QueryClientProvider>
+                      </AuthProvider>
                     </UnifiedWalletProvider>
                   </WalletModalProvider>
                 </WalletProvider>
@@ -132,9 +135,11 @@ function Root() {
           <WalletProvider wallets={wallets} autoConnect>
             <WalletModalProvider>
               <UnifiedWalletProvider>
-                <QueryClientProvider client={queryClient}>
-                  <App />
-                </QueryClientProvider>
+                <AuthProvider>
+                  <QueryClientProvider client={queryClient}>
+                    <App />
+                  </QueryClientProvider>
+                </AuthProvider>
               </UnifiedWalletProvider>
             </WalletModalProvider>
           </WalletProvider>

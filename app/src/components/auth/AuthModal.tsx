@@ -7,7 +7,7 @@
  * @module components/auth/AuthModal
  */
 
-import { useAuth } from '@crossmint/client-sdk-react-ui'
+import { useAuth as useCrossmintAuth } from '@crossmint/client-sdk-react-ui'
 import { useWalletModal } from '@solana/wallet-adapter-react-ui'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
@@ -20,6 +20,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { isCrossmintEnabled } from '@/config/crossmint'
+import { useAuth } from '@/contexts/AuthContext'
 import { WALLET_ERROR_CODES, WalletErrorHandler } from '@/lib/crossmint/wallet-error-handler'
 
 /**
@@ -61,7 +62,8 @@ export interface AuthModalProps {
  * ```
  */
 export function AuthModal({ open, onOpenChange }: AuthModalProps) {
-  const crossmintAuth = useAuth()
+  const crossmintAuth = useCrossmintAuth()
+  const auth = useAuth()
   const { setVisible: setWalletModalVisible } = useWalletModal()
 
   const [isLoading, setIsLoading] = useState(false)
@@ -69,21 +71,21 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
 
   const crossmintEnabled = isCrossmintEnabled()
 
-  // Log Crossmint auth state for debugging
-  console.log('[AuthModal] Crossmint auth state:', {
-    status: crossmintAuth.status,
-    user: crossmintAuth.user,
+  // Log auth state for debugging
+  console.log('[AuthModal] Auth state:', {
+    crossmintStatus: crossmintAuth.status,
+    user: auth.user,
+    walletAddress: auth.walletAddress,
     enabled: crossmintEnabled,
   })
 
   // Close modal automatically when authentication completes
   useEffect(() => {
-    if (crossmintAuth.status === 'logged-in' && open) {
+    if (auth.user && open) {
       console.log('[AuthModal] Authentication successful, closing modal')
       onOpenChange(false)
-      toast.success('Successfully connected!')
     }
-  }, [crossmintAuth.status, open, onOpenChange])
+  }, [auth.user, open, onOpenChange])
 
   // Cleanup: Ensure body scroll is restored when modal closes
   useEffect(() => {

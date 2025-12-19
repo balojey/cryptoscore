@@ -32,14 +32,14 @@
   - **Property 2: Database Storage Consistency**
   - **Validates: Requirements 1.2, 3.1, 3.2, 3.3**
 
-- [ ] 4. Implement user authentication and profile management
+- [x] 4. Implement user authentication and profile management
   - Update authentication flow to work with Supabase user storage
   - Create user profile creation/update logic
   - Implement session management without Supabase Auth
   - Store EVM wallet addresses in user profiles
   - _Requirements: 2.1, 2.4, 2.5_
 
-- [ ] 4.1 Write property test for authentication data persistence
+- [x] 4.1 Write property test for authentication data persistence
   - **Property 4: Authentication Data Persistence**
   - **Validates: Requirements 2.5**
 
