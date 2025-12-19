@@ -2,7 +2,7 @@
  * Crossmint Configuration
  *
  * Configuration for Crossmint authentication and wallet management.
- * Supports social login (Google, email OTP) and automatic Solana
+ * Supports social login (Google, email OTP) and automatic EVM
  * wallet creation for authenticated users.
  *
  * @module config/crossmint
@@ -20,14 +20,14 @@ export type CrossmintEnvironment = 'staging' | 'production'
  * Supported authentication methods for Crossmint
  * - `google`: Google OAuth authentication
  * - `email`: Email OTP (one-time password) authentication
- * - `web3:solana-only`: Web3 wallet authentication (Solana only)
+ * - `web3:ethereum-only`: Web3 wallet authentication (EVM only)
  */
 export type CrossmintLoginMethod
   = | 'google'
     // | 'twitter'
     // | 'farcaster'
     | 'email'
-    // | 'web3:solana-only'
+    // | 'web3:ethereum-only'
 
 /**
  * Crossmint configuration interface
@@ -47,16 +47,16 @@ export interface CrossmintConfig {
 
   /** Wallet creation and management configuration */
   walletConfig: {
-    /** Blockchain network (currently only Solana is supported) */
-    chain: 'solana'
+    /** Blockchain network (EVM chains supported) */
+    chain: 'ethereum'
 
     /** Wallet signer configuration */
     signer: {
       /**
        * Signer type for wallet operations
-       * Note: 'email' is used for Solana (PASSKEY only supported for EVM chains)
+       * Note: 'passkey' is supported for EVM chains
        */
-      type: 'email'
+      type: 'passkey'
     }
   }
 }
@@ -102,15 +102,15 @@ export const CROSSMINT_LOGIN_METHODS: CrossmintLoginMethod[] = [
  * Wallet creation configuration
  *
  * Defines how Crossmint creates and manages wallets for authenticated users.
- * - Creates Solana wallets automatically on first login
- * - Uses email signer for transaction signing (PASSKEY only for EVM chains)
+ * - Creates EVM wallets automatically on first login
+ * - Uses passkey signer for transaction signing (supported for EVM chains)
  *
  * @constant
  */
 export const CROSSMINT_WALLET_CONFIG = {
-  chain: 'solana' as const,
+  chain: 'ethereum' as const,
   signer: {
-    type: 'email' as const,
+    type: 'passkey' as const,
   },
 }
 

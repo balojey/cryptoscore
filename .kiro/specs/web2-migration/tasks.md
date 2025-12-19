@@ -17,7 +17,7 @@
   - Test EVM wallet creation and address validation
   - _Requirements: 2.2, 9.1, 9.4_
 
-- [ ] 2.1 Write property test for EVM wallet creation
+- [x] 2.1 Write property test for EVM wallet creation
   - **Property 3: EVM Wallet Creation**
   - **Validates: Requirements 2.2**
 
