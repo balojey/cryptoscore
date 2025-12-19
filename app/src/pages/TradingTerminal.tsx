@@ -13,7 +13,7 @@ import { DASHBOARD_PROGRAM_ID } from '../config/programs'
 import { useUnifiedWallet } from '../contexts/UnifiedWalletContext'
 import { useAllMarkets } from '../hooks/useDashboardData'
 import { useSimpleRealtimeMarkets } from '../hooks/useEnhancedRealtimeMarkets'
-import { useUserParticipantMarkets } from '../hooks/useMarketData'
+import { useSupabaseUserParticipantMarkets } from '../hooks/useSupabaseMarketData'
 
 type Timeframe = '24h' | '7d' | '30d' | 'all'
 type MetricType = 'tvl' | 'volume' | 'participants'
@@ -32,7 +32,7 @@ export function TradingTerminal() {
 
   // Get current user's wallet and participant markets for private market filtering
   const { publicKey } = useUnifiedWallet()
-  const { data: userParticipantMarkets } = useUserParticipantMarkets(publicKey?.toString())
+  const { data: userParticipantMarkets } = useSupabaseUserParticipantMarkets(publicKey?.toString())
 
   // Filter markets to exclude private markets user isn't authorized to see
   const markets: Market[] = useMemo(() => {

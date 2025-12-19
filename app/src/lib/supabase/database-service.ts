@@ -172,6 +172,18 @@ export class DatabaseService {
     return data
   }
 
+  static async updateParticipant(participantId: string, updates: Tables['participants']['Update']): Promise<Participant> {
+    const { data, error } = await supabase
+      .from('participants')
+      .update(updates)
+      .eq('id', participantId)
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  }
+
   // Transaction operations
   static async createTransaction(transactionData: Tables['transactions']['Insert']): Promise<Transaction> {
     const { data, error } = await supabase

@@ -209,10 +209,9 @@ export class MarketService {
       const actualWinnings = participant.prediction === params.outcome ? winningsPerWinner : 0
       
       // Update participant with actual winnings
-      await DatabaseService.supabase
-        .from('participants')
-        .update({ actual_winnings: actualWinnings })
-        .eq('id', participant.id)
+      await DatabaseService.updateParticipant(participant.id, {
+        actual_winnings: actualWinnings,
+      })
 
       // Create winnings transaction record (even if 0)
       if (actualWinnings > 0) {

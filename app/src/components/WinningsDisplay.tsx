@@ -43,8 +43,8 @@ import {
   prefersReducedMotion 
 } from '@/utils/accessibility'
 import type { WinningsResult } from '@/utils/winnings-calculator'
-import type { MarketData } from '@/hooks/useMarketData'
-import type { ParticipantData } from '@/hooks/useParticipantData'
+import type { MarketData } from '@/hooks/useSupabaseMarketData'
+import type { ParticipantData } from '@/hooks/useSupabaseParticipantData'
 import type { EnhancedMatchData } from '@/hooks/useMatchData'
 
 /**
@@ -725,7 +725,7 @@ export function IntegratedWinningsDisplay({
 
   const useMarketData = React.useMemo(() => {
     try {
-      return require('../hooks/useMarketData').useMarketData
+      return require('../hooks/useSupabaseMarketData').useSupabaseMarketData
     } catch {
       return null
     }
@@ -733,7 +733,7 @@ export function IntegratedWinningsDisplay({
 
   const useParticipantData = React.useMemo(() => {
     try {
-      return require('../hooks/useParticipantData').useParticipantData
+      return require('../hooks/useSupabaseParticipantData').useSupabaseParticipantData
     } catch {
       return null
     }

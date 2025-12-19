@@ -1,7 +1,7 @@
 import { LAMPORTS_PER_SOL } from '@solana/web3.js'
 import { memo, useMemo } from 'react'
 import { useCurrency } from '../../hooks/useCurrency'
-import { useAllMarkets } from '../../hooks/useMarketData'
+import { useSupabaseAllMarkets } from '../../hooks/useSupabaseMarketData'
 import AnimatedNumber from '../ui/AnimatedNumber'
 
 interface MetricCardProps {
@@ -67,7 +67,7 @@ const MetricCard = memo(({ label, value, suffix = '', icon, color, decimals = 0,
 
 export default function LiveMetrics() {
   // Fetch all markets and calculate statistics
-  const { data: marketsData, isLoading } = useAllMarkets()
+  const { data: marketsData, isLoading } = useSupabaseAllMarkets()
   const { currency, convertFromLamports } = useCurrency()
 
   // Calculate metrics from market data

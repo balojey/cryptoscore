@@ -10,9 +10,9 @@ import {
 } from '@/components/ui/tooltip'
 import { UserPredictionBadge } from '@/components/ui/UserPredictionBadge'
 import { useCurrency } from '@/hooks/useCurrency'
-import { useMarketData, useUserParticipantMarkets } from '../../hooks/useMarketData'
+import { useSupabaseMarketData, useSupabaseUserParticipantMarkets } from '../../hooks/useSupabaseMarketData'
 import { useMatchData } from '../../hooks/useMatchData'
-import { useParticipantData } from '../../hooks/useParticipantData'
+import { useSupabaseParticipantData } from '../../hooks/useSupabaseParticipantData'
 import { formatCurrency, formatSOL, formatWithSOLEquivalent, shortenAddress } from '../../utils/formatters'
 import { determinePredictionOutcome } from '../../utils/prediction-outcome'
 import { PotentialWinningsDisplay } from '../market/PotentialWinningsDisplay'
@@ -64,7 +64,7 @@ export function EnhancedMarketCardSkeleton() {
 
 // Calculate prediction distribution from participants
 function usePredictionDistribution(marketAddress: string): PredictionDistribution {
-  const { data: marketData } = useMarketData(marketAddress)
+  const { data: marketData } = useSupabaseMarketData(marketAddress)
 
   if (!marketData) {
     return { home: 0, draw: 0, away: 0, total: 0 }
@@ -187,8 +187,8 @@ export default function EnhancedMarketCard({ market }: EnhancedMarketCardProps) 
   const { publicKey: userAddress } = useUnifiedWallet()
   const { data: matchData, loading, error } = useMatchData(Number(market.matchId))
   const distribution = usePredictionDistribution(market.marketAddress)
-  const { data: userParticipantMarkets } = useUserParticipantMarkets(userAddress?.toString())
-  const { data: participantData } = useParticipantData(market.marketAddress, userAddress?.toString())
+  const { data: userParticipantMarkets } = useSupabaseUserParticipantMarkets(userAddress?.toString())
+  const { data: participantData } = useSupabaseParticipantData(market.marketAddress, userAddress?.toString())
   const { currency, exchangeRates } = useCurrency()
 
   // Check if user has joined this market

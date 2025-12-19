@@ -16,7 +16,7 @@ import {
 } from '@/utils/accessibility'
 import type { WinningsResult } from '@/utils/winnings-calculator'
 import type { MarketData } from '@/hooks/useMarketData'
-import type { ParticipantData } from '@/hooks/useParticipantData'
+import type { ParticipantData } from '@/hooks/useSupabaseParticipantData'
 import type { EnhancedMatchData } from '@/hooks/useMatchData'
 
 // Mock the currency context

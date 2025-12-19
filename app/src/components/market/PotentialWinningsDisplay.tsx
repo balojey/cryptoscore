@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { WinningsCalculator } from '../../utils/winnings-calculator'
 import { useCurrency } from '../../hooks/useCurrency'
-import type { MarketData } from '../../hooks/useMarketData'
+import type { MarketData } from '../../hooks/useSupabaseMarketData'
 
 interface PotentialWinningsDisplayProps {
   marketData: MarketData

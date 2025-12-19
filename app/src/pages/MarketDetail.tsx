@@ -9,10 +9,10 @@ import PredictionDistributionChart from '../components/charts/PredictionDistribu
 import SharePrediction from '../components/SharePrediction'
 import Confetti from '../components/ui/Confetti'
 import { getAccountExplorerUrl } from '../config/programs'
-import { useMarketActions } from '../hooks/useMarketActions'
-import { useMarketData } from '../hooks/useMarketData'
+import { useSupabaseMarketActions } from '../hooks/useSupabaseMarketActions'
+import { useSupabaseMarketData } from '../hooks/useSupabaseMarketData'
 import { useMatchData, type EnhancedMatchData } from '../hooks/useMatchData'
-import { useParticipantData } from '../hooks/useParticipantData'
+import { useSupabaseParticipantData } from '../hooks/useSupabaseParticipantData'
 import { useResolutionEligibility } from '../hooks/useResolutionEligibility'
 import { useWinnings } from '../hooks/useWinnings'
 import { formatCurrency, formatWithSOLEquivalent, shortenAddress } from '../utils/formatters'
@@ -840,8 +840,8 @@ function PageSkeleton() {
 export function MarketDetail() {
   const { marketAddress } = useParams<{ marketAddress: string }>()
   const { publicKey: userAddress } = useUnifiedWallet()
-  const { joinMarket, resolveMarket, withdrawRewards, createSimilarMarket, getExplorerLink, isLoading, txSignature } = useMarketActions()
-  const { data: marketData, isLoading: isLoadingMarket, error: marketError, refetch: refetchMarket } = useMarketData(marketAddress)
+  const { joinMarket, resolveMarket, withdrawRewards, createSimilarMarket, getExplorerLink, isLoading, lastOperationId } = useSupabaseMarketActions()
+  const { data: marketData, isLoading: isLoadingMarket, error: marketError, refetch: refetchMarket } = useSupabaseMarketData(marketAddress)
   const { currency, exchangeRates } = useCurrency()
 
   const [selectedTeam, setSelectedTeam] = useState<number | null>(null)
@@ -875,7 +875,7 @@ export function MarketDetail() {
   }, [matchData, marketData, isLoadingMarket, isLoadingMatch])
 
   // Get user's prediction and rewards
-  const { data: participantData } = useParticipantData(marketAddress, userAddress?.toString())
+  const { data: participantData } = useSupabaseParticipantData(marketAddress, userAddress?.toString())
 
   // Derive prediction info from participant data
   const hasJoined = !!participantData
@@ -937,21 +937,21 @@ export function MarketDetail() {
   const awayCount = marketData?.awayCount || 0
   const drawCount = marketData?.drawCount || 0
 
-  // Update action status based on transaction state
+  // Update action status based on operation state
   useEffect(() => {
-    if (txSignature) {
+    if (lastOperationId) {
       setActionStatus({
         type: 'success',
-        message: 'Transaction successful!',
-        signature: txSignature,
+        message: 'Operation successful!',
+        signature: lastOperationId,
       })
-      // Refetch market data after successful transaction
+      // Refetch market data after successful operation
       refetchMarket()
     }
     if (isLoading) {
-      setActionStatus({ type: 'info', message: 'Processing transaction...' })
+      setActionStatus({ type: 'info', message: 'Processing operation...' })
     }
-  }, [txSignature, isLoading, refetchMarket])
+  }, [lastOperationId, isLoading, refetchMarket])
 
   // Clear action status after some time
   useEffect(() => {
@@ -998,7 +998,7 @@ export function MarketDetail() {
 
     const prediction = selectedTeam === 1 ? 'Home' : selectedTeam === 2 ? 'Away' : 'Draw'
     return await joinMarket({
-      marketAddress,
+      marketId: marketAddress!, // Using marketAddress as marketId for Supabase
       prediction: prediction as 'Home' | 'Draw' | 'Away',
     })
   }, 'Failed to join market.')
@@ -1018,7 +1018,7 @@ export function MarketDetail() {
     }
 
     return await resolveMarket({
-      marketAddress,
+      marketId: marketAddress!,
       outcome: matchData.matchResult,
     })
   }, 'Failed to resolve market.')
@@ -1029,23 +1029,23 @@ export function MarketDetail() {
       return null
     }
 
-    const signature = await withdrawRewards(marketAddress)
-    if (signature) {
+    const operationId = await withdrawRewards(marketAddress)
+    if (operationId) {
       // Trigger confetti on successful withdrawal
       setShowConfetti(true)
       setTimeout(() => setShowConfetti(false), 100)
     }
-    return signature
+    return operationId
   }, 'Failed to withdraw funds.')
 
   const handleCreateSimilarMarket = async (params: CreateSimilarMarketParams) => {
     try {
-      const signature = await createSimilarMarket(params)
-      if (signature) {
+      const operationId = await createSimilarMarket(params)
+      if (operationId) {
         setActionStatus({
           type: 'success',
           message: 'Similar market created successfully!',
-          signature,
+          signature: operationId,
         })
         // Navigate to the new market or provide link
         // Note: We would need the new market address to navigate, which isn't returned by the current implementation

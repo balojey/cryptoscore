@@ -2,14 +2,14 @@ import type { Market } from '../../types'
 import { useMemo } from 'react'
 import { useUnifiedWallet } from '../../contexts/UnifiedWalletContext'
 import { Link } from 'react-router-dom'
-import { useUserMarkets } from '../../hooks/useMarketData'
+import { useSupabaseUserMarkets } from '../../hooks/useSupabaseMarketData'
 import EnhancedMarketCard, { EnhancedMarketCardSkeleton } from '../cards/EnhancedMarketCard'
 
 export function UserMarkets() {
   const { publicKey, connected } = useUnifiedWallet()
 
   // Fetch user's markets
-  const { data: marketDataList, isLoading } = useUserMarkets(publicKey?.toString())
+  const { data: marketDataList, isLoading } = useSupabaseUserMarkets(publicKey?.toString())
 
   const userMarkets = useMemo(() => {
     if (!marketDataList || !publicKey)

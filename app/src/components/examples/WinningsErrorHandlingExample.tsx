@@ -16,7 +16,7 @@ import { WinningsLoadingSkeleton } from '../WinningsLoadingSkeleton'
 import { NetworkStatusBanner, useNetworkAwareRetry } from '../NetworkStatusBanner'
 import { WinningsErrorHandler, WinningsErrorType, ErrorSeverity } from '@/utils/winnings-error-handler'
 import type { WinningsResult } from '@/utils/winnings-calculator'
-import type { MarketData } from '@/hooks/useMarketData'
+import type { MarketData } from '@/hooks/useSupabaseMarketData'
 
 /**
  * Mock data for demonstration

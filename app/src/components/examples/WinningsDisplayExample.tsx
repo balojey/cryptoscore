@@ -7,8 +7,8 @@
 import { useState } from 'react'
 import { WinningsDisplay, CompactWinningsDisplay, DetailedWinningsDisplay } from '../WinningsDisplay'
 import type { WinningsResult } from '@/utils/winnings-calculator'
-import type { MarketData } from '@/hooks/useMarketData'
-import type { ParticipantData } from '@/hooks/useParticipantData'
+import type { MarketData } from '@/hooks/useSupabaseMarketData'
+import type { ParticipantData } from '@/hooks/useSupabaseParticipantData'
 import type { EnhancedMatchData } from '@/hooks/useMatchData'
 
 /**

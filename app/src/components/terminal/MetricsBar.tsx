@@ -1,7 +1,7 @@
-import type { MarketData } from '../../hooks/useMarketData'
+import type { MarketData } from '../../hooks/useSupabaseMarketData'
 import { useMemo } from 'react'
 import { useCurrency } from '../../hooks/useCurrency'
-import { useAllMarkets } from '../../hooks/useMarketData'
+import { useSupabaseAllMarkets } from '../../hooks/useSupabaseMarketData'
 import AnimatedNumber from '../ui/AnimatedNumber'
 
 interface MetricCardProps {
@@ -108,7 +108,7 @@ interface MetricsBarProps {
 
 export default function MetricsBar({ error }: MetricsBarProps) {
   // Fetch all markets from Solana - this already includes all details
-  const { data: marketsData, isLoading } = useAllMarkets()
+  const { data: marketsData, isLoading } = useSupabaseAllMarkets()
   const { currency, convertFromLamports } = useCurrency()
 
   // Calculate metrics from market data

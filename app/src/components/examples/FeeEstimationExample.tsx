@@ -4,26 +4,26 @@
  */
 
 import { useState } from 'react'
-import { useMarketActions } from '../../hooks/useMarketActions'
+import { useSupabaseMarketActions } from '../../hooks/useSupabaseMarketActions'
 import { FeeEstimateDisplay } from '../FeeEstimateDisplay'
 
 export function FeeEstimationExample() {
-  const { createMarket, estimatedFee, isLoading } = useMarketActions()
+  const { createMarket, isLoading } = useSupabaseMarketActions()
   const [showFeeDetails, setShowFeeDetails] = useState(false)
 
   const handleCreateMarket = async () => {
-    // Fee estimation happens automatically inside useMarketActions
-    // The estimatedFee will be updated before the transaction is sent
+    // Database operations don't require fee estimation
     const result = await createMarket({
       matchId: 'example-match-123',
-      entryFee: 1000000, // 0.001 SOL in lamports
-      kickoffTime: Math.floor(Date.now() / 1000) + 3600, // 1 hour from now
+      title: 'Example Match Market',
+      description: 'This is an example prediction market for demonstration purposes',
+      entryFee: 0.001, // 0.001 SOL equivalent in decimal format
       endTime: Math.floor(Date.now() / 1000) + 7200, // 2 hours from now
       isPublic: true,
     })
 
     if (result) {
-      console.log('Market created with transaction:', result)
+      console.log('Market created with ID:', result)
     }
   }
 
@@ -36,25 +36,13 @@ export function FeeEstimationExample() {
           This example demonstrates automatic fee estimation before transactions.
         </p>
 
-        {/* Display fee estimate */}
-        {estimatedFee && (
-          <div className="p-4 rounded-lg" style={{ background: 'var(--bg-secondary)' }}>
-            <FeeEstimateDisplay
-              feeEstimate={estimatedFee}
-              isEstimating={isLoading}
-              showDetails={showFeeDetails}
-            />
-
-            <button
-              onClick={() => setShowFeeDetails(!showFeeDetails)}
-              className="btn-secondary btn-sm mt-2"
-            >
-              {showFeeDetails ? 'Hide' : 'Show'}
-              {' '}
-              Details
-            </button>
-          </div>
-        )}
+        {/* Note: Database operations don't require fee estimation */}
+        <div className="p-4 rounded-lg" style={{ background: 'var(--bg-secondary)' }}>
+          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+            Database operations are instant and don't require blockchain fees.
+            Future MNEE token integration will restore fee estimation.
+          </p>
+        </div>
       </div>
 
       <button
@@ -66,10 +54,10 @@ export function FeeEstimationExample() {
       </button>
 
       <div className="text-xs space-y-1" style={{ color: 'var(--text-tertiary)' }}>
-        <p>• Fee estimation happens automatically before each transaction</p>
-        <p>• Estimates are updated when network conditions change</p>
-        <p>• Failed estimations are handled gracefully</p>
-        <p>• Transactions proceed even if estimation fails</p>
+        <p>• Database operations are instant and free</p>
+        <p>• No blockchain fees required for market participation</p>
+        <p>• Future MNEE token integration will restore transaction fees</p>
+        <p>• All market data is stored in Supabase database</p>
       </div>
     </div>
   )

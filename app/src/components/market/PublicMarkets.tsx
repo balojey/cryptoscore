@@ -3,7 +3,7 @@ import type { FilterOptions } from './MarketFilters'
 import { useMemo, useState } from 'react'
 import { useUnifiedWallet } from '../../contexts/UnifiedWalletContext'
 import { useFilteredMarkets } from '../../hooks/useFilteredMarkets'
-import { useAllMarkets } from '../../hooks/useMarketData'
+import { useSupabaseAllMarkets } from '../../hooks/useSupabaseMarketData'
 import EnhancedMarketCard, { EnhancedMarketCardSkeleton } from '../cards/EnhancedMarketCard'
 import VirtualMarketList from '../VirtualMarketList'
 import MarketFilters from './MarketFilters'
@@ -19,7 +19,7 @@ export default function PublicMarkets() {
   })
 
   // Get all markets from Solana Dashboard program
-  const { data: allMarketsData, isLoading, isError, error, refetch } = useAllMarkets()
+  const { data: allMarketsData, isLoading, isError, error, refetch } = useSupabaseAllMarkets()
 
   // Filter public markets and exclude user's own markets
   const markets = useMemo(() => {

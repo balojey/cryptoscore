@@ -1,8 +1,8 @@
-import type { MarketData } from '../../hooks/useMarketData'
+import type { MarketData } from '../../hooks/useSupabaseMarketData'
 import type { Market } from '../../types'
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useAllMarkets, useUserParticipantMarkets } from '../../hooks/useMarketData'
+import { useSupabaseAllMarkets, useSupabaseUserParticipantMarkets } from '../../hooks/useSupabaseMarketData'
 import { useUnifiedWallet } from '../../contexts/UnifiedWalletContext'
 import EnhancedMarketCard, { EnhancedMarketCardSkeleton } from '../cards/EnhancedMarketCard'
 import ErrorBanner from '../terminal/ErrorBanner'
@@ -33,10 +33,10 @@ export default function FeaturedMarketsPreview() {
   const { walletAddress } = useUnifiedWallet()
 
   // Fetch all markets using the new Anchor-free hook
-  const { data: marketsData, isLoading, isError, refetch } = useAllMarkets()
+  const { data: marketsData, isLoading, isError, refetch } = useSupabaseAllMarkets()
 
   // Fetch markets where user is a participant (to check access to private markets)
-  const { data: userParticipantMarkets } = useUserParticipantMarkets(walletAddress || undefined)
+  const { data: userParticipantMarkets } = useSupabaseUserParticipantMarkets(walletAddress || undefined)
 
   // Transform market data to expected format and filter private markets
   const transformedMarkets = useMemo(() => {
