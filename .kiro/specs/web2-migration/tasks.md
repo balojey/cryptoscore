@@ -43,14 +43,14 @@
   - **Property 4: Authentication Data Persistence**
   - **Validates: Requirements 2.5**
 
-- [ ] 5. Migrate market creation functionality
+- [x] 5. Migrate market creation functionality
   - Replace Solana factory program calls with Supabase database inserts
   - Maintain same market creation form and validation logic
   - Update market data structure to match database schema
   - Implement market status management
   - _Requirements: 4.1, 4.2_
 
-- [ ] 5.1 Write property test for market data consistency
+- [x] 5.1 Write property test for market data consistency
   - **Property 5: Market Data Consistency**
   - **Validates: Requirements 4.1**
 

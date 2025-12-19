@@ -1,5 +1,4 @@
 import type { MarketProps } from '../../types'
-import { LAMPORTS_PER_SOL } from '@solana/web3.js'
 import { useUnifiedWallet } from '../../contexts/UnifiedWalletContext'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -15,11 +14,11 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { useMarketActions } from '../../hooks/useMarketActions'
+import { useSupabaseMarketActions } from '../../hooks/useSupabaseMarketActions'
 import { MarqueeText } from '../MarqueeText'
 import { CompactWinningsDisplay } from '../WinningsDisplay'
 import { useWinnings } from '../../hooks/useWinnings'
-import { useMarketData } from '../../hooks/useMarketData'
+import { useSupabaseMarketData } from '../../hooks/useSupabaseMarketData'
 
 export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: MarketProps) {
   const { publicKey: userAddress } = useUnifiedWallet()
@@ -34,7 +33,7 @@ export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: 
     signature?: string
   } | null>(null)
 
-  const { createMarket, isLoading: isCreateMarketLoading } = useMarketActions()
+  const { createMarket, isLoading: isCreateMarketLoading } = useSupabaseMarketActions()
 
   // Handle transaction status changes
   useEffect(() => {
@@ -88,31 +87,31 @@ export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: 
     try {
       setTransactionStatus({ type: 'info', message: 'Initializing market...' })
 
-      const entryFeeLamports = Math.floor(Number(entryFee) * LAMPORTS_PER_SOL)
       const kickoffTime = Math.floor(new Date(match.utcDate).getTime() / 1000)
       const endTime = kickoffTime + (2 * 60 * 60) // 2 hours after kickoff
 
-      const signature = await createMarket({
+      const marketId = await createMarket({
         matchId: match.id.toString(),
-        entryFee: entryFeeLamports,
-        kickoffTime,
+        title: `${match.homeTeam.name} vs ${match.awayTeam.name}`,
+        description: `Prediction market for ${match.competition.name} match`,
+        entryFee: Number(entryFee),
         endTime,
         isPublic,
       })
-      console.log('Signature: ', signature)
+      console.log('Market ID: ', marketId)
 
-      if (signature) {
+      if (marketId) {
         setTransactionStatus({
           type: 'success',
           message: 'Market created successfully!',
-          signature,
+          signature: marketId,
         })
 
         // Set the newly created market
-        setNewlyCreatedMarket({ matchId: match.id, address: 'pending' })
+        setNewlyCreatedMarket({ matchId: match.id, address: marketId })
       }
       else {
-        throw new Error('Transaction failed - no signature returned')
+        throw new Error('Market creation failed - no market ID returned')
       }
     }
     catch (e: any) {
@@ -217,7 +216,7 @@ export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: 
                 {/* Entry Fee */}
                 <div>
                   <label htmlFor={`entryFee-${match.id}`} className="font-sans text-xs font-medium mb-2 block" style={{ color: 'var(--text-tertiary)' }}>
-                    Entry Fee (SOL)
+                    Entry Fee (Tokens)
                   </label>
                   <Input
                     id={`entryFee-${match.id}`}
@@ -232,14 +231,11 @@ export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: 
                   />
                   <div className="flex justify-between items-center mt-1">
                     <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                      Minimum: 0.001 SOL
+                      Minimum: 0.001 tokens
                     </p>
                     {Number(entryFee) > 0 && (
                       <p className="text-xs font-mono" style={{ color: 'var(--accent-cyan)' }}>
-                        ≈ $
-                        {(Number(entryFee) * 100).toFixed(2)}
-                        {' '}
-                        USD
+                        {Number(entryFee).toFixed(3)} tokens
                       </p>
                     )}
                   </div>
@@ -302,16 +298,10 @@ export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: 
                     </div>
                     {transactionStatus.signature && (
                       <div className="pt-2 border-t" style={{ borderColor: 'currentColor', opacity: 0.3 }}>
-                        <a
-                          href={`https://explorer.solana.com/tx/${transactionStatus.signature}?cluster=${import.meta.env.VITE_SOLANA_NETWORK || 'devnet'}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs hover:underline flex items-center justify-center gap-1"
-                          style={{ color: 'var(--accent-cyan)' }}
-                        >
-                          <span className="icon-[mdi--open-in-new] w-3 h-3" />
-                          View on Solana Explorer
-                        </a>
+                        <div className="text-xs flex items-center justify-center gap-1" style={{ color: 'var(--accent-cyan)' }}>
+                          <span className="icon-[mdi--check-circle-outline] w-3 h-3" />
+                          Market Created Successfully
+                        </div>
                         <div
                           className="mt-1 p-2 rounded font-mono text-xs break-all"
                           style={{
@@ -367,7 +357,7 @@ function WinningsPreview({ marketAddress }: { marketAddress?: string }) {
   const { publicKey: userAddress } = useUnifiedWallet()
   
   // Only fetch market data if we have a market address
-  const { data: marketData, isLoading: isLoadingMarket } = useMarketData(marketAddress)
+  const { data: marketData, isLoading: isLoadingMarket } = useSupabaseMarketData(marketAddress)
   
   // Only fetch winnings if we have market data
   const { winnings, isLoading: isLoadingWinnings } = useWinnings(

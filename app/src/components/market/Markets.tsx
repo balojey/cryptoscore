@@ -1,7 +1,7 @@
 import type { Match } from '../../types'
 import { useEffect, useMemo, useState } from 'react'
 import { useUnifiedWallet } from '../../contexts/UnifiedWalletContext'
-import { useAllMarkets } from '../../hooks/useMarketData'
+import { useAllMarkets } from '../../hooks/useSupabaseMarketData'
 import { getRandomApiKey } from '../../utils/apiKey'
 import SearchBar from '../SearchBar'
 import { Market } from './Market'
@@ -81,7 +81,7 @@ export function Markets() {
 
   const { publicKey: userAddress } = useUnifiedWallet()
 
-  // Fetch all markets from Solana Dashboard program
+  // Fetch all markets from Supabase
   const { data: allMarketsData, refetch: refetchAllMarkets } = useAllMarkets()
 
   const userMarketsByMatchId = useMemo(() => {
@@ -91,10 +91,16 @@ export function Markets() {
     const marketMap = new Map()
     allMarketsData.forEach((market) => {
       if (market.creator === userAddress.toString()) {
-        marketMap.set(Number(market.matchId), {
-          creator: market.creator,
-          marketAddress: market.marketAddress,
-        })
+        // Try to extract match ID from market.matchId (which might be the market ID)
+        // For now, we'll use a simple approach - check if the market was created recently
+        // In a real implementation, we'd store the actual match ID in the database
+        const matchId = parseInt(market.matchId) || 0
+        if (matchId > 0) {
+          marketMap.set(matchId, {
+            creator: market.creator,
+            marketAddress: market.marketAddress,
+          })
+        }
       }
     })
     return marketMap
