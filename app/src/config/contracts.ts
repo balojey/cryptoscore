@@ -1,20 +1,17 @@
-// Compatibility layer for Solana migration
-// This file provides exports that match the old Polkadot contract structure
-// but uses Solana program IDs instead
+// Stub implementation for Web2 migration
+// This file provides placeholder exports for contract-related functionality
+// All Solana program dependencies have been removed
 
-import { DASHBOARD_PROGRAM_ID, FACTORY_PROGRAM_ID, MARKET_PROGRAM_ID } from './programs'
+// Placeholder contract addresses for compatibility during migration
+export const CRYPTO_SCORE_FACTORY_ADDRESS = '0x0000000000000000000000000000000000000000' as `0x${string}`
+export const CRYPTO_SCORE_DASHBOARD_ADDRESS = '0x0000000000000000000000000000000000000000' as `0x${string}`
 
-// Export program IDs as contract addresses for compatibility
-// Using a mock Ethereum address format to satisfy type requirements during migration
-export const CRYPTO_SCORE_FACTORY_ADDRESS = `0x${FACTORY_PROGRAM_ID.toString().slice(0, 40)}` as `0x${string}`
-export const CRYPTO_SCORE_DASHBOARD_ADDRESS = `0x${DASHBOARD_PROGRAM_ID.toString().slice(0, 40)}` as `0x${string}`
-
-// Placeholder ABIs for compatibility (will be replaced with IDLs)
-// These are used by components that haven't been fully migrated yet
-// Using 'any' to bypass TypeScript errors during migration
+// Placeholder ABIs for compatibility (will be replaced with API calls)
 export const CryptoScoreFactoryABI = [] as any
 export const CryptoScoreMarketABI = [] as any
 export const CryptoScoreDashboardABI = [] as any
 
-// Re-export program IDs for direct use
-export { DASHBOARD_PROGRAM_ID, FACTORY_PROGRAM_ID, MARKET_PROGRAM_ID }
+// Placeholder program IDs for compatibility
+export const DASHBOARD_PROGRAM_ID = 'placeholder-dashboard-program-id'
+export const FACTORY_PROGRAM_ID = 'placeholder-factory-program-id'
+export const MARKET_PROGRAM_ID = 'placeholder-market-program-id'

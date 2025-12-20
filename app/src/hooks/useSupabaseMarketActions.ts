@@ -46,7 +46,7 @@ export interface CreateSimilarMarketParams {
  * Maintains same interface as original Solana-based hook
  */
 export function useSupabaseMarketActions() {
-  const { publicKey, crossmintWallet } = useUnifiedWallet()
+  const { publicKey, user } = useUnifiedWallet()
   const queryClient = useQueryClient()
   const [isLoading, setIsLoading] = useState(false)
   const [lastOperationId, setLastOperationId] = useState<string | null>(null)
@@ -55,24 +55,24 @@ export function useSupabaseMarketActions() {
    * Get current user from Supabase or create if needed
    */
   const getCurrentUser = useCallback(async () => {
-    if (!crossmintWallet || !publicKey) {
+    if (!user || !publicKey) {
       throw new Error('Wallet not connected')
     }
 
     // Get user data from Crossmint
-    const walletAddress = publicKey.toString()
-    const email = crossmintWallet.email || `${walletAddress}@crossmint.local`
+    const walletAddress = publicKey
+    const email = user.email || `${walletAddress}@crossmint.local`
 
     // Authenticate/create user in Supabase
-    const { user } = await UserService.authenticateUser({
-      id: walletAddress,
+    const { user: supabaseUser } = await UserService.authenticateUser({
+      id: user.userId,
       email,
       walletAddress,
-      displayName: crossmintWallet.displayName,
+      displayName: user.displayName,
     })
 
-    return user
-  }, [crossmintWallet, publicKey])
+    return supabaseUser
+  }, [user, publicKey])
 
   /**
    * Create a new prediction market

@@ -16,6 +16,8 @@ import type { EnhancedMatchData } from '@/hooks/useMatchData'
 
 export interface CreateSimilarMarketParams {
   matchId: string
+  title: string
+  description: string
   entryFee: number
   isPublic: boolean
 }
@@ -75,9 +77,15 @@ export function CreateSimilarMarketDialog({
     const entryFeeValue = parseFloat(entryFee)
     const entryFeeInLamports = Math.round(entryFeeValue * 1_000_000_000) // SOL to lamports
 
+    // Generate title and description based on match data
+    const title = `${matchData.homeTeam.name} vs ${matchData.awayTeam.name}`
+    const description = `Prediction market for ${matchData.homeTeam.name} vs ${matchData.awayTeam.name} - ${matchData.competition.name}`
+
     try {
       await onCreateMarket({
         matchId: matchData.id.toString(),
+        title,
+        description,
         entryFee: entryFeeInLamports,
         isPublic: visibility === 'public',
       })

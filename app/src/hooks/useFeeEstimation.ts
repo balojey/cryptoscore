@@ -1,8 +1,18 @@
-import type { PublicKey, Transaction } from '@solana/web3.js'
-import type { FeeEstimate } from '../lib/solana/transaction-builder'
+/**
+ * Fee Estimation Hook (Web2 Stub)
+ * 
+ * This hook previously estimated Solana transaction fees.
+ * Now it's a stub for the web2 migration.
+ */
+
 import { useCallback, useEffect, useState } from 'react'
-import { SolanaUtils } from '../lib/solana/utils'
-import { useSolanaConnection } from './useSolanaConnection'
+
+export interface FeeEstimate {
+  fee: number
+  feeInSol: number
+  success: boolean
+  error?: string
+}
 
 export interface UseFeeEstimationOptions {
   enabled?: boolean
@@ -11,21 +21,19 @@ export interface UseFeeEstimationOptions {
 }
 
 /**
- * Hook for estimating transaction fees
- * Provides real-time fee estimates with automatic refresh capability
+ * Hook for estimating transaction fees (stub implementation)
  */
 export function useFeeEstimation(options: UseFeeEstimationOptions = {}) {
   const { enabled = true, autoRefresh = false, refreshInterval = 30000 } = options
-  const { connection, publicKey } = useSolanaConnection()
 
   const [feeEstimate, setFeeEstimate] = useState<FeeEstimate | null>(null)
   const [isEstimating, setIsEstimating] = useState(false)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
 
   /**
-   * Estimate fee for a transaction
+   * Estimate fee for a transaction (stub)
    */
-  const estimateFee = useCallback(async (transaction: Transaction, feePayer?: PublicKey): Promise<FeeEstimate> => {
+  const estimateFee = useCallback(async (transaction: any, feePayer?: any): Promise<FeeEstimate> => {
     if (!enabled) {
       return {
         fee: 0,
@@ -35,35 +43,13 @@ export function useFeeEstimation(options: UseFeeEstimationOptions = {}) {
       }
     }
 
-    const payer = feePayer || publicKey
-    if (!payer) {
-      return {
-        fee: 0,
-        feeInSol: 0,
-        success: false,
-        error: 'No fee payer available',
-      }
-    }
-
     setIsEstimating(true)
 
     try {
-      const fee = await SolanaUtils.estimateTransactionFee(connection, transaction)
-
-      if (fee === null) {
-        const estimate: FeeEstimate = {
-          fee: 0,
-          feeInSol: 0,
-          success: false,
-          error: 'Unable to estimate fee - network conditions may have changed',
-        }
-        setFeeEstimate(estimate)
-        return estimate
-      }
-
+      // TODO: Implement fee estimation for web2 operations if needed
       const estimate: FeeEstimate = {
-        fee,
-        feeInSol: fee / 1_000_000_000,
+        fee: 0,
+        feeInSol: 0,
         success: true,
       }
 
@@ -84,12 +70,12 @@ export function useFeeEstimation(options: UseFeeEstimationOptions = {}) {
     finally {
       setIsEstimating(false)
     }
-  }, [connection, publicKey, enabled])
+  }, [enabled])
 
   /**
    * Refresh the current fee estimate
    */
-  const refreshEstimate = useCallback(async (transaction: Transaction, feePayer?: PublicKey) => {
+  const refreshEstimate = useCallback(async (transaction: any, feePayer?: any) => {
     return estimateFee(transaction, feePayer)
   }, [estimateFee])
 
@@ -102,30 +88,13 @@ export function useFeeEstimation(options: UseFeeEstimationOptions = {}) {
   }, [])
 
   /**
-   * Auto-refresh fee estimate at specified interval
-   */
-  useEffect(() => {
-    if (!autoRefresh || !feeEstimate || !enabled) {
-      return
-    }
-
-    const intervalId = setInterval(() => {
-      // Note: Auto-refresh requires the transaction to be stored
-      // This is a placeholder - actual implementation would need transaction context
-      console.log('Auto-refresh triggered - transaction context needed')
-    }, refreshInterval)
-
-    return () => clearInterval(intervalId)
-  }, [autoRefresh, refreshInterval, feeEstimate, enabled])
-
-  /**
    * Format fee for display
    */
   const formatFee = useCallback((includeSymbol = true) => {
     if (!feeEstimate || !feeEstimate.success) {
-      return includeSymbol ? '-- SOL' : '--'
+      return includeSymbol ? '-- USD' : '--'
     }
-    return SolanaUtils.formatFee(feeEstimate.fee, includeSymbol)
+    return includeSymbol ? `$${feeEstimate.fee.toFixed(2)}` : feeEstimate.fee.toFixed(2)
   }, [feeEstimate])
 
   return {

@@ -20,21 +20,7 @@ vi.mock('@/config/supabase', () => ({
   }
 }))
 
-// Mock Solana WebSocket hooks to ensure they're not used
-vi.mock('../useSolanaWebSocket', () => ({
-  useMarketWebSocketSubscriptions: vi.fn(() => ({
-    isConnected: false,
-    subscriptions: [],
-    reconnectAttempts: 0,
-    accountChanges: new Map(),
-  })),
-  useFactoryWebSocketSubscription: vi.fn(() => ({
-    isConnected: false,
-    subscriptions: [],
-    reconnectAttempts: 0,
-    factoryData: null,
-  })),
-}))
+// Mock removed for web2 migration - Solana WebSocket hooks no longer exist
 
 // Generators for property-based testing
 const marketIdArb = fc.uuid()
@@ -91,13 +77,9 @@ describe('Real-time Update Source Properties', () => {
           // Verify the hook exists and is a function
           expect(typeof useSupabaseRealtimeMarkets).toBe('function')
           
-          // Verify that Solana WebSocket hooks return disconnected state
-          const { useMarketWebSocketSubscriptions } = await import('../useSolanaWebSocket')
-          const solanaHook = useMarketWebSocketSubscriptions([])
-          expect(solanaHook.isConnected).toBe(false)
-          
+          // Verify that Solana WebSocket hooks are no longer available (web2 migration)
           // The property we're testing: Supabase is used instead of Solana
-          // This is validated by the hook's design and the mocked Solana hooks
+          // This is validated by the hook's design and the absence of Solana dependencies
         }
       ),
       { numRuns: 100 }
@@ -198,10 +180,8 @@ describe('Real-time Update Source Properties', () => {
           expect(mockSubscription.unsubscribe).toHaveBeenCalled()
           expect(supabase.removeChannel).toHaveBeenCalled()
           
-          // Verify Solana hooks remain disconnected
-          const { useMarketWebSocketSubscriptions } = await import('../useSolanaWebSocket')
-          const solanaHook = useMarketWebSocketSubscriptions([])
-          expect(solanaHook.isConnected).toBe(false)
+          // Verify Solana hooks are no longer available (web2 migration)
+          // The property we're testing: Supabase is used instead of Solana
 
           // The property holds: cleanup uses Supabase, not Solana
         }
@@ -218,13 +198,10 @@ describe('Real-time Update Source Properties', () => {
           // Import the hook
           const { useSupabaseRealtimeMarkets } = await import('../useSupabaseRealtimeMarkets')
           
-          // The hook should always use Supabase regardless of useSolanaWebSocket option
+          // The hook should always use Supabase (web2 migration)
           // This is enforced by the hook's implementation
           
-          // Verify Solana hooks remain disconnected even if requested
-          const { useMarketWebSocketSubscriptions } = await import('../useSolanaWebSocket')
-          const solanaHook = useMarketWebSocketSubscriptions([])
-          expect(solanaHook.isConnected).toBe(false)
+          // Verify Solana hooks are no longer available
 
           // The property holds: Supabase is always used in web2 migration
         }

@@ -1,14 +1,13 @@
 /**
  * Authentication Modal Component
  *
- * Provides a unified authentication experience with both social login
- * (via Crossmint) and traditional Solana wallet connections.
+ * Provides a unified authentication experience with social login
+ * via Crossmint for the web2 migration.
  *
  * @module components/auth/AuthModal
  */
 
 import { useAuth as useCrossmintAuth } from '@crossmint/client-sdk-react-ui'
-import { useWalletModal } from '@solana/wallet-adapter-react-ui'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -37,13 +36,11 @@ export interface AuthModalProps {
 /**
  * Authentication Modal Component
  *
- * Displays a unified authentication interface that allows users to choose
- * between social login methods (via Crossmint) and traditional Solana
- * wallet connections.
+ * Displays a social authentication interface that allows users to login
+ * with social methods via Crossmint (Google, Email).
  *
  * Features:
  * - Social login options (Google, Email)
- * - Traditional wallet connection (Phantom, Solflare, etc.)
  * - Loading states during authentication
  * - Error handling with user-friendly messages
  * - Automatic modal closure on successful authentication
@@ -64,10 +61,8 @@ export interface AuthModalProps {
 export function AuthModal({ open, onOpenChange }: AuthModalProps) {
   const crossmintAuth = useCrossmintAuth()
   const auth = useAuth()
-  const { setVisible: setWalletModalVisible } = useWalletModal()
 
   const [isLoading, setIsLoading] = useState(false)
-  const [loadingMethod, setLoadingMethod] = useState<string | null>(null)
 
   const crossmintEnabled = isCrossmintEnabled()
 
@@ -107,14 +102,13 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
    */
   const handleSocialLogin = async () => {
     setIsLoading(true)
-    setLoadingMethod('social')
 
     try {
       // Close our custom modal
       onOpenChange(false)
 
       // Trigger Crossmint's native login modal
-      // This will show all configured login methods (Google, Twitter, Farcaster, Email)
+      // This will show all configured login methods (Google, Email)
       await crossmintAuth.login()
 
       console.log('[AuthModal] Crossmint login modal opened')
@@ -148,50 +142,7 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
     }
     finally {
       setIsLoading(false)
-      setLoadingMethod(null)
     }
-  }
-
-  /**
-   * Handle traditional wallet connection
-   *
-   * Opens the Solana wallet adapter modal to allow users to connect
-   * their traditional crypto wallets (Phantom, Solflare, etc.).
-   */
-  const handleWalletConnect = () => {
-    setIsLoading(true)
-    setLoadingMethod('wallet')
-
-    try {
-      // Close auth modal
-      onOpenChange(false)
-
-      // Open the wallet adapter modal
-      setWalletModalVisible(true)
-    }
-    catch (error) {
-      // Use WalletErrorHandler to parse and log the error
-      WalletErrorHandler.logError(error, 'walletConnect', 'adapter')
-      const walletError = WalletErrorHandler.parseError(error, 'adapter', 'walletConnect')
-
-      // Get user-friendly error message
-      const errorMessage = WalletErrorHandler.getUserMessage(walletError)
-      toast.error(errorMessage)
-    }
-    finally {
-      setIsLoading(false)
-      setLoadingMethod(null)
-    }
-  }
-
-  /**
-   * Check if a specific authentication method is currently loading
-   *
-   * @param method - The authentication method to check
-   * @returns True if the method is currently processing
-   */
-  const isMethodLoading = (method: string) => {
-    return isLoading && loadingMethod === method
   }
 
   return (
@@ -202,13 +153,13 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
             Connect to CryptoScore
           </DialogTitle>
           <DialogDescription>
-            Choose your preferred authentication method to get started
+            Sign in with your preferred social account to get started
           </DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col gap-3 mt-4">
           {/* Social Login Option */}
-          {crossmintEnabled && (
+          {crossmintEnabled ? (
             <Button
               variant="outline"
               size="lg"
@@ -216,7 +167,7 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
               disabled={isLoading}
               className="w-full justify-start gap-3 h-14"
             >
-              {isMethodLoading('social') ? (
+              {isLoading ? (
                 <span className="icon-[mdi--loading] w-6 h-6 animate-spin" />
               ) : (
                 <span className="icon-[mdi--account-circle] w-6 h-6" />
@@ -228,28 +179,13 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
                 </div>
               </div>
             </Button>
-          )}
-
-          {/* Traditional Wallet Option */}
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={handleWalletConnect}
-            disabled={isLoading}
-            className="w-full justify-start gap-3 h-14"
-          >
-            {isMethodLoading('wallet') ? (
-              <span className="icon-[mdi--loading] w-6 h-6 animate-spin" />
-            ) : (
-              <span className="icon-[mdi--wallet] w-6 h-6" />
-            )}
-            <div className="flex-1 text-left">
-              <div className="font-semibold">Wallet Connection</div>
-              <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                Phantom, Solflare, Backpack, etc.
-              </div>
+          ) : (
+            <div className="text-center p-4">
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                Social login is not configured. Please check your Crossmint settings.
+              </p>
             </div>
-          </Button>
+          )}
 
           {/* Info Text */}
           <p

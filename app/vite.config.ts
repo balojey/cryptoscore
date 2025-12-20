@@ -9,17 +9,6 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-      'buffer': 'buffer',
-    },
-  },
-  define: {
-    global: 'globalThis',
-  },
-  optimizeDeps: {
-    esbuildOptions: {
-      define: {
-        global: 'globalThis',
-      },
     },
   },
   build: {
@@ -28,9 +17,9 @@ export default defineConfig({
         manualChunks: {
           // Separate vendor chunks for better caching
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'solana-vendor': ['@solana/web3.js', '@solana/wallet-adapter-react', '@solana/wallet-adapter-react-ui', '@solana/wallet-adapter-wallets'],
           'query-vendor': ['@tanstack/react-query'],
           'recharts-vendor': ['recharts'],
+          'supabase-vendor': ['@supabase/supabase-js'],
         },
       },
     },

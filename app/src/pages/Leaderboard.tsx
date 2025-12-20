@@ -1,4 +1,3 @@
-import { LAMPORTS_PER_SOL } from '@solana/web3.js'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
@@ -36,8 +35,8 @@ export function Leaderboard() {
       case 'earnings':
         // Sort by net profit (highest first)
         return data.sort((a, b) => {
-          const aProfit = Number(a.netProfit) / LAMPORTS_PER_SOL
-          const bProfit = Number(b.netProfit) / LAMPORTS_PER_SOL
+          const aProfit = Number(a.netProfit)
+          const bProfit = Number(b.netProfit)
           return bProfit - aProfit
         })
       case 'active':
@@ -155,9 +154,9 @@ export function Leaderboard() {
               <div className="space-y-2">
                 {sortedData.slice(0, 50).map((trader, index) => {
                   const rank = index + 1
-                  const netProfitSOL = Number(trader.netProfit) / LAMPORTS_PER_SOL
-                  const totalWageredSOL = Number(trader.totalWagered) / LAMPORTS_PER_SOL
-                  const totalWonSOL = Number(trader.totalWon) / LAMPORTS_PER_SOL
+                  const netProfitSOL = Number(trader.netProfit)
+                  const totalWageredSOL = Number(trader.totalWagered)
+                  const totalWonSOL = Number(trader.totalWon)
 
                   return (
                     <div

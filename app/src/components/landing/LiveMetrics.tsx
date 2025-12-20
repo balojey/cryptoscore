@@ -1,4 +1,3 @@
-import { LAMPORTS_PER_SOL } from '@solana/web3.js'
 import { memo, useMemo } from 'react'
 import { useCurrency } from '../../hooks/useCurrency'
 import { useSupabaseAllMarkets } from '../../hooks/useSupabaseMarketData'
@@ -81,8 +80,6 @@ export default function LiveMetrics() {
       }
     }
 
-    const now = Date.now() / 1000 // Current time in seconds
-
     let totalValueLockedLamports = 0
     let activeTraders = 0
     let marketsResolved = 0
@@ -148,7 +145,7 @@ export default function LiveMetrics() {
             isLoading={isLoading}
             solEquivalent={
               currency !== 'SOL'
-                ? `◎${(metrics.totalValueLockedLamports / LAMPORTS_PER_SOL).toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 4 })} SOL`
+                ? `◎${(metrics.totalValueLockedLamports / 1_000_000_000).toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 4 })} SOL`
                 : undefined
             }
           />

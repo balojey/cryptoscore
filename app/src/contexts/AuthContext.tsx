@@ -262,7 +262,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     user,
     isLoading,
     isUpdatingProfile,
-    crossmintStatus: crossmintAuth.status,
+    crossmintStatus: crossmintAuth.status === 'in-progress' || crossmintAuth.status === 'initializing' ? 'loading' : crossmintAuth.status,
     walletAddress: crossmintWallet.wallet?.address || null,
     isNewUser,
 

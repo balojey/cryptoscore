@@ -34,9 +34,6 @@
     "localnet": "solana-test-validator",
     "logs": "solana logs"
   },
-  "dependencies": {
-    "@coral-xyz/anchor": "^0.30.1"
-  },
   "devDependencies": {
     "@types/bn.js": "^5.1.0",
     "@types/chai": "^4.3.0",

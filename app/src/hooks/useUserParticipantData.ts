@@ -1,24 +1,28 @@
-import { PublicKey } from '@solana/web3.js'
+/**
+ * useUserParticipantData - Hook for fetching user participant data (Web2 Migration)
+ *
+ * This hook previously fetched user participant data from Solana blockchain.
+ * Now it's a stub that will be replaced with Supabase operations.
+ */
+
 import { useQuery } from '@tanstack/react-query'
-import { MARKET_PROGRAM_ID } from '../config/programs'
-import { AccountDecoder } from '../lib/solana/account-decoder'
-import { useSolanaConnection } from './useSolanaConnection'
 
 export interface UserParticipantData {
-  marketAddress: string
+  market: string
   user: string
-  prediction: number // 0=Home, 1=Draw, 2=Away
-  joinedAt: number
+  prediction: 'Home' | 'Draw' | 'Away'
   hasWithdrawn: boolean
+  joinedAt: number
+  entryAmount: number
+  potentialWinnings: number
 }
 
 /**
- * Hook for fetching user's participant data across all markets
- * Returns the user's predictions and participation details
+ * Hook for fetching all participant data for a user (stub)
+ *
+ * @param userAddress - User address
  */
 export function useUserParticipantData(userAddress?: string) {
-  const { connection } = useSolanaConnection()
-
   return useQuery({
     queryKey: ['user', 'participants', userAddress],
     queryFn: async (): Promise<UserParticipantData[]> => {
@@ -26,53 +30,12 @@ export function useUserParticipantData(userAddress?: string) {
         return []
       }
 
-      try {
-        const userPubkey = new PublicKey(userAddress)
-        const marketProgramId = new PublicKey(MARKET_PROGRAM_ID)
-
-        // Fetch all Participant accounts where user is the participant
-        const participantAccounts = await connection.getProgramAccounts(marketProgramId, {
-          filters: [
-            {
-              dataSize: 83, // Participant::LEN = 83 bytes
-            },
-            {
-              memcmp: {
-                offset: 40, // Skip discriminator (8) + market pubkey (32) to get to user field
-                bytes: userPubkey.toBase58(),
-              },
-            },
-          ],
-        })
-
-        const participants: UserParticipantData[] = []
-
-        for (const { account } of participantAccounts) {
-          try {
-            const participant = AccountDecoder.decodeParticipant(account.data)
-
-            participants.push({
-              marketAddress: participant.market.toString(),
-              user: participant.user.toString(),
-              prediction: participant.prediction,
-              joinedAt: Number(participant.joinedAt),
-              hasWithdrawn: participant.hasWithdrawn,
-            })
-          }
-          catch (decodeError) {
-            console.warn('Failed to decode participant account:', decodeError)
-          }
-        }
-
-        return participants
-      }
-      catch (error) {
-        console.error('Error fetching user participant data:', error)
-        return []
-      }
+      // TODO: Implement Supabase user participant data fetching
+      console.log('Fetching user participant data for:', userAddress)
+      return []
     },
     enabled: !!userAddress,
-    staleTime: 10000, // 10 seconds
+    staleTime: 10000,
     refetchInterval: 10000,
   })
 }

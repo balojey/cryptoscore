@@ -4,10 +4,8 @@
  * Defines fee percentages and platform address for market resolution
  */
 
-import { PublicKey } from '@solana/web3.js'
-
-// Platform address for fee collection
-export const PLATFORM_ADDRESS = new PublicKey('2xUfnnyizenM7a9jWHtgxdCWCTE11afRUhX5YeFSrVTn')
+// Platform address for fee collection (EVM address format)
+export const PLATFORM_ADDRESS = '0x742d35Cc6634C0532925a3b8D4C9db96DfbBb0b1' // Placeholder EVM address
 
 // Fee distribution percentages (in basis points for precision)
 export const FEE_DISTRIBUTION = {
@@ -39,7 +37,7 @@ export interface FeeDistribution {
 /**
  * Calculate fee distribution from total pool amount
  * 
- * @param totalPool - Total pool amount in lamports
+ * @param totalPool - Total pool amount in base units
  * @returns Fee distribution breakdown
  */
 export function calculateFeeDistribution(totalPool: bigint): FeeDistribution {

@@ -1,37 +1,36 @@
-// Compatibility layer for Solana migration
-// This file provides exports that match the old Polkadot wagmi structure
-// Components using this will need to be migrated to use Solana wallet adapter
+// Stub implementation for Web2 migration
+// This file provides placeholder exports for wagmi-related functionality
+// All Solana dependencies have been removed
 
 import type { Chain, PublicClient } from 'viem'
-import { connection, currentNetwork } from './solana'
 
-// Create a mock chain object that satisfies Viem's Chain type
+// Create a placeholder chain object
 export const passetHub: Chain = {
-  id: 900, // Arbitrary ID for Solana devnet
-  name: currentNetwork.name,
-  nativeCurrency: currentNetwork.nativeCurrency,
+  id: 900,
+  name: 'Placeholder Network',
+  nativeCurrency: {
+    name: 'Placeholder Token',
+    symbol: 'PLH',
+    decimals: 18,
+  },
   rpcUrls: {
-    default: { http: [connection.rpcEndpoint] },
-    public: { http: [connection.rpcEndpoint] },
+    default: { http: ['https://placeholder-rpc.com'] },
+    public: { http: ['https://placeholder-rpc.com'] },
   },
   blockExplorers: {
-    default: { name: 'Solana Explorer', url: currentNetwork.explorer },
+    default: { name: 'Placeholder Explorer', url: 'https://placeholder-explorer.com' },
   },
 }
 
-// Export a config object for compatibility
-// This is a mock config that satisfies the type requirements
+// Export a placeholder config object
 export const config: any = {
-  connection,
-  network: currentNetwork,
   chains: [passetHub],
   connectors: [],
   storage: null,
   state: {},
 }
 
-// Mock getPublicClient for compatibility during migration
-// This returns null to indicate Solana doesn't use Viem's public client
+// Placeholder getPublicClient function
 export function getPublicClient(_config: any): PublicClient | null {
   return null
 }

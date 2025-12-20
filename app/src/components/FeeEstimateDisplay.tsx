@@ -1,6 +1,11 @@
-import type { FeeEstimate } from '../lib/solana/transaction-builder'
 import { AlertCircle, Info } from 'lucide-react'
-import { SolanaUtils } from '../lib/solana/utils'
+
+interface FeeEstimate {
+  fee: number
+  feeInSol: number
+  success: boolean
+  error?: string
+}
 
 interface FeeEstimateDisplayProps {
   feeEstimate: FeeEstimate | null
@@ -50,7 +55,7 @@ export function FeeEstimateDisplay({
         <div className="flex items-center gap-2">
           <span style={{ color: 'var(--text-secondary)' }}>Estimated fee:</span>
           <span style={{ color: 'var(--text-primary)' }} className="font-mono font-semibold">
-            {SolanaUtils.formatFee(feeEstimate.fee)}
+            {(feeEstimate.fee / 1_000_000_000).toFixed(6)} SOL
           </span>
         </div>
         {showDetails && (

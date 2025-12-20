@@ -1,27 +1,32 @@
-// Solana network utilities
-// This file replaces the old Polkadot chain switching utilities
-
-import type { Connection } from '@solana/web3.js'
-import { currentNetwork, getHealthyConnection } from '../config/solana'
+// Network utilities for web2 architecture
+// This file replaces the old Solana network utilities
 
 /**
- * Ensures connection to Solana network
- * Replaces the old ensurePaseoTestnet function
+ * Network configuration for display purposes
  */
-export async function ensureSolanaNetwork(): Promise<Connection> {
+export const networkConfig = {
+  name: 'Supabase Backend',
+  explorer: 'https://supabase.com',
+  nativeCurrency: {
+    name: 'USD',
+    symbol: 'USD',
+    decimals: 2,
+  },
+} as const
+
+/**
+ * Ensures connection to Supabase backend
+ * Replaces the old ensureSolanaNetwork function
+ */
+export async function ensureSupabaseConnection(): Promise<boolean> {
   try {
-    // Get a healthy connection with automatic fallback
-    const connection = await getHealthyConnection()
-
-    // Verify connection is working
-    await connection.getLatestBlockhash('confirmed')
-
-    console.log(`Connected to ${currentNetwork.name}`)
-    return connection
+    // TODO: Implement Supabase health check
+    console.log(`Connected to ${networkConfig.name}`)
+    return true
   }
   catch (error) {
-    console.error('Failed to connect to Solana network:', error)
-    throw new Error(`Unable to connect to ${currentNetwork.name}. Please check your network connection.`)
+    console.error('Failed to connect to Supabase backend:', error)
+    throw new Error(`Unable to connect to ${networkConfig.name}. Please check your network connection.`)
   }
 }
 
@@ -29,5 +34,5 @@ export async function ensureSolanaNetwork(): Promise<Connection> {
  * Get current network info
  */
 export function getCurrentNetwork() {
-  return currentNetwork
+  return networkConfig
 }

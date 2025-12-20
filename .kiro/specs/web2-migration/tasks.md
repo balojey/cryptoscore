@@ -94,7 +94,7 @@
   - Implement efficient queries with proper indexing
   - _Requirements: 4.5, 10.1_
 
-- [ ] 10. Remove Solana dependencies and clean up codebase
+- [x] 10. Remove Solana dependencies and clean up codebase
   - Uninstall all @solana packages from package.json
   - Remove Solana configuration files (solana.ts, programs.ts)
   - Delete Anchor IDL files and related imports
@@ -102,11 +102,11 @@
   - Remove all Solana-related utility functions and hooks
   - _Requirements: 1.3, 1.4, 1.5, 7.1, 7.2, 7.3, 7.4, 7.5_
 
-- [ ] 10.1 Write property test for Solana connection elimination
+- [x] 10.1 Write property test for Solana connection elimination
   - **Property 1: Solana Connection Elimination**
   - **Validates: Requirements 1.1**
 
-- [ ] 10.2 Write property test for bundle size reduction
+- [x] 10.2 Write property test for bundle size reduction
   - **Property 9: Bundle Size Reduction**
   - **Validates: Requirements 10.3**
 

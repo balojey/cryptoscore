@@ -1,17 +1,9 @@
-import type { WalletAdapterNetwork } from '@solana/wallet-adapter-base'
 import { Buffer } from 'buffer'
 import {
   CrossmintAuthProvider,
   CrossmintProvider,
   CrossmintWalletProvider,
 } from '@crossmint/client-sdk-react-ui'
-import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react'
-import { WalletModalProvider } from '@solana/wallet-adapter-react-ui'
-import {
-  PhantomWalletAdapter,
-  SolflareWalletAdapter,
-} from '@solana/wallet-adapter-wallets'
-import { clusterApiUrl } from '@solana/web3.js'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React, { useMemo } from 'react'
 import ReactDOM from 'react-dom/client'
@@ -33,7 +25,6 @@ import { UnifiedWalletProvider } from './contexts/UnifiedWalletContext'
 import { AuthProvider } from './contexts/AuthContext'
 
 import './style.css'
-import '@solana/wallet-adapter-react-ui/styles.css'
 
 // Polyfill Buffer for browser
 window.Buffer = Buffer
@@ -41,24 +32,6 @@ window.Buffer = Buffer
 const queryClient = new QueryClient()
 
 function Root() {
-  // Get network from environment
-  const network = (import.meta.env.VITE_SOLANA_NETWORK || 'devnet') as WalletAdapterNetwork
-
-  // Get RPC endpoint from environment or use devnet
-  const endpoint = useMemo(
-    () => import.meta.env.VITE_SOLANA_RPC_URL || clusterApiUrl(network),
-    [network],
-  )
-
-  // Initialize wallet adapters with explicit network configuration
-  const wallets = useMemo(
-    () => [
-      new PhantomWalletAdapter(),
-      new SolflareWalletAdapter({ network }),
-    ],
-    [network],
-  )
-
   // Validate Crossmint configuration on startup
   const crossmintValidation = useMemo(() => {
     // Only validate if user is attempting to use Crossmint
@@ -107,33 +80,12 @@ function Root() {
           >
             <CrossmintWalletProvider 
               createOnLogin={{
-                chain: 'ethereum',
+                chain: 'solana',
                 signer: {
-                  type: 'passkey',
+                  type: 'email',
                 },
               }}
             >
-              <ConnectionProvider endpoint={endpoint}>
-                <WalletProvider wallets={wallets} autoConnect>
-                  <WalletModalProvider>
-                    <UnifiedWalletProvider>
-                      <AuthProvider>
-                        <QueryClientProvider client={queryClient}>
-                          <App />
-                        </QueryClientProvider>
-                      </AuthProvider>
-                    </UnifiedWalletProvider>
-                  </WalletModalProvider>
-                </WalletProvider>
-              </ConnectionProvider>
-            </CrossmintWalletProvider>
-          </CrossmintAuthProvider>
-        </CrossmintProvider>
-      ) : (
-        // Use existing providers when Crossmint is not configured
-        <ConnectionProvider endpoint={endpoint}>
-          <WalletProvider wallets={wallets} autoConnect>
-            <WalletModalProvider>
               <UnifiedWalletProvider>
                 <AuthProvider>
                   <QueryClientProvider client={queryClient}>
@@ -141,9 +93,18 @@ function Root() {
                   </QueryClientProvider>
                 </AuthProvider>
               </UnifiedWalletProvider>
-            </WalletModalProvider>
-          </WalletProvider>
-        </ConnectionProvider>
+            </CrossmintWalletProvider>
+          </CrossmintAuthProvider>
+        </CrossmintProvider>
+      ) : (
+        // Fallback when Crossmint is not configured
+        <UnifiedWalletProvider>
+          <AuthProvider>
+            <QueryClientProvider client={queryClient}>
+              <App />
+            </QueryClientProvider>
+          </AuthProvider>
+        </UnifiedWalletProvider>
       )}
     </React.StrictMode>
   )

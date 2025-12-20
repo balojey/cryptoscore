@@ -29,7 +29,7 @@ export default function MarketComments({ marketAddress: _marketAddress }: Market
 
     const comment: Comment = {
       id: Date.now().toString(),
-      author: publicKey.toBase58(),
+      author: publicKey,
       text: newComment.trim(),
       timestamp: Date.now(),
       prediction: selectedPrediction,

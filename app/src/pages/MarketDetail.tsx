@@ -8,7 +8,6 @@ import { useCurrency } from '@/hooks/useCurrency'
 import PredictionDistributionChart from '../components/charts/PredictionDistributionChart'
 import SharePrediction from '../components/SharePrediction'
 import Confetti from '../components/ui/Confetti'
-import { getAccountExplorerUrl } from '../config/programs'
 import { useSupabaseMarketActions } from '../hooks/useSupabaseMarketActions'
 import { useSupabaseMarketData } from '../hooks/useSupabaseMarketData'
 import { useMatchData, type EnhancedMatchData } from '../hooks/useMatchData'
@@ -18,6 +17,11 @@ import { useWinnings } from '../hooks/useWinnings'
 import { formatCurrency, formatWithSOLEquivalent, shortenAddress } from '../utils/formatters'
 import { CreateSimilarMarketDialog, type CreateSimilarMarketParams } from '../components/CreateSimilarMarketDialog'
 import { WinningsDisplay } from '../components/WinningsDisplay'
+
+// Placeholder function for account explorer URL (removed Solana dependency)
+function getAccountExplorerUrl(address: string): string {
+  return `https://placeholder-explorer.com/account/${address}`
+}
 import { PotentialWinningsDisplay } from '../components/market/PotentialWinningsDisplay'
 
 // --- SUB-COMPONENTS ---
@@ -899,7 +903,7 @@ export function MarketDetail() {
   } : null
 
   // Check if user is the creator
-  const isCreator = userAddress && marketInfo?.creator === userAddress.toBase58()
+  const isCreator = userAddress && marketInfo?.creator === userAddress
 
   // Determine resolution eligibility
   const resolutionEligibility = useResolutionEligibility({
