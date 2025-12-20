@@ -10,6 +10,7 @@ import { MarketService } from '../lib/supabase/market-service'
 import { DatabaseService } from '../lib/supabase/database-service'
 import { UserService } from '../lib/supabase/user-service'
 import { useUnifiedWallet } from '../contexts/UnifiedWalletContext'
+import { queryKeys, prefetchHelpers } from '../config/query-client'
 
 export interface Participant {
   user: string
@@ -56,7 +57,7 @@ function parseOutcome(outcome: string | null): 'Home' | 'Draw' | 'Away' | null {
  */
 export function useSupabaseMarketData(marketId?: string) {
   return useQuery({
-    queryKey: ['market', 'details', marketId],
+    queryKey: queryKeys.markets.detail(marketId || ''),
     queryFn: async (): Promise<MarketData | null> => {
       if (!marketId) {
         return null
@@ -103,8 +104,8 @@ export function useSupabaseMarketData(marketId?: string) {
       }
     },
     enabled: !!marketId,
-    staleTime: 10000, // 10 seconds
-    refetchInterval: 10000,
+    staleTime: 1000 * 60 * 2, // 2 minutes - market details change less frequently
+    gcTime: 1000 * 60 * 10, // 10 minutes cache time
   })
 }
 
@@ -113,7 +114,7 @@ export function useSupabaseMarketData(marketId?: string) {
  */
 export function useSupabaseAllMarkets() {
   return useQuery({
-    queryKey: ['markets', 'all'],
+    queryKey: queryKeys.markets.list({}),
     queryFn: async (): Promise<MarketData[]> => {
       try {
         // Fetch all markets
@@ -166,8 +167,8 @@ export function useSupabaseAllMarkets() {
         return []
       }
     },
-    staleTime: 30000, // 30 seconds
-    refetchInterval: 30000,
+    staleTime: 1000 * 60 * 5, // 5 minutes - market lists change less frequently
+    gcTime: 1000 * 60 * 15, // 15 minutes cache time
   })
 }
 

@@ -70,9 +70,9 @@ export class MarketService {
    * @returns Created market data
    */
   static async createMarket(params: CreateMarketParams): Promise<Market> {
-    // Get platform fee percentage from config (default to 5%)
-    const platformConfig = await DatabaseService.getPlatformConfig('platform_fee_percentage')
-    const platformFeePercentage = platformConfig?.value as number || 5
+    // Get platform fee percentage from config (default to 0.05 for 5%)
+    const platformConfig = await DatabaseService.getPlatformConfig('default_platform_fee_percentage')
+    const platformFeePercentage = platformConfig?.value ? parseFloat(platformConfig.value as string) : 0.05
 
     const marketData: MarketInsert = {
       creator_id: params.creatorId,

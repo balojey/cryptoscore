@@ -4,7 +4,7 @@ import {
   CrossmintProvider,
   CrossmintWalletProvider,
 } from '@crossmint/client-sdk-react-ui'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClientProvider } from '@tanstack/react-query'
 import React, { useMemo } from 'react'
 import ReactDOM from 'react-dom/client'
 
@@ -16,6 +16,7 @@ import {
   CROSSMINT_LOGIN_METHODS,
   isCrossmintEnabled,
 } from './config/crossmint'
+import { queryClient } from './config/query-client'
 import {
   getConsoleUrl,
   shouldEnableCrossmint,
@@ -28,8 +29,6 @@ import './style.css'
 
 // Polyfill Buffer for browser
 window.Buffer = Buffer
-
-const queryClient = new QueryClient()
 
 function Root() {
   // Validate Crossmint configuration on startup
