@@ -8,62 +8,72 @@
 import { useQuery } from '@tanstack/react-query'
 
 export interface Participant {
-  user: string
-  prediction: number
-  amount: number
+  id: string // UUID from Supabase
+  user_id: string // User UUID
+  prediction: 'Home' | 'Draw' | 'Away'
+  entry_amount: number
+  potential_winnings: number
+  actual_winnings?: number | null
+  joined_at: string // ISO timestamp
 }
 
 export interface MarketData {
-  marketAddress: string
-  creator: string
+  id: string // UUID from Supabase
+  creator_id: string // User UUID
   matchId: string
-  entryFee: number
-  kickoffTime: number
-  endTime: number
-  status: 'Open' | 'Live' | 'Resolved' | 'Cancelled'
-  outcome: 'Home' | 'Draw' | 'Away' | null
-  totalPool: number
+  title: string
+  description: string
+  entry_fee: number
+  end_time: string // ISO timestamp
+  status: 'active' | 'resolved' | 'cancelled'
+  resolution_outcome: 'Home' | 'Draw' | 'Away' | null
+  total_pool: number
+  platform_fee_percentage: number
+  created_at: string
+  updated_at: string
   participantCount: number
   homeCount: number
   drawCount: number
   awayCount: number
-  isPublic: boolean
   participants?: Participant[]
 }
 
 /**
  * Hook for fetching detailed information for a specific market (stub)
  */
-export function useMarketData(marketAddress?: string) {
+export function useMarketData(marketId?: string) {
   return useQuery({
-    queryKey: ['market', 'details', marketAddress],
+    queryKey: ['market', 'details', marketId],
     queryFn: async (): Promise<MarketData | null> => {
-      if (!marketAddress) {
+      if (!marketId) {
         return null
       }
 
       // TODO: Implement Supabase market data fetching
-      console.log('Fetching market data for:', marketAddress)
+      console.log('Fetching market data for:', marketId)
       
       // Return mock data for now
       return {
-        marketAddress,
-        creator: 'mock_creator',
+        id: marketId,
+        creator_id: 'mock_creator_uuid',
         matchId: 'mock_match',
-        entryFee: 1000000,
-        kickoffTime: Date.now() + 3600000,
-        endTime: Date.now() + 7200000,
-        status: 'Open',
-        outcome: null,
-        totalPool: 5000000,
+        title: 'Mock Market',
+        description: 'Mock market description',
+        entry_fee: 1.0,
+        end_time: new Date(Date.now() + 7200000).toISOString(),
+        status: 'active',
+        resolution_outcome: null,
+        total_pool: 5.0,
+        platform_fee_percentage: 0.05,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
         participantCount: 5,
         homeCount: 2,
         drawCount: 1,
         awayCount: 2,
-        isPublic: true,
       }
     },
-    enabled: !!marketAddress,
+    enabled: !!marketId,
     staleTime: 10000,
     refetchInterval: 10000,
   })
@@ -88,19 +98,19 @@ export function useAllMarkets() {
 /**
  * Hook for fetching markets for a specific user (stub)
  */
-export function useUserMarkets(userAddress?: string) {
+export function useUserMarkets(userId?: string) {
   return useQuery({
-    queryKey: ['markets', 'user', userAddress],
+    queryKey: ['markets', 'user', userId],
     queryFn: async (): Promise<MarketData[]> => {
-      if (!userAddress) {
+      if (!userId) {
         return []
       }
 
       // TODO: Implement Supabase user markets fetching
-      console.log('Fetching user markets for:', userAddress)
+      console.log('Fetching user markets for:', userId)
       return []
     },
-    enabled: !!userAddress,
+    enabled: !!userId,
     staleTime: 10000,
     refetchInterval: 10000,
   })
@@ -109,19 +119,19 @@ export function useUserMarkets(userAddress?: string) {
 /**
  * Hook for fetching markets where user has made a prediction (stub)
  */
-export function useUserParticipantMarkets(userAddress?: string) {
+export function useUserParticipantMarkets(userId?: string) {
   return useQuery({
-    queryKey: ['markets', 'participant', userAddress],
+    queryKey: ['markets', 'participant', userId],
     queryFn: async (): Promise<MarketData[]> => {
-      if (!userAddress) {
+      if (!userId) {
         return []
       }
 
       // TODO: Implement Supabase participant markets fetching
-      console.log('Fetching participant markets for:', userAddress)
+      console.log('Fetching participant markets for:', userId)
       return []
     },
-    enabled: !!userAddress,
+    enabled: !!userId,
     staleTime: 10000,
     refetchInterval: 10000,
   })
@@ -130,25 +140,25 @@ export function useUserParticipantMarkets(userAddress?: string) {
 /**
  * Hook for fetching user statistics (stub)
  */
-export function useUserStats(userAddress?: string) {
+export function useUserStats(userId?: string) {
   return useQuery({
-    queryKey: ['user', 'stats', userAddress],
+    queryKey: ['user', 'stats', userId],
     queryFn: async () => {
-      if (!userAddress) {
+      if (!userId) {
         return null
       }
 
       // TODO: Implement Supabase user stats fetching
-      console.log('Fetching user stats for:', userAddress)
+      console.log('Fetching user stats for:', userId)
       return {
-        user: userAddress,
+        user_id: userId,
         totalMarkets: 0,
         totalWins: 0,
         totalEarnings: 0,
         currentStreak: 0,
       }
     },
-    enabled: !!userAddress,
+    enabled: !!userId,
     staleTime: 30000,
   })
 }

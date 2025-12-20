@@ -26,23 +26,25 @@ export const FEE_DISTRIBUTION = {
 export const BASIS_POINTS_DIVISOR = 10000
 
 /**
- * Fee distribution interface for type safety
+ * Fee distribution interface for type safety (Web2 Migration)
+ * Updated to use decimal amounts instead of bigint
  */
 export interface FeeDistribution {
-  creatorFee: bigint
-  platformFee: bigint
-  participantPool: bigint
+  creatorFee: number
+  platformFee: number
+  participantPool: number
 }
 
 /**
- * Calculate fee distribution from total pool amount
+ * Calculate fee distribution from total pool amount (Web2 Migration)
+ * Updated to use decimal amounts instead of bigint
  * 
- * @param totalPool - Total pool amount in base units
+ * @param totalPool - Total pool amount in decimal format
  * @returns Fee distribution breakdown
  */
-export function calculateFeeDistribution(totalPool: bigint): FeeDistribution {
-  const creatorFee = (totalPool * BigInt(FEE_DISTRIBUTION.CREATOR_FEE_BPS)) / BigInt(BASIS_POINTS_DIVISOR)
-  const platformFee = (totalPool * BigInt(FEE_DISTRIBUTION.PLATFORM_FEE_BPS)) / BigInt(BASIS_POINTS_DIVISOR)
+export function calculateFeeDistribution(totalPool: number): FeeDistribution {
+  const creatorFee = (totalPool * FEE_DISTRIBUTION.CREATOR_FEE_BPS) / BASIS_POINTS_DIVISOR
+  const platformFee = (totalPool * FEE_DISTRIBUTION.PLATFORM_FEE_BPS) / BASIS_POINTS_DIVISOR
   const participantPool = totalPool - creatorFee - platformFee
   
   return {

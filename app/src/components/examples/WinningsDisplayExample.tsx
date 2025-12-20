@@ -7,32 +7,43 @@
 import { useState } from 'react'
 import { WinningsDisplay, CompactWinningsDisplay, DetailedWinningsDisplay } from '../WinningsDisplay'
 import type { WinningsResult } from '@/utils/winnings-calculator'
-import type { MarketData } from '@/hooks/useSupabaseMarketData'
-import type { ParticipantData } from '@/hooks/useSupabaseParticipantData'
+import type { MarketData } from '@/hooks/useMarketData'
+import type { ParticipantData } from '@/hooks/useParticipantData'
 import type { EnhancedMatchData } from '@/hooks/useMatchData'
 
 /**
  * Mock data for examples
  */
 const mockMarketData: MarketData = {
-  creator: 'mock-creator-address',
+  id: 'mock-market-uuid',
+  creator_id: 'mock-creator-uuid',
   matchId: '12345',
-  entryFee: 100000000, // 0.1 SOL in lamports
-  totalPool: 1000000000, // 1 SOL in lamports
+  title: 'Mock Market',
+  description: 'Mock market description',
+  entry_fee: 0.1,
+  end_time: new Date(Date.now() + 3600000).toISOString(),
+  status: 'active',
+  resolution_outcome: null,
+  total_pool: 1.0,
+  platform_fee_percentage: 0.05,
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
   participantCount: 10,
   homeCount: 4,
   drawCount: 2,
   awayCount: 4,
-  status: 'Open',
-  outcome: null,
-  createdAt: new Date(),
-  startsAt: new Date(Date.now() + 3600000), // 1 hour from now
 }
 
 const mockParticipantData: ParticipantData = {
-  address: 'mock-participant-address',
+  id: 'mock-participant-uuid',
+  market_id: 'mock-market-uuid',
+  user_id: 'mock-user-uuid',
   prediction: 'Home',
-  hasWithdrawn: false,
+  entry_amount: 0.1,
+  potential_winnings: 0.19,
+  actual_winnings: null,
+  joined_at: new Date().toISOString(),
+}
   joinedAt: Date.now(),
 }
 

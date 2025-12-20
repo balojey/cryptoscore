@@ -16,23 +16,30 @@ import { WinningsLoadingSkeleton } from '../WinningsLoadingSkeleton'
 import { NetworkStatusBanner, useNetworkAwareRetry } from '../NetworkStatusBanner'
 import { WinningsErrorHandler, WinningsErrorType, ErrorSeverity } from '@/utils/winnings-error-handler'
 import type { WinningsResult } from '@/utils/winnings-calculator'
-import type { MarketData } from '@/hooks/useSupabaseMarketData'
+import type { MarketData } from '@/hooks/useMarketData'
 
 /**
  * Mock data for demonstration
  */
 const mockMarketData: MarketData = {
-  address: 'mock-market-address',
-  creator: 'mock-creator-address',
+  id: 'mock-market-uuid',
+  creator_id: 'mock-creator-uuid',
   matchId: 'mock-match-123',
-  entryFee: 100_000_000, // 0.1 SOL
-  totalPool: 1_000_000_000, // 1 SOL
+  title: 'Mock Market',
+  description: 'Mock market description',
+  entry_fee: 0.1,
+  end_time: new Date(Date.now() + 3600000).toISOString(),
+  status: 'active',
+  resolution_outcome: null,
+  total_pool: 1.0,
+  platform_fee_percentage: 0.05,
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
   participantCount: 10,
   homeCount: 4,
   drawCount: 2,
   awayCount: 4,
-  status: 'Open',
-  outcome: null,
+}
   kickoffTime: Date.now() + 3600000, // 1 hour from now
   isPrivate: false,
 }
@@ -153,9 +160,15 @@ export function WinningsErrorHandlingExample() {
           <WinningsDisplay
             marketData={mockMarketData}
             participantData={{
-              market: mockMarketData.address,
-              user: 'mock-user-address',
+              id: 'mock-participant-uuid',
+              market_id: mockMarketData.id,
+              user_id: 'mock-user-uuid',
               prediction: 'Home',
+              entry_amount: 0.1,
+              potential_winnings: 0.19,
+              actual_winnings: null,
+              joined_at: new Date().toISOString(),
+            }}
               hasWithdrawn: false,
             }}
             userAddress="mock-user-address"

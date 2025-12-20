@@ -3,7 +3,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Create custom types
 CREATE TYPE market_status AS ENUM ('active', 'resolved', 'cancelled');
-CREATE TYPE transaction_type AS ENUM ('market_entry', 'winnings', 'platform_fee');
+CREATE TYPE transaction_type AS ENUM ('market_entry', 'winnings', 'platform_fee', 'creator_reward');
 
 -- Users table (replaces user account data)
 CREATE TABLE users (

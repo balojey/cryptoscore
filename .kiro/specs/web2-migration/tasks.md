@@ -131,7 +131,7 @@
 - [x] 13. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 14. Update TypeScript types and interfaces
+- [x] 14. Update TypeScript types and interfaces
   - Generate TypeScript types from Supabase schema
   - Update all interfaces to match new database structure
   - Remove Solana-specific types and replace with Supabase equivalents

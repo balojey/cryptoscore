@@ -56,8 +56,8 @@ export interface WinningsError {
   retryable: boolean
   timestamp: number
   context?: {
-    marketAddress?: string
-    userAddress?: string
+    marketId?: string
+    userId?: string
     operation?: string
     [key: string]: any
   }

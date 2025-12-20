@@ -39,20 +39,19 @@ export function formatTime(timestamp: Date): string {
 }
 
 /**
- * Formats SOL amounts with proper decimal places and symbol
- * @param lamports - Amount in lamports (1 SOL = 1,000,000,000 lamports)
- * @param decimals - Number of decimal places to show (default: 4)
- * @param showSymbol - Whether to show SOL symbol (default: true)
- * @returns Formatted SOL amount string
+ * Formats MNEE token amounts with proper decimal places and symbol
+ * @param amount - Amount in decimal format (e.g., 1.5 for 1.5 MNEE)
+ * @param decimals - Number of decimal places to show (default: 2)
+ * @param showSymbol - Whether to show MNEE symbol (default: true)
+ * @returns Formatted MNEE amount string
  */
-export function formatSOL(
-  lamports: number | bigint,
-  decimals: number = 4,
+export function formatMNEE(
+  amount: number,
+  decimals: number = 2,
   showSymbol: boolean = true,
 ): string {
-  const sol = Number(lamports) / 1_000_000_000
-  const formatted = sol.toFixed(decimals)
-  return showSymbol ? `${formatted} SOL` : formatted
+  const formatted = amount.toFixed(decimals)
+  return showSymbol ? `${formatted} MNEE` : formatted
 }
 
 /**
@@ -89,14 +88,16 @@ export function formatPercentage(value: number, decimals: number = 1): string {
  * @param currency - The currency code
  * @returns Currency symbol string
  */
-export function getCurrencySymbol(currency: 'SOL' | 'USD' | 'NGN'): string {
+export function getCurrencySymbol(currency: 'MNEE' | 'USD' | 'EUR' | 'GBP'): string {
   switch (currency) {
-    case 'SOL':
-      return '◎'
+    case 'MNEE':
+      return 'Ⓜ'
     case 'USD':
       return '$'
-    case 'NGN':
-      return '₦'
+    case 'EUR':
+      return '€'
+    case 'GBP':
+      return '£'
     default:
       return ''
   }
@@ -107,12 +108,13 @@ export function getCurrencySymbol(currency: 'SOL' | 'USD' | 'NGN'): string {
  * @param currency - The currency code
  * @returns Number of decimal places
  */
-export function getCurrencyDecimals(currency: 'SOL' | 'USD' | 'NGN'): number {
+export function getCurrencyDecimals(currency: 'MNEE' | 'USD' | 'EUR' | 'GBP'): number {
   switch (currency) {
-    case 'SOL':
-      return 4
+    case 'MNEE':
+      return 2
     case 'USD':
-    case 'NGN':
+    case 'EUR':
+    case 'GBP':
       return 2
     default:
       return 2
@@ -132,54 +134,53 @@ function formatWithThousandSeparators(value: number, decimals: number): string {
 }
 
 /**
- * Convert lamports to target currency amount
- * @param lamports - Amount in lamports
- * @param targetCurrency - Target currency (SOL, USD, NGN)
- * @param exchangeRates - Current exchange rates (null for SOL)
+ * Convert decimal amount to target currency amount
+ * @param amount - Amount in decimal format
+ * @param targetCurrency - Target currency (MNEE, USD, EUR, GBP)
+ * @param exchangeRates - Current exchange rates (null for MNEE)
  * @returns Converted amount in target currency
  */
-function convertLamportsToAmount(
-  lamports: number,
-  targetCurrency: 'SOL' | 'USD' | 'NGN',
-  exchangeRates: { SOL_USD: number, SOL_NGN: number } | null,
+function convertAmountToTarget(
+  amount: number,
+  targetCurrency: 'MNEE' | 'USD' | 'EUR' | 'GBP',
+  exchangeRates: { MNEE_USD: number, MNEE_EUR: number, MNEE_GBP: number } | null,
 ): number {
-  // Convert lamports to SOL first
-  const sol = lamports / 1_000_000_000
-
-  // If target is SOL, return SOL amount
-  if (targetCurrency === 'SOL') {
-    return sol
+  // If target is MNEE, return amount as-is
+  if (targetCurrency === 'MNEE') {
+    return amount
   }
 
   // For other currencies, need exchange rates
   if (!exchangeRates) {
-    return sol // Fallback to SOL if no rates available
+    return amount // Fallback to original amount if no rates available
   }
 
-  // Convert SOL to target currency
+  // Convert MNEE to target currency
   switch (targetCurrency) {
     case 'USD':
-      return sol * exchangeRates.SOL_USD
-    case 'NGN':
-      return sol * exchangeRates.SOL_NGN
+      return amount * exchangeRates.MNEE_USD
+    case 'EUR':
+      return amount * exchangeRates.MNEE_EUR
+    case 'GBP':
+      return amount * exchangeRates.MNEE_GBP
     default:
-      return sol
+      return amount
   }
 }
 
 /**
  * Format currency amount with proper symbol and decimals
  * Handles edge cases like zero values, very small amounts, and very large amounts
- * @param lamports - Amount in lamports
+ * @param amount - Amount in decimal format
  * @param currency - Target currency
- * @param exchangeRates - Current exchange rates (null for SOL-only)
+ * @param exchangeRates - Current exchange rates (null for MNEE-only)
  * @param options - Formatting options
  * @returns Formatted currency string
  */
 export function formatCurrency(
-  lamports: number,
-  currency: 'SOL' | 'USD' | 'NGN',
-  exchangeRates: { SOL_USD: number, SOL_NGN: number } | null,
+  amount: number,
+  currency: 'MNEE' | 'USD' | 'EUR' | 'GBP',
+  exchangeRates: { MNEE_USD: number, MNEE_EUR: number, MNEE_GBP: number } | null,
   options: {
     showSymbol?: boolean
     decimals?: number
@@ -188,62 +189,61 @@ export function formatCurrency(
   const { showSymbol = true, decimals } = options
 
   // Handle zero or null values
-  if (!lamports || lamports === 0) {
+  if (!amount || amount === 0) {
     const defaultDecimals = decimals ?? getCurrencyDecimals(currency)
     const formatted = (0).toFixed(defaultDecimals)
     return showSymbol ? `${getCurrencySymbol(currency)}${formatted}` : formatted
   }
 
   // Convert to target currency
-  const amount = convertLamportsToAmount(lamports, currency, exchangeRates)
+  const convertedAmount = convertAmountToTarget(amount, currency, exchangeRates)
   const currencyDecimals = decimals ?? getCurrencyDecimals(currency)
 
   // Handle very small amounts (< 0.01 for fiat currencies)
-  if (currency !== 'SOL' && amount > 0 && amount < 0.01) {
+  if (currency !== 'MNEE' && convertedAmount > 0 && convertedAmount < 0.01) {
     return showSymbol ? `< ${getCurrencySymbol(currency)}0.01` : '< 0.01'
   }
 
   // Handle very large amounts (use K/M/B suffixes for amounts > 1M)
-  if (amount >= 1_000_000) {
-    const formatted = formatNumber(amount, 1)
+  if (convertedAmount >= 1_000_000) {
+    const formatted = formatNumber(convertedAmount, 1)
     return showSymbol ? `${getCurrencySymbol(currency)}${formatted}` : formatted
   }
 
-  // Format with thousand separators for NGN
+  // Format with thousand separators for certain currencies
   let formatted: string
-  if (currency === 'NGN') {
-    formatted = formatWithThousandSeparators(amount, currencyDecimals)
+  if (currency === 'EUR' || currency === 'GBP') {
+    formatted = formatWithThousandSeparators(convertedAmount, currencyDecimals)
   }
   else {
-    formatted = amount.toFixed(currencyDecimals)
+    formatted = convertedAmount.toFixed(currencyDecimals)
   }
 
   return showSymbol ? `${getCurrencySymbol(currency)}${formatted}` : formatted
 }
 
 /**
- * Format amount with SOL equivalent display
- * Returns both the primary formatted value and the SOL equivalent
- * @param lamports - Amount in lamports
+ * Format amount with MNEE equivalent display
+ * Returns both the primary formatted value and the MNEE equivalent
+ * @param amount - Amount in decimal format
  * @param currency - Target currency
  * @param exchangeRates - Current exchange rates
  * @returns Object with primary and equivalent formatted strings
  */
-export function formatWithSOLEquivalent(
-  lamports: number,
-  currency: 'SOL' | 'USD' | 'NGN',
-  exchangeRates: { SOL_USD: number, SOL_NGN: number } | null,
+export function formatWithMNEEEquivalent(
+  amount: number,
+  currency: 'MNEE' | 'USD' | 'EUR' | 'GBP',
+  exchangeRates: { MNEE_USD: number, MNEE_EUR: number, MNEE_GBP: number } | null,
 ): { primary: string, equivalent: string } {
-  const primary = formatCurrency(lamports, currency, exchangeRates)
+  const primary = formatCurrency(amount, currency, exchangeRates)
 
-  // If already in SOL, no equivalent needed
-  if (currency === 'SOL') {
+  // If already in MNEE, no equivalent needed
+  if (currency === 'MNEE') {
     return { primary, equivalent: '' }
   }
 
-  // Format SOL equivalent
-  const sol = lamports / 1_000_000_000
-  const equivalent = `${getCurrencySymbol('SOL')}${sol.toFixed(4)}`
+  // Format MNEE equivalent
+  const equivalent = `${getCurrencySymbol('MNEE')}${amount.toFixed(2)}`
 
   return { primary, equivalent }
 }

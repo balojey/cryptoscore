@@ -25,7 +25,7 @@ export interface WinningsCalculationParams {
  */
 export interface WinningsResult {
   type: 'potential' | 'actual' | 'creator_reward' | 'none'
-  amount: number // in lamports
+  amount: number // in decimal format
   breakdown?: {
     participantWinnings?: number
     creatorReward?: number

@@ -60,7 +60,7 @@ function AppContent() {
               <Route path="/markets" element={<Content />} />
               <Route path="/terminal" element={<TradingTerminal />} />
               <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/markets/:marketAddress" element={<MarketDetail />} />
+              <Route path="/markets/:marketId" element={<MarketDetail />} />
               <Route path="/leaderboard" element={<Leaderboard />} />
               <Route path="/shadcn-test" element={<ShadcnTest />} />
             </Routes>

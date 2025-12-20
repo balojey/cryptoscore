@@ -8,40 +8,46 @@
 import { useQuery } from '@tanstack/react-query'
 
 export interface ParticipantData {
-  market: string
-  user: string
+  id: string // UUID from Supabase
+  market_id: string // Market UUID
+  user_id: string // User UUID
   prediction: 'Home' | 'Draw' | 'Away'
-  hasWithdrawn: boolean
-  joinedAt: number
+  entry_amount: number
+  potential_winnings: number
+  actual_winnings?: number | null
+  joined_at: string // ISO timestamp
 }
 
 /**
  * Hook for fetching participant data for a specific market and user (stub)
  *
- * @param marketAddress - Market address
- * @param userAddress - User address (optional, defaults to connected wallet)
+ * @param marketId - Market UUID
+ * @param userId - User UUID (optional, defaults to connected user)
  */
-export function useParticipantData(marketAddress?: string, userAddress?: string) {
+export function useParticipantData(marketId?: string, userId?: string) {
   return useQuery({
-    queryKey: ['participant', marketAddress, userAddress],
+    queryKey: ['participant', marketId, userId],
     queryFn: async (): Promise<ParticipantData | null> => {
-      if (!marketAddress || !userAddress) {
+      if (!marketId || !userId) {
         return null
       }
 
       // TODO: Implement Supabase participant data fetching
-      console.log('Fetching participant data for market:', marketAddress, 'user:', userAddress)
+      console.log('Fetching participant data for market:', marketId, 'user:', userId)
       
       // Return mock data for now
       return {
-        market: marketAddress,
-        user: userAddress,
+        id: 'mock_participant_uuid',
+        market_id: marketId,
+        user_id: userId,
         prediction: 'Home',
-        hasWithdrawn: false,
-        joinedAt: Date.now() - 3600000, // 1 hour ago
+        entry_amount: 1.0,
+        potential_winnings: 1.95,
+        actual_winnings: null,
+        joined_at: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
       }
     },
-    enabled: !!marketAddress && !!userAddress,
+    enabled: !!marketId && !!userId,
     staleTime: 10000,
     refetchInterval: 10000,
   })
