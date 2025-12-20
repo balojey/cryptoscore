@@ -11,7 +11,7 @@
   - **Property 1: Database Schema Completeness**
   - **Validates: Requirements 5.1**
 
-- [ ] 2. Update Crossmint configuration for EVM wallets
+- [x] 2. Update Crossmint configuration for EVM wallets
   - Modify Crossmint configuration to use EVM chain instead of Solana
   - Update wallet creation to use EVM addresses (0x format)
   - Test EVM wallet creation and address validation

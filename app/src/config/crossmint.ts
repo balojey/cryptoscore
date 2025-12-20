@@ -48,7 +48,7 @@ export interface CrossmintConfig {
   /** Wallet creation and management configuration */
   walletConfig: {
     /** Blockchain network (EVM chains supported) */
-    chain: 'ethereum'
+    chain: 'ethereum-sepolia' | 'base' | 'polygon' | 'arbitrum' | 'optimism'
 
     /** Wallet signer configuration */
     signer: {
@@ -104,11 +104,12 @@ export const CROSSMINT_LOGIN_METHODS: CrossmintLoginMethod[] = [
  * Defines how Crossmint creates and manages wallets for authenticated users.
  * - Creates EVM wallets automatically on first login
  * - Uses passkey signer for transaction signing (supported for EVM chains)
+ * - Uses Ethereum Sepolia testnet for development
  *
  * @constant
  */
 export const CROSSMINT_WALLET_CONFIG = {
-  chain: 'ethereum' as const,
+  chain: 'ethereum-sepolia' as const,
   signer: {
     type: 'passkey' as const,
   },

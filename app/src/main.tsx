@@ -79,9 +79,9 @@ function Root() {
           >
             <CrossmintWalletProvider 
               createOnLogin={{
-                chain: 'solana',
+                chain: 'ethereum-sepolia',
                 signer: {
-                  type: 'email',
+                  type: 'passkey',
                 },
               }}
             >
