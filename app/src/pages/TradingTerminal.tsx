@@ -92,12 +92,12 @@ export function TradingTerminal() {
     }
   }
 
-  // Integrate real-time updates with WebSocket and polling fallback
-  // Note: WebSocket disabled until programs are deployed to avoid unnecessary RPC calls
+  // Integrate real-time updates with Supabase real-time subscriptions
+  // Note: Now uses Supabase instead of WebSocket for real-time updates
   const realtimeStatus = useSimpleRealtimeMarkets(
     displayMarkets,
-    DASHBOARD_PROGRAM_ID,
-    false, // Disable WebSocket until programs deployed
+    undefined, // factoryAddress not needed with Supabase
+    true, // webSocketEnabled ignored - always uses Supabase
   )
 
   // Trigger refetch when real-time updates are received

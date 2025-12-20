@@ -76,14 +76,14 @@
   - **Property 8: Fee Structure Consistency**
   - **Validates: Requirements 8.1, 8.3**
 
-- [ ] 8. Set up Supabase real-time subscriptions
+- [x] 8. Set up Supabase real-time subscriptions
   - Replace Solana WebSocket connections with Supabase real-time
   - Implement real-time market updates and participant notifications
   - Update hooks to use Supabase subscriptions
   - Optimize subscription patterns for performance
   - _Requirements: 3.5, 6.1, 6.2, 6.3, 6.4, 6.5_
 
-- [ ] 8.1 Write property test for real-time update source
+- [x] 8.1 Write property test for real-time update source
   - **Property 6: Real-time Update Source**
   - **Validates: Requirements 3.5, 6.1**
 

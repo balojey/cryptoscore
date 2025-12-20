@@ -2,29 +2,29 @@ import type { Market } from '../types'
 import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { marketToast, useRealtimeMarkets } from './useRealtimeMarkets'
-import { useFactoryWebSocketSubscription, useMarketWebSocketSubscriptions } from './useSolanaWebSocket'
+import { useSupabaseRealtimeMarkets } from './useSupabaseRealtimeMarkets'
 
 interface EnhancedRealtimeOptions {
   enabled?: boolean
   markets?: Market[]
-  factoryAddress?: string
-  pollingInterval?: number
-  webSocketEnabled?: boolean
+  factoryAddress?: string // Legacy option - ignored in web2 migration
+  pollingInterval?: number // Legacy option - not used with Supabase real-time
+  webSocketEnabled?: boolean // Legacy option - ignored in web2 migration
   onConnectionStatusChange?: (status: 'connected' | 'disconnected' | 'fallback') => void
   onMarketUpdate?: (marketAddress: string) => void
 }
 
 /**
- * Enhanced real-time markets hook that combines WebSocket and polling
- * with intelligent fallback and comprehensive error handling
+ * Enhanced real-time markets hook that uses Supabase real-time subscriptions
+ * instead of WebSocket and polling. Maintains backward compatibility with the original API.
  */
 export function useEnhancedRealtimeMarkets(options: EnhancedRealtimeOptions = {}) {
   const {
     enabled = true,
     markets = [],
-    factoryAddress,
-    pollingInterval = 10000,
-    webSocketEnabled = true,
+    factoryAddress, // Ignored in web2 migration
+    pollingInterval = 10000, // Not used with real-time subscriptions
+    webSocketEnabled = true, // Ignored - always use Supabase
     onConnectionStatusChange,
     onMarketUpdate,
   } = options
@@ -34,164 +34,91 @@ export function useEnhancedRealtimeMarkets(options: EnhancedRealtimeOptions = {}
   const [lastUpdateTime, setLastUpdateTime] = useState<number>(Date.now())
   const statusReportedRef = useRef<string>('')
 
-  // Extract market addresses for subscriptions
-  const marketAddresses = markets.map(m => m.marketAddress).filter(Boolean)
+  // Extract market IDs for subscriptions
+  const marketIds = markets.map(m => m.marketAddress).filter(Boolean)
 
-  // WebSocket subscriptions
-  const marketWebSocket = useMarketWebSocketSubscriptions(
-    webSocketEnabled ? marketAddresses : [],
-  )
-
-  const factoryWebSocket = useFactoryWebSocketSubscription(
-    webSocketEnabled ? factoryAddress : undefined,
-  )
-
-  // Fallback polling mechanism
-  const realtimePolling = useRealtimeMarkets({
-    enabled: enabled && (!webSocketEnabled || connectionStatus === 'fallback'),
-    interval: pollingInterval,
-    markets,
-    useWebSocket: false, // Disable WebSocket in polling mode
-    onUpdate: () => {
+  // Use Supabase real-time subscriptions instead of WebSocket
+  const supabaseRealtime = useSupabaseRealtimeMarkets({
+    marketIds,
+    enabled,
+    onMarketUpdate: (marketId, eventType) => {
+      console.log(`Supabase market update: ${eventType} ${marketId}`)
+      
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({ queryKey: ['market', 'details', marketId] })
+      queryClient.invalidateQueries({ queryKey: ['markets'] })
+      
+      onMarketUpdate?.(marketId)
       setLastUpdateTime(Date.now())
-      console.log('Polling update triggered')
+    },
+    onParticipantUpdate: (marketId, participantId, eventType) => {
+      console.log(`Supabase participant update: ${eventType} ${participantId} in ${marketId}`)
+      
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({ queryKey: ['market', 'details', marketId] })
+      queryClient.invalidateQueries({ queryKey: ['market', 'participants', marketId] })
+      queryClient.invalidateQueries({ queryKey: ['user', 'participation'] })
+      
+      setLastUpdateTime(Date.now())
+    },
+    onConnectionStatusChange: (status) => {
+      const mappedStatus = status === 'connected' ? 'connected' : 
+                          status === 'error' ? 'fallback' : 'disconnected'
+      
+      if (mappedStatus !== connectionStatus) {
+        setConnectionStatus(mappedStatus)
+        onConnectionStatusChange?.(mappedStatus)
+
+        // Show toast notifications for status changes
+        if (statusReportedRef.current !== mappedStatus) {
+          switch (mappedStatus) {
+            case 'connected':
+              if (statusReportedRef.current === 'disconnected' || statusReportedRef.current === 'fallback') {
+                marketToast.webSocketConnected()
+              }
+              break
+            case 'disconnected':
+              if (statusReportedRef.current === 'connected') {
+                marketToast.webSocketDisconnected()
+              }
+              break
+            case 'fallback':
+              marketToast.error('Real-time connection error')
+              break
+          }
+          statusReportedRef.current = mappedStatus
+        }
+      }
     },
   })
 
   /**
-   * Handle WebSocket account changes
-   */
-  const handleWebSocketAccountChange = useCallback((accountAddress: string, accountType: string, data: any) => {
-    console.log(`WebSocket account change: ${accountType} ${accountAddress}`, data)
-
-    // Invalidate relevant queries
-    if (accountType === 'market') {
-      queryClient.invalidateQueries({ queryKey: ['market', 'details', accountAddress] })
-      queryClient.invalidateQueries({ queryKey: ['markets'] })
-      onMarketUpdate?.(accountAddress)
-    }
-    else if (accountType === 'factory') {
-      queryClient.invalidateQueries({ queryKey: ['markets'] })
-    }
-
-    setLastUpdateTime(Date.now())
-  }, [queryClient, onMarketUpdate])
-
-  /**
-   * Monitor WebSocket connection status
+   * Update connection status based on Supabase real-time status
    */
   useEffect(() => {
-    if (!webSocketEnabled) {
-      const newStatus = 'fallback'
-      if (newStatus !== connectionStatus) {
-        setConnectionStatus(newStatus)
-        onConnectionStatusChange?.(newStatus)
-
-        if (statusReportedRef.current !== newStatus) {
-          marketToast.webSocketFallback()
-          statusReportedRef.current = newStatus
-        }
-      }
-      return
-    }
-
-    const isMarketConnected = marketAddresses.length === 0 || marketWebSocket.isConnected
-    const isFactoryConnected = !factoryAddress || factoryWebSocket.isConnected
-    const hasHighReconnectAttempts = marketWebSocket.reconnectAttempts >= 3 || factoryWebSocket.reconnectAttempts >= 3
-
-    let newStatus: 'connected' | 'disconnected' | 'fallback'
-
-    if (isMarketConnected && isFactoryConnected && !hasHighReconnectAttempts) {
-      newStatus = 'connected'
-    }
-    else if (hasHighReconnectAttempts) {
-      newStatus = 'fallback'
-    }
-    else {
-      newStatus = 'disconnected'
-    }
-
+    const newStatus = supabaseRealtime.isSupabaseConnected ? 'connected' : 
+                     supabaseRealtime.connectionStatus === 'error' ? 'fallback' : 'disconnected'
+    
     if (newStatus !== connectionStatus) {
       setConnectionStatus(newStatus)
       onConnectionStatusChange?.(newStatus)
-
-      // Show toast notifications for status changes
-      if (statusReportedRef.current !== newStatus) {
-        switch (newStatus) {
-          case 'connected':
-            if (statusReportedRef.current === 'disconnected' || statusReportedRef.current === 'fallback') {
-              marketToast.webSocketConnected()
-            }
-            break
-          case 'disconnected':
-            if (statusReportedRef.current === 'connected') {
-              marketToast.webSocketDisconnected()
-            }
-            break
-          case 'fallback':
-            marketToast.webSocketFallback()
-            break
-        }
-        statusReportedRef.current = newStatus
-      }
     }
-  }, [
-    webSocketEnabled,
-    marketAddresses.length,
-    marketWebSocket.isConnected,
-    marketWebSocket.reconnectAttempts,
-    factoryAddress,
-    factoryWebSocket.isConnected,
-    factoryWebSocket.reconnectAttempts,
-    connectionStatus,
-    onConnectionStatusChange,
-  ])
+  }, [supabaseRealtime.isSupabaseConnected, supabaseRealtime.connectionStatus, connectionStatus, onConnectionStatusChange])
 
   /**
-   * Monitor WebSocket account changes
+   * Log warnings for legacy options
    */
   useEffect(() => {
-    if (connectionStatus !== 'connected')
-      return
-
-    // Process market account changes
-    marketWebSocket.accountChanges.forEach((change, address) => {
-      handleWebSocketAccountChange(address, change.type, change.data)
-    })
-
-    // Process factory account changes
-    if (factoryWebSocket.factoryData && factoryAddress) {
-      handleWebSocketAccountChange(factoryAddress, 'factory', factoryWebSocket.factoryData)
+    if (!webSocketEnabled) {
+      console.warn('webSocketEnabled=false is ignored in web2 migration. Supabase real-time is always used.')
     }
-  }, [
-    connectionStatus,
-    marketWebSocket.accountChanges,
-    factoryWebSocket.factoryData,
-    factoryAddress,
-    handleWebSocketAccountChange,
-  ])
-
-  /**
-   * Health check for WebSocket connections
-   */
-  useEffect(() => {
-    if (!webSocketEnabled || connectionStatus === 'fallback')
-      return
-
-    const healthCheckInterval = setInterval(() => {
-      const now = Date.now()
-      const timeSinceLastUpdate = now - lastUpdateTime
-
-      // If no updates for 60 seconds and we should be connected, trigger a manual refresh
-      if (timeSinceLastUpdate > 60000 && connectionStatus === 'connected') {
-        console.log('WebSocket health check: triggering manual refresh')
-        queryClient.invalidateQueries({ queryKey: ['markets'] })
-        setLastUpdateTime(now)
-      }
-    }, 30000) // Check every 30 seconds
-
-    return () => clearInterval(healthCheckInterval)
-  }, [webSocketEnabled, connectionStatus, lastUpdateTime, queryClient])
+    if (factoryAddress) {
+      console.warn('factoryAddress is ignored in web2 migration. Supabase handles all real-time updates.')
+    }
+    if (pollingInterval !== 10000) {
+      console.warn('pollingInterval is ignored in web2 migration. Supabase real-time provides instant updates.')
+    }
+  }, [webSocketEnabled, factoryAddress, pollingInterval])
 
   /**
    * Cleanup on unmount
@@ -205,24 +132,24 @@ export function useEnhancedRealtimeMarkets(options: EnhancedRealtimeOptions = {}
   return {
     // Connection status
     connectionStatus,
-    isWebSocketActive: connectionStatus === 'connected',
-    isPollingActive: connectionStatus === 'fallback' || !webSocketEnabled,
+    isWebSocketActive: supabaseRealtime.isSupabaseConnected,
+    isPollingActive: false, // No polling with Supabase real-time
     lastUpdateTime,
 
-    // WebSocket details
+    // WebSocket details (mapped from Supabase for backward compatibility)
     webSocketStatus: {
-      marketConnected: marketWebSocket.isConnected,
-      factoryConnected: factoryWebSocket.isConnected,
-      marketSubscriptions: marketWebSocket.subscriptions.length,
-      factorySubscriptions: factoryWebSocket.subscriptions.length,
-      marketReconnectAttempts: marketWebSocket.reconnectAttempts,
-      factoryReconnectAttempts: factoryWebSocket.reconnectAttempts,
+      marketConnected: supabaseRealtime.isSupabaseConnected,
+      factoryConnected: supabaseRealtime.isSupabaseConnected,
+      marketSubscriptions: supabaseRealtime.subscribedMarketCount,
+      factorySubscriptions: supabaseRealtime.isSupabaseConnected ? 1 : 0,
+      marketReconnectAttempts: 0, // Supabase handles reconnection
+      factoryReconnectAttempts: 0, // Supabase handles reconnection
     },
 
-    // Polling details
+    // Polling details (not used but kept for compatibility)
     pollingStatus: {
-      isActive: realtimePolling.isPolling,
-      interval: pollingInterval,
+      isActive: false,
+      interval: 0,
     },
 
     // Manual controls
@@ -233,21 +160,22 @@ export function useEnhancedRealtimeMarkets(options: EnhancedRealtimeOptions = {}
       setLastUpdateTime(Date.now())
     },
 
-    // Subscription management
-    subscribeToMarket: marketWebSocket.subscribeToAccount,
-    unsubscribeFromMarket: marketWebSocket.unsubscribeFromAccount,
-    subscribeToFactory: factoryWebSocket.subscribeToAccount,
-    unsubscribeFromFactory: factoryWebSocket.unsubscribeFromAccount,
+    // Subscription management (legacy API - not used with Supabase)
+    subscribeToMarket: () => console.warn('subscribeToMarket is not needed with Supabase real-time'),
+    unsubscribeFromMarket: () => console.warn('unsubscribeFromMarket is not needed with Supabase real-time'),
+    subscribeToFactory: () => console.warn('subscribeToFactory is not needed with Supabase real-time'),
+    unsubscribeFromFactory: () => console.warn('unsubscribeFromFactory is not needed with Supabase real-time'),
   }
 }
 
 /**
  * Simplified hook for components that just need basic real-time functionality
+ * Updated to use Supabase instead of WebSocket
  */
 export function useSimpleRealtimeMarkets(
   markets: Market[] = [],
-  factoryAddress?: string,
-  webSocketEnabled: boolean = false, // Disabled by default until programs deployed
+  factoryAddress?: string, // Ignored in web2 migration
+  webSocketEnabled: boolean = true, // Ignored - always use Supabase
 ) {
   const enhanced = useEnhancedRealtimeMarkets({
     markets,
@@ -256,7 +184,7 @@ export function useSimpleRealtimeMarkets(
   })
 
   return {
-    isActive: enhanced.isWebSocketActive || enhanced.isPollingActive,
+    isActive: enhanced.isWebSocketActive,
     connectionType: enhanced.connectionStatus,
     lastUpdate: enhanced.lastUpdateTime,
     forceRefresh: enhanced.forceRefresh,
