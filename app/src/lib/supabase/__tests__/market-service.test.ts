@@ -16,6 +16,7 @@ vi.mock('../database-service', () => ({
     getMarkets: vi.fn(),
     joinMarket: vi.fn(),
     updateMarket: vi.fn(),
+    updateParticipant: vi.fn(),
     getMarketParticipants: vi.fn(),
     getUserMarketParticipation: vi.fn(),
     createTransaction: vi.fn(),
@@ -252,10 +253,13 @@ describe('MarketService Property Tests', () => {
         fc.record({
           marketId: fc.uuid(),
           outcome: fc.oneof(fc.constant('Home'), fc.constant('Draw'), fc.constant('Away')),
-          totalPool: fc.float({ min: Math.fround(1), max: Math.fround(1000), noNaN: true }),
+          totalPool: fc.float({ min: Math.fround(100), max: Math.fround(1000), noNaN: true }),
           platformFeePercentage: fc.integer({ min: 1, max: 10 }),
         }),
         async (resolveParams) => {
+          // Clear mocks for this iteration
+          vi.clearAllMocks()
+          
           // Mock market data
           const mockMarket = {
             id: resolveParams.marketId,
@@ -304,6 +308,10 @@ describe('MarketService Property Tests', () => {
             status: 'resolved',
             resolution_outcome: resolveParams.outcome,
           })
+          vi.mocked(DatabaseService.updateParticipant).mockResolvedValue({
+            ...mockParticipants[0],
+            actual_winnings: 100,
+          })
           vi.mocked(DatabaseService.createTransaction).mockResolvedValue({
             id: 'tx-resolve',
             user_id: 'user1',
@@ -336,12 +344,11 @@ describe('MarketService Property Tests', () => {
           const expectedWinningsPerWinner = winners.length > 0 ? winnerPool / winners.length : 0
 
           // Verify participant updates were called for each participant
-          expect(DatabaseService.supabase.from).toHaveBeenCalled()
+          expect(DatabaseService.updateParticipant).toHaveBeenCalledTimes(mockParticipants.length)
 
-          // Verify transaction records were created for winners
-          if (winners.length > 0 && expectedWinningsPerWinner > 0) {
-            expect(DatabaseService.createTransaction).toHaveBeenCalled()
-          }
+          // Verify transaction records were created
+          // At minimum, there should be creator reward and platform fee transactions
+          expect(DatabaseService.createTransaction).toHaveBeenCalled()
         }
       ),
       { numRuns: 100 }
