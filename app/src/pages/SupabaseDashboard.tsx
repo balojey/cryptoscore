@@ -1,3 +1,10 @@
+/**
+ * Supabase Dashboard Component
+ * 
+ * Replaces Dashboard.tsx with Supabase-based data fetching
+ * for portfolio and market management functionality.
+ */
+
 import type { FilterOptions } from '../components/market/MarketFilters'
 import { useState } from 'react'
 import { useUnifiedWallet } from '../contexts/UnifiedWalletContext'
@@ -36,7 +43,12 @@ function transformToLegacyMarketFormat(market: SupabaseMarketDashboardInfo) {
   }
 }
 
-function MarketList({ markets, isLoading, emptyMessage, emptyIcon }: {
+function MarketList({ 
+  markets, 
+  isLoading, 
+  emptyMessage, 
+  emptyIcon 
+}: {
   markets: SupabaseMarketDashboardInfo[]
   isLoading: boolean
   emptyMessage: string
@@ -89,7 +101,7 @@ function MarketList({ markets, isLoading, emptyMessage, emptyIcon }: {
   )
 }
 
-export function Dashboard() {
+export function SupabaseDashboard() {
   const { publicKey, walletType, connected } = useUnifiedWallet()
   const [activeTab, setActiveTab] = useState<'created' | 'joined'>('created')
   const [filters, setFilters] = useState<FilterOptions>({
@@ -234,6 +246,9 @@ export function Dashboard() {
     )
   }
 
+  // Transform markets for legacy components
+  const legacyAllInvolvedMarkets = allInvolvedMarkets.map(transformToLegacyMarketFormat)
+
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -266,14 +281,14 @@ export function Dashboard() {
 
         {/* Recent Activity & Performance */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          <RecentActivity markets={allInvolvedMarkets.map(transformToLegacyMarketFormat)} limit={5} />
-          <PerformanceChart markets={allInvolvedMarkets.map(transformToLegacyMarketFormat)} />
+          <RecentActivity markets={legacyAllInvolvedMarkets} limit={5} />
+          <PerformanceChart markets={legacyAllInvolvedMarkets} />
         </div>
 
         {/* Advanced Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          <PredictionDistributionChart markets={allInvolvedMarkets.map(transformToLegacyMarketFormat)} />
-          <PoolTrendChart markets={allInvolvedMarkets.map(transformToLegacyMarketFormat)} />
+          <PredictionDistributionChart markets={legacyAllInvolvedMarkets} />
+          <PoolTrendChart markets={legacyAllInvolvedMarkets} />
         </div>
 
         {/* Tabs */}

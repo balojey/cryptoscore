@@ -87,7 +87,7 @@
   - **Property 6: Real-time Update Source**
   - **Validates: Requirements 3.5, 6.1**
 
-- [ ] 9. Update portfolio and dashboard functionality
+- [x] 9. Update portfolio and dashboard functionality
   - Migrate dashboard data aggregation to Supabase queries
   - Update portfolio calculations to use database data
   - Maintain same metrics and display logic (P&L, win rate, etc.)
