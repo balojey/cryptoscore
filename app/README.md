@@ -1,6 +1,6 @@
 # CryptoScore Frontend
 
-Professional Web3 trading terminal for decentralized sports prediction markets on Solana.
+Professional Web2 prediction market application with Supabase backend and EVM wallet integration.
 
 🎥 **[Watch Demo](https://youtu.be/kkQOds2JSD4)** - See the app in action
 
@@ -9,8 +9,8 @@ Professional Web3 trading terminal for decentralized sports prediction markets o
 - **6 Theme Presets** - Dark Terminal, Ocean Blue, Forest Green, Sunset Orange, Purple Haze, Light Mode
 - **Market Trading** - Create, join, and resolve prediction markets
 - **Portfolio Dashboard** - Track performance, P&L, and win rates  
-- **Real-Time Updates** - Live market data with WebSocket integration
-- **Social Login** - Crossmint integration (Google, Twitter, Farcaster, Email)
+- **Real-Time Updates** - Live market data with Supabase real-time subscriptions
+- **Social Login** - Crossmint integration (Google, Twitter, Farcaster, Email) with EVM wallets
 - **PWA Support** - Installable app with offline capability
 - **Full Accessibility** - WCAG AA compliant with keyboard navigation
 
@@ -19,14 +19,18 @@ Professional Web3 trading terminal for decentralized sports prediction markets o
 ### Prerequisites
 
 - Node.js 18+ and npm
-- Solana wallet or social login (Google, Twitter, etc.)
-- Deployed Solana programs
+- Supabase project with database schema
+- Crossmint account for EVM wallet authentication
 
 ### Installation
 
 ```bash
 # Install dependencies
 npm install
+
+# Configure environment
+cp .env.example .env
+# Edit .env with your Supabase and Crossmint credentials
 
 # Start development server  
 npm run dev
@@ -39,7 +43,7 @@ npm run build
 
 - **React 19** + **TypeScript** - Modern UI with type safety
 - **Vite** - Lightning-fast build tool
-- **Anchor 0.30** - Solana program framework
+- **Supabase** - PostgreSQL database with real-time subscriptions
 - **TanStack Query** - Data fetching and caching
 - **Tailwind CSS** - Utility-first styling
 - **Radix UI** - Accessible component primitives
@@ -51,30 +55,52 @@ npm run build
 Create a `.env` file:
 
 ```env
-# Solana Program IDs (from deployment)
-VITE_FACTORY_PROGRAM_ID=your_factory_program_id
-VITE_MARKET_PROGRAM_ID=your_market_program_id
-VITE_DASHBOARD_PROGRAM_ID=your_dashboard_program_id
+# Supabase Configuration
+VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 
-# Solana Network
-VITE_SOLANA_NETWORK=devnet
-VITE_SOLANA_RPC_URL=https://api.devnet.solana.com
-
-# Crossmint (for social login)
+# Crossmint Configuration (EVM wallets)
 VITE_CROSSMINT_CLIENT_API_KEY=your_crossmint_client_api_key
+VITE_CROSSMINT_ENVIRONMENT=staging
+
+# Database Configuration
+VITE_DB_POOL_SIZE=10
+VITE_DB_TIMEOUT=30000
+
+# Real-time Configuration
+VITE_REALTIME_EVENTS_PER_SECOND=10
+VITE_REALTIME_HEARTBEAT_INTERVAL=30000
+
+# Platform Configuration
+VITE_PLATFORM_FEE_PERCENTAGE=5.0
+VITE_MIN_MARKET_DURATION_HOURS=1
+VITE_MAX_MARKET_DURATION_DAYS=30
+
+# Optional: Sports data APIs
+VITE_FOOTBALL_DATA_API_KEY_1=your_api_key
+VITE_COINGECKO_API_KEY=your_api_key
 ```
+
+### Supabase Setup
+
+1. Create a project at [supabase.com](https://supabase.com)
+2. Run the SQL migrations in `supabase/migrations/`
+3. Get your project URL and anon key from Settings > API
+4. Configure Row Level Security (RLS) policies
 
 ### Crossmint Setup
 
-For social login (Google, Twitter, Farcaster, Email):
+For EVM wallet authentication (Google, Twitter, Farcaster, Email):
 
 1. Sign up at [Crossmint Console](https://www.crossmint.com/console)
 2. Create a project and get your Client API Key
-3. Add to `.env` as `VITE_CROSSMINT_CLIENT_API_KEY`
+3. Configure for **EVM wallet creation** (not Solana)
+4. Add to `.env` as `VITE_CROSSMINT_CLIENT_API_KEY`
 
 Supported login methods:
 - Google, Twitter/X, Farcaster, Email OTP
-- Traditional Solana wallets (Phantom, Solflare, etc.)
+- Creates EVM wallets (0x addresses) for future MNEE token integration
 
 ## Development
 
@@ -85,6 +111,7 @@ npm run dev          # Start dev server (localhost:5173)
 npm run build        # Build for production
 npm run preview      # Preview production build
 npm run lint         # ESLint with auto-fix
+npm run test         # Run tests with Vitest
 ```
 
 ### Code Style
@@ -95,7 +122,7 @@ npm run lint         # ESLint with auto-fix
 
 ## Deployment
 
-Deploy to any static hosting service (Vercel, Netlify, GitHub Pages, IPFS):
+Deploy to any static hosting service (Vercel, Netlify, GitHub Pages):
 
 ```bash
 npm run build  # Outputs to dist/
@@ -104,7 +131,7 @@ npm run build  # Outputs to dist/
 ## Security & Accessibility
 
 - No private keys stored in frontend
-- All transactions require wallet signature
+- EVM wallet addresses stored in Supabase user profiles
 - WCAG AA compliant with keyboard navigation
 - PWA support with offline capability
 
@@ -125,27 +152,53 @@ Features:
 - CSS variables for dynamic theming
 - Glassmorphism effects with backdrop blur
 
-## Solana Integration
+## Supabase Integration
 
-### Programs
+### Database Schema
 
-Three Solana programs handle different aspects:
+The application uses these main tables:
 
-1. **Factory** - Market creation and registry
-2. **Market** - Predictions, resolution, and rewards  
-3. **Dashboard** - Data aggregation and queries
+1. **users** - User profiles with EVM wallet addresses
+2. **markets** - Prediction markets with metadata
+3. **participants** - User participation in markets
+4. **transactions** - Transaction history and winnings
+5. **platform_config** - Platform configuration settings
 
 ### Custom Hooks
 
-- `useSolanaProgram()` - Initialize Anchor programs
-- `useMarketData()` - Fetch market details
-- `useAllMarkets()` - Fetch all markets with pagination
-- `useUserMarkets()` - Fetch user's markets
-- `useMarketActions()` - Transaction methods (create, join, resolve, withdraw)
+- `useSupabaseMarketData()` - Fetch market details from database
+- `useSupabaseMarketActions()` - Database operations (create, join, resolve)
+- `useRealtimeMarkets()` - Real-time market updates via Supabase subscriptions
+- `useSupabaseDashboardData()` - Portfolio and analytics data
 
 ### Transaction Flow
 
-1. **Create Market** - Market program initializes account, Factory creates registry
-2. **Join Market** - Market program creates Participant account
-3. **Resolve Market** - Market program updates outcome
-4. **Withdraw Rewards** - Market program transfers SOL to winners
+1. **Create Market** - Insert into markets table, update platform stats
+2. **Join Market** - Insert into participants table with prediction
+3. **Resolve Market** - Update market outcome, calculate winnings
+4. **Withdraw Rewards** - Update user balances in transactions table
+
+## Migration from Solana
+
+This frontend has been migrated from Solana web3 to Supabase web2:
+
+### Key Changes
+
+- **Authentication**: Crossmint now creates EVM wallets instead of Solana wallets
+- **Data Storage**: All market data stored in Supabase instead of blockchain accounts
+- **Real-time Updates**: Supabase subscriptions replace Solana WebSocket connections
+- **Transactions**: Database operations replace blockchain transactions
+- **Bundle Size**: Significantly reduced by removing Solana dependencies
+
+### Removed Dependencies
+
+- All `@solana/*` packages
+- Anchor framework and IDL files
+- Solana wallet adapters
+- Blockchain connection utilities
+
+### New Dependencies
+
+- `@supabase/supabase-js` - Database client
+- Enhanced Crossmint integration for EVM wallets
+- Improved TanStack Query configuration for database caching

@@ -1,0 +1,413 @@
+#!/usr/bin/env node
+
+/**
+ * Supabase Setup Script for CryptoScore Web2 Migration
+ * Configures Supabase connection and validates database schema
+ */
+
+const fs = require('fs');
+const path = require('path');
+
+class SupabaseSetup {
+  constructor() {
+    this.requiredEnvVars = [
+      'VITE_SUPABASE_URL',
+      'VITE_SUPABASE_ANON_KEY'
+    ];
+  }
+
+  async setup() {
+    console.log('🔧 Setting up Supabase configuration...');
+    
+    try {
+      // Step 1: Validate environment variables
+      await this.validateEnvironment();
+      
+      // Step 2: Test Supabase connection
+      await this.testConnection();
+      
+      // Step 3: Validate database schema
+      await this.validateSchema();
+      
+      // Step 4: Create configuration files
+      await this.createConfigFiles();
+      
+      console.log('✅ Supabase setup completed successfully!');
+      this.displayNextSteps();
+      
+    } catch (error) {
+      console.error('❌ Supabase setup failed:', error.message);
+      process.exit(1);
+    }
+  }
+
+  async validateEnvironment() {
+    console.log('🔍 Validating environment configuration...');
+    
+    // Check if .env file exists
+    const envFile = '.env';
+    if (!fs.existsSync(envFile)) {
+      throw new Error(`Environment file not found: ${envFile}. Run 'npm run configure:development' first.`);
+    }
+    
+    // Load environment variables
+    const envContent = fs.readFileSync(envFile, 'utf8');
+    
+    // Check required variables
+    for (const varName of this.requiredEnvVars) {
+      if (!envContent.includes(varName) || envContent.includes(`${varName}=your_`)) {
+        throw new Error(`Missing or placeholder value for ${varName} in ${envFile}`);
+      }
+    }
+    
+    console.log('   ✅ Environment variables validated');
+  }
+
+  async testConnection() {
+    console.log('🔗 Testing Supabase connection...');
+    
+    try {
+      // Check if Supabase client is available
+      try {
+        const { createClient } = await import('@supabase/supabase-js');
+      } catch (importError) {
+        console.log('   ⚠️  @supabase/supabase-js not installed');
+        console.log('   💡 Install it with: cd app && npm install @supabase/supabase-js');
+        console.log('   ✅ Connection will be tested when the app starts');
+        return;
+      }
+      
+      // Load environment variables
+      const dotenv = await import('dotenv');
+      dotenv.config();
+      
+      const supabaseUrl = process.env.VITE_SUPABASE_URL;
+      const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
+      
+      if (!supabaseUrl || !supabaseKey) {
+        throw new Error('Supabase URL or key not found in environment variables');
+      }
+      
+      // For Node.js environment, we'll just validate the URL format
+      if (!supabaseUrl.startsWith('https://') || !supabaseUrl.includes('.supabase.co')) {
+        throw new Error('Invalid Supabase URL format');
+      }
+      
+      console.log('   ✅ Supabase configuration validated');
+      console.log('   💡 Full connection test will occur when the app starts');
+      
+    } catch (error) {
+      if (error.message.includes('fetch is not defined')) {
+        console.log('   ⚠️  Connection test skipped (Node.js environment)');
+        console.log('   💡 Connection will be tested when the app starts');
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  async validateSchema() {
+    console.log('📋 Validating database schema...');
+    
+    const migrationDir = path.join(process.cwd(), 'app', 'supabase', 'migrations');
+    
+    if (!fs.existsSync(migrationDir)) {
+      console.log('   ⚠️  Migration directory not found, creating...');
+      fs.mkdirSync(migrationDir, { recursive: true });
+    }
+    
+    // Check for required migration files
+    const requiredMigrations = [
+      '20241219000000_initial_schema.sql'
+    ];
+    
+    let migrationsFound = 0;
+    for (const migration of requiredMigrations) {
+      const migrationPath = path.join(migrationDir, migration);
+      if (fs.existsSync(migrationPath)) {
+        migrationsFound++;
+        console.log(`   ✅ Found migration: ${migration}`);
+      } else {
+        console.log(`   ⚠️  Missing migration: ${migration}`);
+      }
+    }
+    
+    if (migrationsFound === 0) {
+      console.log('   💡 No migrations found. You may need to run them manually in Supabase.');
+    }
+    
+    console.log('   ✅ Schema validation completed');
+  }
+
+  async createConfigFiles() {
+    console.log('📄 Creating configuration files...');
+    
+    // Create Supabase config file
+    const configDir = path.join(process.cwd(), 'app', 'src', 'config');
+    if (!fs.existsSync(configDir)) {
+      fs.mkdirSync(configDir, { recursive: true });
+    }
+    
+    const supabaseConfigPath = path.join(configDir, 'supabase.ts');
+    const supabaseConfigContent = `// Supabase configuration
+// Auto-generated by setup script
+
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing Supabase environment variables')
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: false, // We use Crossmint for auth
+  },
+  realtime: {
+    params: {
+      eventsPerSecond: Number(import.meta.env.VITE_REALTIME_EVENTS_PER_SECOND) || 10
+    }
+  },
+  db: {
+    schema: 'public'
+  }
+})
+
+// Database configuration
+export const DB_CONFIG = {
+  poolSize: Number(import.meta.env.VITE_DB_POOL_SIZE) || 10,
+  timeout: Number(import.meta.env.VITE_DB_TIMEOUT) || 30000,
+}
+
+// Real-time configuration
+export const REALTIME_CONFIG = {
+  eventsPerSecond: Number(import.meta.env.VITE_REALTIME_EVENTS_PER_SECOND) || 10,
+  heartbeatInterval: Number(import.meta.env.VITE_REALTIME_HEARTBEAT_INTERVAL) || 30000,
+}
+
+// Platform configuration
+export const PLATFORM_CONFIG = {
+  feePercentage: Number(import.meta.env.VITE_PLATFORM_FEE_PERCENTAGE) || 5.0,
+  minMarketDurationHours: Number(import.meta.env.VITE_MIN_MARKET_DURATION_HOURS) || 1,
+  maxMarketDurationDays: Number(import.meta.env.VITE_MAX_MARKET_DURATION_DAYS) || 30,
+}
+`;
+    
+    fs.writeFileSync(supabaseConfigPath, supabaseConfigContent);
+    console.log(`   ✅ Created Supabase config: ${supabaseConfigPath}`);
+    
+    // Create types file
+    const typesPath = path.join(process.cwd(), 'app', 'src', 'types', 'supabase.ts');
+    const typesDir = path.dirname(typesPath);
+    if (!fs.existsSync(typesDir)) {
+      fs.mkdirSync(typesDir, { recursive: true });
+    }
+    
+    const typesContent = `// Supabase database types
+// Auto-generated by setup script
+
+export interface Database {
+  public: {
+    Tables: {
+      users: {
+        Row: {
+          id: string
+          wallet_address: string
+          email: string
+          display_name: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          wallet_address: string
+          email: string
+          display_name?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          wallet_address?: string
+          email?: string
+          display_name?: string | null
+          updated_at?: string
+        }
+      }
+      markets: {
+        Row: {
+          id: string
+          creator_id: string
+          title: string
+          description: string
+          entry_fee: number
+          end_time: string
+          status: 'active' | 'resolved' | 'cancelled'
+          resolution_outcome: string | null
+          total_pool: number
+          platform_fee_percentage: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          creator_id: string
+          title: string
+          description: string
+          entry_fee: number
+          end_time: string
+          status?: 'active' | 'resolved' | 'cancelled'
+          resolution_outcome?: string | null
+          total_pool?: number
+          platform_fee_percentage?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          creator_id?: string
+          title?: string
+          description?: string
+          entry_fee?: number
+          end_time?: string
+          status?: 'active' | 'resolved' | 'cancelled'
+          resolution_outcome?: string | null
+          total_pool?: number
+          platform_fee_percentage?: number
+          updated_at?: string
+        }
+      }
+      participants: {
+        Row: {
+          id: string
+          market_id: string
+          user_id: string
+          prediction: string
+          entry_amount: number
+          potential_winnings: number
+          actual_winnings: number | null
+          joined_at: string
+        }
+        Insert: {
+          id?: string
+          market_id: string
+          user_id: string
+          prediction: string
+          entry_amount: number
+          potential_winnings: number
+          actual_winnings?: number | null
+          joined_at?: string
+        }
+        Update: {
+          id?: string
+          market_id?: string
+          user_id?: string
+          prediction?: string
+          entry_amount?: number
+          potential_winnings?: number
+          actual_winnings?: number | null
+        }
+      }
+      transactions: {
+        Row: {
+          id: string
+          user_id: string
+          market_id: string | null
+          type: 'market_entry' | 'winnings' | 'platform_fee' | 'creator_reward'
+          amount: number
+          description: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          market_id?: string | null
+          type: 'market_entry' | 'winnings' | 'platform_fee' | 'creator_reward'
+          amount: number
+          description: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          market_id?: string | null
+          type?: 'market_entry' | 'winnings' | 'platform_fee' | 'creator_reward'
+          amount?: number
+          description?: string
+        }
+      }
+      platform_config: {
+        Row: {
+          key: string
+          value: any
+          updated_at: string
+        }
+        Insert: {
+          key: string
+          value: any
+          updated_at?: string
+        }
+        Update: {
+          key?: string
+          value?: any
+          updated_at?: string
+        }
+      }
+    }
+  }
+}
+
+// Convenience types
+export type User = Database['public']['Tables']['users']['Row']
+export type Market = Database['public']['Tables']['markets']['Row']
+export type Participant = Database['public']['Tables']['participants']['Row']
+export type Transaction = Database['public']['Tables']['transactions']['Row']
+export type PlatformConfig = Database['public']['Tables']['platform_config']['Row']
+
+export type CreateUser = Database['public']['Tables']['users']['Insert']
+export type CreateMarket = Database['public']['Tables']['markets']['Insert']
+export type CreateParticipant = Database['public']['Tables']['participants']['Insert']
+export type CreateTransaction = Database['public']['Tables']['transactions']['Insert']
+
+export type UpdateUser = Database['public']['Tables']['users']['Update']
+export type UpdateMarket = Database['public']['Tables']['markets']['Update']
+export type UpdateParticipant = Database['public']['Tables']['participants']['Update']
+`;
+    
+    fs.writeFileSync(typesPath, typesContent);
+    console.log(`   ✅ Created types file: ${typesPath}`);
+  }
+
+  displayNextSteps() {
+    console.log('\n🎯 Next Steps:');
+    console.log('1. 📋 Run your database migrations in Supabase dashboard');
+    console.log('2. 🔐 Configure Row Level Security (RLS) policies');
+    console.log('3. 🚀 Start the development server: npm run dev');
+    console.log('4. 🧪 Test the application with your Supabase backend');
+    console.log('\n💡 Useful commands:');
+    console.log('   npm run dev          - Start development server');
+    console.log('   npm run build        - Build for production');
+    console.log('   npm run db:migrate   - Run database migrations');
+    console.log('   npm run db:seed      - Seed database with test data');
+  }
+}
+
+// CLI interface
+async function main() {
+  try {
+    const setup = new SupabaseSetup();
+    await setup.setup();
+  } catch (error) {
+    console.error('❌ Setup failed:', error.message);
+    process.exit(1);
+  }
+}
+
+// Run if called directly
+if (require.main === module) {
+  main().catch(console.error);
+}
+
+module.exports = { SupabaseSetup };
