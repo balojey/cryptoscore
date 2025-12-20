@@ -214,8 +214,8 @@ describe('Supabase Market Participation Integration', () => {
           market_id: 'market-123',
           user_id: 'user-1',
           prediction: 'Home' as const,
-          entry_amount: 0.1,
-          potential_winnings: 0.19,
+          entry_amount: 100000000, // 0.1 SOL in lamports
+          potential_winnings: 190000000, // 0.19 SOL in lamports
           actual_winnings: null,
           joined_at: new Date().toISOString(),
         },
@@ -224,8 +224,8 @@ describe('Supabase Market Participation Integration', () => {
           market_id: 'market-123',
           user_id: 'user-2',
           prediction: 'Away' as const,
-          entry_amount: 0.1,
-          potential_winnings: 0.19,
+          entry_amount: 100000000, // 0.1 SOL in lamports
+          potential_winnings: 190000000, // 0.19 SOL in lamports
           actual_winnings: null,
           joined_at: new Date().toISOString(),
         },
@@ -233,7 +233,7 @@ describe('Supabase Market Participation Integration', () => {
 
       const marketWithPool = {
         ...mockMarket,
-        total_pool: 0.2,
+        total_pool: 200000000, // 0.2 SOL in lamports
       }
 
       vi.mocked(DatabaseService.getMarketById).mockResolvedValue(marketWithPool)
@@ -255,7 +255,7 @@ describe('Supabase Market Participation Integration', () => {
         user_id: 'user-1',
         market_id: 'market-123',
         type: 'winnings',
-        amount: 0.19, // Total pool (0.2) minus platform fee (0.01) = 0.19
+        amount: 190000000, // 0.19 SOL in lamports (95% of 0.2 SOL pool)
         description: 'Winnings from market resolution: Home',
       })
 
@@ -264,7 +264,7 @@ describe('Supabase Market Participation Integration', () => {
         user_id: 'user-123', // Market creator
         market_id: 'market-123',
         type: 'platform_fee',
-        amount: expect.closeTo(0.01, 5), // 5% of 0.2, allow for floating point precision
+        amount: 6000000, // 3% of 0.2 SOL = 0.006 SOL in lamports
         description: 'Platform fee from market resolution',
       })
     })

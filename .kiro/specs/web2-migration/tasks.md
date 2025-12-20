@@ -61,18 +61,18 @@
   - Maintain same user experience for market participation
   - _Requirements: 4.3_
 
-- [ ] 7. Implement market resolution and winnings calculation
+- [x] 7. Implement market resolution and winnings calculation
   - Migrate winnings calculation logic from blockchain to database functions
   - Implement market resolution workflow with database updates
   - Maintain same fee structure and calculation methods
   - Update user balance tracking in database
   - _Requirements: 4.4, 8.1, 8.2, 8.3_
 
-- [ ] 7.1 Write property test for winnings calculation preservation
+- [x] 7.1 Write property test for winnings calculation preservation
   - **Property 7: Winnings Calculation Preservation**
   - **Validates: Requirements 4.4**
 
-- [ ] 7.2 Write property test for fee structure consistency
+- [x] 7.2 Write property test for fee structure consistency
   - **Property 8: Fee Structure Consistency**
   - **Validates: Requirements 8.1, 8.3**
 

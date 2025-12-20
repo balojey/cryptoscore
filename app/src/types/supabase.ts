@@ -142,7 +142,7 @@ export interface Database {
           id: string
           user_id: string
           market_id: string | null
-          type: 'market_entry' | 'winnings' | 'platform_fee'
+          type: 'market_entry' | 'winnings' | 'platform_fee' | 'creator_reward'
           amount: number
           description: string
           created_at: string
@@ -151,7 +151,7 @@ export interface Database {
           id?: string
           user_id: string
           market_id?: string | null
-          type: 'market_entry' | 'winnings' | 'platform_fee'
+          type: 'market_entry' | 'winnings' | 'platform_fee' | 'creator_reward'
           amount: number
           description: string
           created_at?: string
@@ -160,7 +160,7 @@ export interface Database {
           id?: string
           user_id?: string
           market_id?: string | null
-          type?: 'market_entry' | 'winnings' | 'platform_fee'
+          type?: 'market_entry' | 'winnings' | 'platform_fee' | 'creator_reward'
           amount?: number
           description?: string
           created_at?: string
@@ -209,7 +209,7 @@ export interface Database {
     }
     Enums: {
       market_status: 'active' | 'resolved' | 'cancelled'
-      transaction_type: 'market_entry' | 'winnings' | 'platform_fee'
+      transaction_type: 'market_entry' | 'winnings' | 'platform_fee' | 'creator_reward'
     }
     CompositeTypes: {
       [_ in never]: never

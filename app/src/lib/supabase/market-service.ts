@@ -129,19 +129,21 @@ export class MarketService {
       throw new Error('User has already joined this market')
     }
 
-    // Get current participants to calculate potential winnings
+    // Get current participants to calculate potential winnings using same logic as WinningsCalculator
     const currentParticipants = await DatabaseService.getMarketParticipants(params.marketId)
-    const totalParticipants = currentParticipants.length
     const newTotalPool = market.total_pool + params.entryAmount
 
-    // Calculate potential winnings (simplified: total pool minus platform fee)
-    const platformFee = newTotalPool * (market.platform_fee_percentage / 100)
-    const winnerPool = newTotalPool - platformFee
+    // Use the same fee structure as WinningsCalculator (95% participant pool)
+    const newParticipantPool = Math.floor((newTotalPool * 9500) / 10000)
     
-    // Estimate potential winnings assuming equal distribution among winners
-    // This is a simplified calculation - actual winnings depend on final participant distribution
-    const estimatedWinners = Math.max(1, Math.floor(totalParticipants / 3)) // Rough estimate
-    const potentialWinnings = winnerPool / estimatedWinners
+    // Count current predictions for the same outcome
+    const currentPredictionCount = currentParticipants.filter(p => p.prediction === params.prediction).length
+    
+    // Calculate potential winnings: if no one has made this prediction yet, user gets full participant pool
+    // Otherwise, divide by the number of people who will have made this prediction (including this user)
+    const potentialWinnings = currentPredictionCount === 0 
+      ? newParticipantPool 
+      : Math.floor(newParticipantPool / (currentPredictionCount + 1))
 
     // Create participant record
     const participant = await DatabaseService.joinMarket({
@@ -188,14 +190,15 @@ export class MarketService {
     // Get all participants
     const participants = await DatabaseService.getMarketParticipants(params.marketId)
     
-    // Find winners
-    const winners = participants.filter(p => p.prediction === params.outcome)
+    // Use the same fee structure as the original WinningsCalculator
     const totalPool = market.total_pool
-    const platformFee = totalPool * (market.platform_fee_percentage / 100)
-    const winnerPool = totalPool - platformFee
-
-    // Calculate winnings per winner
-    const winningsPerWinner = winners.length > 0 ? winnerPool / winners.length : 0
+    const creatorFee = Math.floor((totalPool * 200) / 10000) // 2% in basis points
+    const platformFee = Math.floor((totalPool * 300) / 10000) // 3% in basis points
+    const participantPool = Math.floor((totalPool * 9500) / 10000) // 95% in basis points
+    
+    // Find winners and calculate winnings using the same logic as WinningsCalculator
+    const winners = participants.filter(p => p.prediction === params.outcome)
+    const winningsPerWinner = winners.length > 0 ? Math.floor(participantPool / winners.length) : 0
 
     // Update market status
     await DatabaseService.updateMarket(params.marketId, {
@@ -213,7 +216,7 @@ export class MarketService {
         actual_winnings: actualWinnings,
       })
 
-      // Create winnings transaction record (even if 0)
+      // Create winnings transaction record for winners
       if (actualWinnings > 0) {
         await DatabaseService.createTransaction({
           user_id: participant.user_id,
@@ -225,7 +228,18 @@ export class MarketService {
       }
     }
 
-    // Create platform fee transaction if there are fees
+    // Create creator reward transaction
+    if (creatorFee > 0) {
+      await DatabaseService.createTransaction({
+        user_id: market.creator_id,
+        market_id: params.marketId,
+        type: 'creator_reward',
+        amount: creatorFee,
+        description: `Creator reward from market resolution`,
+      })
+    }
+
+    // Create platform fee transaction
     if (platformFee > 0) {
       await DatabaseService.createTransaction({
         user_id: market.creator_id, // Associate with market creator for tracking
@@ -367,5 +381,86 @@ export class MarketService {
       status: 'cancelled',
       updated_at: new Date().toISOString(),
     })
+  }
+
+  /**
+   * Calculate user balance from all transactions
+   *
+   * @param userId - User ID to calculate balance for
+   * @returns User's current balance
+   */
+  static async getUserBalance(userId: string): Promise<number> {
+    const transactions = await DatabaseService.getUserTransactions(userId)
+    
+    let balance = 0
+    for (const transaction of transactions) {
+      switch (transaction.type) {
+        case 'winnings':
+        case 'creator_reward':
+          balance += transaction.amount
+          break
+        case 'market_entry':
+          balance -= transaction.amount
+          break
+        case 'platform_fee':
+          // Platform fees are deducted from winnings, not user balance
+          break
+      }
+    }
+    
+    return balance
+  }
+
+  /**
+   * Get user's portfolio summary
+   *
+   * @param userId - User ID to get portfolio for
+   * @returns Portfolio summary with P&L, win rate, etc.
+   */
+  static async getUserPortfolio(userId: string): Promise<{
+    totalWinnings: number
+    totalSpent: number
+    netProfitLoss: number
+    marketsParticipated: number
+    marketsWon: number
+    winRate: number
+    activeMarkets: number
+  }> {
+    const transactions = await DatabaseService.getUserTransactions(userId)
+    const participation = await DatabaseService.getUserParticipation(userId)
+    
+    let totalWinnings = 0
+    let totalSpent = 0
+    let creatorRewards = 0
+    
+    for (const transaction of transactions) {
+      switch (transaction.type) {
+        case 'winnings':
+          totalWinnings += transaction.amount
+          break
+        case 'creator_reward':
+          creatorRewards += transaction.amount
+          break
+        case 'market_entry':
+          totalSpent += transaction.amount
+          break
+      }
+    }
+    
+    const marketsParticipated = participation.length
+    const marketsWon = participation.filter(p => p.actual_winnings && p.actual_winnings > 0).length
+    const activeMarkets = participation.filter(p => p.actual_winnings === null).length
+    const winRate = marketsParticipated > 0 ? (marketsWon / marketsParticipated) * 100 : 0
+    const netProfitLoss = totalWinnings + creatorRewards - totalSpent
+    
+    return {
+      totalWinnings: totalWinnings + creatorRewards,
+      totalSpent,
+      netProfitLoss,
+      marketsParticipated,
+      marketsWon,
+      winRate,
+      activeMarkets
+    }
   }
 }
