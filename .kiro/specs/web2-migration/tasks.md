@@ -138,14 +138,14 @@
   - Ensure type safety across the entire application
   - _Requirements: 5.2, 5.3, 5.4_
 
-- [ ] 15. Test complete migration and user workflows
+- [x] 15. Test complete migration and user workflows
   - Test end-to-end user workflows (auth, market creation, participation, resolution)
   - Validate that all original features work with Supabase backend
   - Test real-time functionality and performance
   - Verify complete removal of Solana dependencies
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
 
-- [ ] 15.1 Write integration tests for complete user workflows
+- [x] 15.1 Write integration tests for complete user workflows
   - Test authentication → market creation → participation → resolution flow
   - Verify data consistency throughout the entire process
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
