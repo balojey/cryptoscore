@@ -56,22 +56,22 @@
   - **Property 3: Market display includes team information**
   - **Validates: Requirements 2.4**
 
-- [ ] 6. Implement multiple predictions per user functionality
+- [x] 6. Implement multiple predictions per user functionality
   - Update participants table schema to allow multiple predictions
   - Modify prediction creation API to handle multiple predictions per user
   - Implement validation for 3-prediction limit per user per market
   - Update UI to support multiple prediction placement
   - _Requirements: 3.1, 3.2, 3.4, 8.1, 8.2_
 
-- [ ] 6.1 Write property test for multiple predictions enforcement
+- [x] 6.1 Write property test for multiple predictions enforcement
   - **Property 4: Multiple predictions per user are enforced**
   - **Validates: Requirements 3.1, 3.2**
 
-- [ ] 6.2 Write property test for independent prediction tracking
+- [x] 6.2 Write property test for independent prediction tracking
   - **Property 5: Multiple predictions are tracked independently**
   - **Validates: Requirements 3.4**
 
-- [ ] 6.3 Write property test for multiple prediction UI support
+- [x] 6.3 Write property test for multiple prediction UI support
   - **Property 13: Multiple prediction UI support**
   - **Validates: Requirements 8.1, 8.2**
 

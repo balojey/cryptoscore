@@ -41,7 +41,6 @@ vi.mock('../market-service', async () => {
       ...actual.MarketService,
       // Override methods to use MockDatabaseService
       getUserTransactions: MockDatabaseService.getUserTransactions,
-      getMarketParticipants: MockDatabaseService.getMarketParticipants,
       getMarketTransactions: MockDatabaseService.getMarketTransactions,
       createMarket: async (params: any) => {
         // Get platform fee percentage from config (default to 0.03 for 3%)
@@ -89,17 +88,31 @@ vi.mock('../market-service', async () => {
           throw new Error('Market not found')
         }
 
-        if (market.status !== 'active') {
+        if (market.status !== 'SCHEDULED') {
           throw new Error('Market is not active')
         }
 
-        // Check if user already participated
-        const existingParticipation = await MockDatabaseService.getUserMarketParticipation(
-          params.userId,
-          params.marketId
-        )
-        if (existingParticipation) {
-          throw new Error('User has already joined this market')
+        if (new Date(market.end_time) < new Date()) {
+          throw new Error('Market has ended')
+        }
+
+        // Check if user already has this specific prediction
+        const existingParticipants = await MockDatabaseService.getMarketParticipants(params.marketId)
+        const userParticipants = existingParticipants.filter(p => p.user_id === params.userId)
+        
+        // Map prediction values for database storage
+        const dbPrediction = params.prediction === 'HOME_WIN' ? 'Home' : 
+                            params.prediction === 'AWAY_WIN' ? 'Away' : 'Draw'
+        
+        // Check for duplicate prediction
+        const duplicatePrediction = userParticipants.find(p => p.prediction === dbPrediction)
+        if (duplicatePrediction) {
+          throw new Error(`User has already placed a ${params.prediction} prediction on this market`)
+        }
+
+        // Check prediction limit (max 3 per user per market)
+        if (userParticipants.length >= 3) {
+          throw new Error('User cannot place more than 3 predictions per market')
         }
 
         // Get current participants to calculate potential winnings
@@ -107,20 +120,22 @@ vi.mock('../market-service', async () => {
         const newTotalPool = market.total_pool + params.entryAmount
 
         // Use the same fee structure (95% participant pool)
-        const newParticipantPool = (newTotalPool * 9500) / 10000
+        const newParticipantPool = Math.max(1, Math.floor((newTotalPool * 9500) / 10000))
         
         // Count current predictions for the same outcome
-        const currentPredictionCount = currentParticipants.filter(p => p.prediction === params.prediction).length
+        const currentPredictionCount = currentParticipants.filter(p => p.prediction === dbPrediction).length
         
-        // Calculate potential winnings: divide participant pool by total people who will have this prediction
-        const totalWithSamePrediction = currentPredictionCount + 1 // Including this new participant
-        const potentialWinnings = newParticipantPool / totalWithSamePrediction
+        // Calculate potential winnings: if no one has made this prediction yet, user gets full participant pool
+        // Otherwise, divide by the number of people who will have made this prediction (including this user)
+        const potentialWinnings = currentPredictionCount === 0 
+          ? newParticipantPool 
+          : Math.max(1, Math.floor(newParticipantPool / (currentPredictionCount + 1)))
 
         // Create participant record
         const participant = await MockDatabaseService.joinMarket({
           market_id: params.marketId,
           user_id: params.userId,
-          prediction: params.prediction,
+          prediction: dbPrediction,
           entry_amount: params.entryAmount,
           potential_winnings: potentialWinnings,
         })
@@ -137,7 +152,7 @@ vi.mock('../market-service', async () => {
           market_id: params.marketId,
           type: 'market_entry',
           amount: params.entryAmount,
-          description: `Joined market with ${params.prediction} prediction`,
+          description: `Joined market with ${dbPrediction} prediction`,
         })
 
         return participant
@@ -216,6 +231,28 @@ vi.mock('../market-service', async () => {
         }
       },
       getMarketById: MockDatabaseService.getMarketById,
+      updateMarket: MockDatabaseService.updateMarket,
+      getMarketParticipants: MockDatabaseService.getMarketParticipants,
+      getUserMarketPredictions: async (userId: string, marketId: string) => {
+        const allParticipants = await MockDatabaseService.getMarketParticipants(marketId)
+        return allParticipants.filter(p => p.user_id === userId)
+      },
+      getMarketStats: async (marketId: string) => {
+        const participants = await MockDatabaseService.getMarketParticipants(marketId)
+        
+        const homeCount = participants.filter(p => p.prediction === 'Home').length
+        const drawCount = participants.filter(p => p.prediction === 'Draw').length
+        const awayCount = participants.filter(p => p.prediction === 'Away').length
+        const totalPool = participants.reduce((sum, p) => sum + p.entry_amount, 0)
+
+        return {
+          totalParticipants: participants.length,
+          homeCount,
+          drawCount,
+          awayCount,
+          totalPool,
+        }
+      },
     }
   }
 })

@@ -37,7 +37,7 @@ export interface CreateMarketParams {
 export interface JoinMarketParams {
   marketId: string
   userId: string
-  prediction: 'Home' | 'Draw' | 'Away'
+  prediction: 'HOME_WIN' | 'DRAW' | 'AWAY_WIN'
   entryAmount: number
 }
 
@@ -126,7 +126,7 @@ export class MarketService {
       throw new Error('Market not found')
     }
 
-    if (market.status !== 'active') {
+    if (market.status !== 'SCHEDULED') {
       throw new Error('Market is not active')
     }
 
@@ -134,13 +134,23 @@ export class MarketService {
       throw new Error('Market has ended')
     }
 
-    // Check if user already participated
-    const existingParticipation = await DatabaseService.getUserMarketParticipation(
-      params.userId,
-      params.marketId
-    )
-    if (existingParticipation) {
-      throw new Error('User has already joined this market')
+    // Check if user already has this specific prediction
+    const existingParticipants = await DatabaseService.getMarketParticipants(params.marketId)
+    const userParticipants = existingParticipants.filter(p => p.user_id === params.userId)
+    
+    // Map prediction values for database storage
+    const dbPrediction = params.prediction === 'HOME_WIN' ? 'Home' : 
+                        params.prediction === 'AWAY_WIN' ? 'Away' : 'Draw'
+    
+    // Check for duplicate prediction
+    const duplicatePrediction = userParticipants.find(p => p.prediction === dbPrediction)
+    if (duplicatePrediction) {
+      throw new Error(`User has already placed a ${params.prediction} prediction on this market`)
+    }
+
+    // Check prediction limit (max 3 per user per market)
+    if (userParticipants.length >= 3) {
+      throw new Error('User cannot place more than 3 predictions per market')
     }
 
     // Get current participants to calculate potential winnings using same logic as WinningsCalculator
@@ -151,7 +161,7 @@ export class MarketService {
     const newParticipantPool = Math.floor((newTotalPool * 9500) / 10000)
     
     // Count current predictions for the same outcome
-    const currentPredictionCount = currentParticipants.filter(p => p.prediction === params.prediction).length
+    const currentPredictionCount = currentParticipants.filter(p => p.prediction === dbPrediction).length
     
     // Calculate potential winnings: if no one has made this prediction yet, user gets full participant pool
     // Otherwise, divide by the number of people who will have made this prediction (including this user)
@@ -163,7 +173,7 @@ export class MarketService {
     const participant = await DatabaseService.joinMarket({
       market_id: params.marketId,
       user_id: params.userId,
-      prediction: params.prediction,
+      prediction: dbPrediction,
       entry_amount: params.entryAmount,
       potential_winnings: potentialWinnings,
     })
@@ -180,7 +190,7 @@ export class MarketService {
       market_id: params.marketId,
       type: 'market_entry',
       amount: params.entryAmount,
-      description: `Joined market with ${params.prediction} prediction`,
+      description: `Joined market with ${dbPrediction} prediction`,
     })
 
     return participant
@@ -364,6 +374,39 @@ export class MarketService {
    */
   static async getUserMarketParticipation(userId: string, marketId: string): Promise<Participant | null> {
     return await DatabaseService.getUserMarketParticipation(userId, marketId)
+  }
+
+  /**
+   * Get user's multiple predictions in a specific market
+   *
+   * @param userId - User ID
+   * @param marketId - Market ID
+   * @returns Array of participant data for the user in the market
+   */
+  static async getUserMarketPredictions(userId: string, marketId: string): Promise<Participant[]> {
+    const allParticipants = await DatabaseService.getMarketParticipants(marketId)
+    return allParticipants.filter(p => p.user_id === userId)
+  }
+
+  /**
+   * Update market status and other fields
+   *
+   * @param marketId - Market ID to update
+   * @param updates - Fields to update
+   * @returns Updated market data
+   */
+  static async updateMarket(marketId: string, updates: MarketUpdate): Promise<Market> {
+    return await DatabaseService.updateMarket(marketId, updates)
+  }
+
+  /**
+   * Get market participants
+   *
+   * @param marketId - Market ID
+   * @returns Array of participants
+   */
+  static async getMarketParticipants(marketId: string): Promise<Participant[]> {
+    return await DatabaseService.getMarketParticipants(marketId)
   }
 
   /**

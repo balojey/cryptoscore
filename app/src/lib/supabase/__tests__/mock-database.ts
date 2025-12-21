@@ -214,11 +214,42 @@ class MockTable {
           const id = data.id || uuidv4()
           const timestamp = new Date().toISOString()
           
+          // Handle participants table unique constraint validation
+          if (this.tableName === 'participants') {
+            // Check for existing prediction with same market_id, user_id, and prediction
+            for (const participant of table.values()) {
+              if (participant.market_id === data.market_id && 
+                  participant.user_id === data.user_id && 
+                  participant.prediction === data.prediction) {
+                return Promise.resolve({ 
+                  data: null, 
+                  error: new MockDatabaseError('duplicate key value violates unique constraint "unique_market_user_prediction"', '23505') 
+                })
+              }
+            }
+            
+            // Check prediction limit (max 3 per user per market)
+            const userParticipants = Array.from(table.values()).filter(
+              p => p.market_id === data.market_id && p.user_id === data.user_id
+            )
+            if (userParticipants.length >= 3) {
+              return Promise.resolve({ 
+                data: null, 
+                error: new MockDatabaseError('User cannot place more than 3 predictions per market', 'P0001') 
+              })
+            }
+          }
+          
           const record = {
             ...data,
             id,
             created_at: data.created_at || timestamp,
             updated_at: data.updated_at || timestamp,
+          }
+          
+          // Handle participants table special case (uses joined_at instead of created_at)
+          if (this.tableName === 'participants') {
+            record.joined_at = data.joined_at || timestamp
           }
           
           // Handle platform_config special case (uses key instead of id)
