@@ -1,6 +1,6 @@
 # Implementation Plan
 
-- [ ] 1. Update database schema and migrations
+- [x] 1. Update database schema and migrations
   - Create new migration files for enhanced schema changes
   - Update market_status enum to include football-data API status values
   - Add match_id, home_team_id, home_team_name, away_team_id, away_team_name columns to markets table
@@ -9,7 +9,7 @@
   - Update platform_fee_percentage default to 0.03 (3%)
   - _Requirements: 1.1, 2.1, 2.2, 2.3, 3.3, 10.1, 10.2_
 
-- [ ] 1.1 Write property test for database schema migration
+- [x] 1.1 Write property test for database schema migration
   - **Property 16: Safe database migration**
   - **Validates: Requirements 10.4**
 
