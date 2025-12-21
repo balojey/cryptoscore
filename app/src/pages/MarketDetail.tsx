@@ -12,7 +12,6 @@ import { useSupabaseMarketActions } from '../hooks/useSupabaseMarketActions'
 import { useSupabaseMarketData } from '../hooks/useSupabaseMarketData'
 import { useMatchData, type EnhancedMatchData } from '../hooks/useMatchData'
 import { useSupabaseParticipantData } from '../hooks/useSupabaseParticipantData'
-import { useResolutionEligibility } from '../hooks/useResolutionEligibility'
 import { useWinnings } from '../hooks/useWinnings'
 import { formatCurrency, formatWithSOLEquivalent, shortenAddress } from '../utils/formatters'
 import { CreateSimilarMarketDialog, type CreateSimilarMarketParams } from '../components/CreateSimilarMarketDialog'
@@ -844,7 +843,7 @@ function PageSkeleton() {
 export function MarketDetail() {
   const { marketAddress } = useParams<{ marketAddress: string }>()
   const { publicKey: userAddress } = useUnifiedWallet()
-  const { joinMarket, resolveMarket, withdrawRewards, createSimilarMarket, getExplorerLink, isLoading, lastOperationId } = useSupabaseMarketActions()
+  const { joinMarket, createSimilarMarket, getExplorerLink, isLoading, lastOperationId } = useSupabaseMarketActions()
   const { data: marketData, isLoading: isLoadingMarket, error: marketError, refetch: refetchMarket } = useSupabaseMarketData(marketAddress)
   const { currency, exchangeRates } = useCurrency()
 
@@ -905,15 +904,13 @@ export function MarketDetail() {
   // Check if user is the creator
   const isCreator = userAddress && marketInfo?.creator === userAddress
 
-  // Determine resolution eligibility
-  const resolutionEligibility = useResolutionEligibility({
-    matchData,
-    marketStatus: marketData?.status === 'Resolved',
-    isUserCreator: !!isCreator,
-    isUserParticipant: hasJoined,
-    userPrediction: participantData?.prediction as 'Home' | 'Draw' | 'Away' | undefined,
-    userAddress: userAddress?.toString()
-  })
+  // Determine user status
+  const isUserWinner = hasJoined 
+    && marketData?.status === 'resolved'
+    && marketData.outcome
+    && participantData.prediction === marketData.outcome
+  const hasUserWithdrawn = participantData?.hasWithdrawn || false
+  const canUserWithdraw = isUserWinner && !hasUserWithdrawn
 
   // Debug logging
   useEffect(() => {
@@ -928,9 +925,8 @@ export function MarketDetail() {
       isUserWinner,
       hasUserWithdrawn,
       canUserWithdraw,
-      resolutionEligibility,
     })
-  }, [participantData, hasJoined, predictionName, userAddress, marketAddress, marketData, isUserWinner, hasUserWithdrawn, canUserWithdraw, resolutionEligibility])
+  }, [participantData, hasJoined, predictionName, userAddress, marketAddress, marketData, isUserWinner, hasUserWithdrawn, canUserWithdraw])
 
   const marketStatus = marketData?.status === 'Resolved'
   const participantsCount = marketData?.participantCount || 0
@@ -1007,25 +1003,7 @@ export function MarketDetail() {
     })
   }, 'Failed to join market.')
 
-  const handleResolveMarket = () => handleAction(async () => {
-    if (!resolutionEligibility.canResolve) {
-      setActionStatus({ type: 'error', message: resolutionEligibility.reason })
-      return null
-    }
-    if (!marketAddress) {
-      setActionStatus({ type: 'error', message: 'Market address not found.' })
-      return null
-    }
-    if (!matchData?.matchResult) {
-      setActionStatus({ type: 'error', message: 'Match result not available.' })
-      return null
-    }
 
-    return await resolveMarket({
-      marketId: marketAddress!,
-      outcome: matchData.matchResult,
-    })
-  }, 'Failed to resolve market.')
 
   const handleWithdraw = () => handleAction(async () => {
     if (!marketAddress) {
@@ -1033,13 +1011,10 @@ export function MarketDetail() {
       return null
     }
 
-    const operationId = await withdrawRewards(marketAddress)
-    if (operationId) {
-      // Trigger confetti on successful withdrawal
-      setShowConfetti(true)
-      setTimeout(() => setShowConfetti(false), 100)
-    }
-    return operationId
+    // Note: In the enhanced prediction system, winnings are automatically distributed
+    // This function is kept for interface compatibility but shows a message instead
+    setActionStatus({ type: 'info', message: 'Winnings are automatically distributed when markets resolve.' })
+    return null
   }, 'Failed to withdraw funds.')
 
   const handleCreateSimilarMarket = async (params: CreateSimilarMarketParams) => {
@@ -1107,27 +1082,16 @@ export function MarketDetail() {
     if (marketStatus) { // Resolved
       // Note: Creator fee withdrawal is not implemented in the Solana program yet
       // Only show withdraw button for winning participants
-      const showWithdrawButton = canUserWithdraw && !hasUserWithdrawn
-
-      // Show withdrawn status only if user was a winner and has withdrawn
-      const showWithdrawnStatus = isUserWinner && hasUserWithdrawn
-
+      // In the enhanced prediction system, winnings are automatically distributed
+      // Show status message instead of withdrawal button
       return (
         <div className="flex items-center gap-4">
           <Button variant="secondary" disabled>Resolved</Button>
-          {showWithdrawButton
-            ? (
-                <Button variant="success" onClick={handleWithdraw} className="gap-2" disabled={isLoading}>
-                  <span className="icon-[mdi--cash-multiple] w-5 h-5" />
-                  {isLoading ? 'Withdrawing...' : 'Withdraw Rewards'}
-                </Button>
-              )
-            : null}
-          {showWithdrawnStatus
+          {isUserWinner
             ? (
                 <div className="text-sm font-medium flex items-center gap-2" style={{ color: 'var(--accent-green)' }}>
                   <span className="icon-[mdi--check-circle] w-5 h-5" />
-                  <span>Withdrawn</span>
+                  <span>Winnings Automatically Distributed</span>
                 </div>
               )
             : null}
@@ -1145,29 +1109,10 @@ export function MarketDetail() {
     }
 
     if (isMatchStarted) {
-      // Show resolve button based on eligibility logic
-      if (resolutionEligibility.showResolveButton) {
-        return (
-          <Button 
-            variant="default" 
-            onClick={handleResolveMarket} 
-            className="gap-2"
-            disabled={!resolutionEligibility.canResolve}
-          >
-            <span className="icon-[mdi--check-decagram] w-5 h-5" />
-            Resolve Market
-          </Button>
-        )
-      }
-      
-      // Show why user can't resolve if they're a participant or creator
-      if ((isUserParticipant || isCreator) && !resolutionEligibility.showResolveButton) {
-        return (
-          <div className="text-sm font-medium flex items-center gap-2" style={{ color: 'var(--text-tertiary)' }}>
-            <span className="icon-[mdi--information-outline] w-5 h-5" />
-            <span>{resolutionEligibility.reason}</span>
-          </div>
-        )
+      // In the enhanced prediction system, markets are resolved automatically
+      // Show status message instead of manual resolution button
+      if (marketData?.status === 'resolved') {
+        return <Button variant="secondary" disabled>Automatically Resolved</Button>
       }
       
       return <Button variant="secondary" disabled>Market Closed</Button>

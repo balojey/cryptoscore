@@ -208,9 +208,6 @@ export interface JoinMarketFormData {
   entry_amount: number
 }
 
-export interface ResolveMarketFormData {
-  outcome: 'Home' | 'Draw' | 'Away'
-}
 
 // API response types
 export interface ApiResponse<T> {

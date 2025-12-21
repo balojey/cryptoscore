@@ -198,81 +198,10 @@ export class MarketService {
 
   /**
    * Resolve a market with the winning outcome
-   *
-   * @param params - Market resolution parameters
+   * @deprecated Manual resolution is deprecated in favor of automated resolution
    */
   static async resolveMarket(params: ResolveMarketParams): Promise<void> {
-    const market = await DatabaseService.getMarketById(params.marketId)
-    if (!market) {
-      throw new Error('Market not found')
-    }
-
-    if (market.status !== 'active') {
-      throw new Error('Market is not active')
-    }
-
-    // Get all participants
-    const participants = await DatabaseService.getMarketParticipants(params.marketId)
-    
-    // Use the same fee structure as the original WinningsCalculator
-    const totalPool = market.total_pool
-    const creatorFee = Math.floor((totalPool * 200) / 10000) // 2% in basis points
-    const platformFee = Math.floor((totalPool * 300) / 10000) // 3% in basis points
-    const participantPool = Math.floor((totalPool * 9500) / 10000) // 95% in basis points
-    
-    // Find winners and calculate winnings using the same logic as WinningsCalculator
-    const winners = participants.filter(p => p.prediction === params.outcome)
-    const winningsPerWinner = winners.length > 0 ? Math.floor(participantPool / winners.length) : 0
-
-    // Update market status
-    await DatabaseService.updateMarket(params.marketId, {
-      status: 'resolved',
-      resolution_outcome: params.outcome,
-      updated_at: new Date().toISOString(),
-    })
-
-    // Update participant winnings and create transaction records
-    for (const participant of participants) {
-      const actualWinnings = participant.prediction === params.outcome ? winningsPerWinner : 0
-      
-      // Update participant with actual winnings
-      await DatabaseService.updateParticipant(participant.id, {
-        actual_winnings: actualWinnings,
-      })
-
-      // Create winnings transaction record for winners
-      if (actualWinnings > 0) {
-        await DatabaseService.createTransaction({
-          user_id: participant.user_id,
-          market_id: params.marketId,
-          type: 'winnings',
-          amount: actualWinnings,
-          description: `Winnings from market resolution: ${params.outcome}`,
-        })
-      }
-    }
-
-    // Create creator reward transaction
-    if (creatorFee > 0) {
-      await DatabaseService.createTransaction({
-        user_id: market.creator_id,
-        market_id: params.marketId,
-        type: 'creator_reward',
-        amount: creatorFee,
-        description: `Creator reward from market resolution`,
-      })
-    }
-
-    // Create platform fee transaction
-    if (platformFee > 0) {
-      await DatabaseService.createTransaction({
-        user_id: market.creator_id, // Associate with market creator for tracking
-        market_id: params.marketId,
-        type: 'platform_fee',
-        amount: platformFee,
-        description: `Platform fee from market resolution`,
-      })
-    }
+    throw new Error('Manual market resolution has been disabled. Markets are now resolved automatically.')
   }
 
   /**
@@ -356,13 +285,12 @@ export class MarketService {
    * @param userId - User ID to check permissions for
    * @returns True if user can resolve the market
    */
+  /**
+   * Check if a user can resolve a market
+   * @deprecated Manual resolution is deprecated in favor of automated resolution
+   */
   static async canUserResolveMarket(marketId: string, userId: string): Promise<boolean> {
-    const market = await DatabaseService.getMarketById(marketId)
-    if (!market) return false
-
-    // Only market creator can resolve for now
-    // In the future, this could be extended to include platform admins
-    return market.creator_id === userId
+    return false // Manual resolution is disabled
   }
 
   /**

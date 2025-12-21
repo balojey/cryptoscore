@@ -127,190 +127,20 @@ pub mod cryptoscore_market {
     }
 
     /// Resolve market with match outcome and distribute fees
+    /// DEPRECATED: Manual resolution is deprecated in favor of automated resolution
+    /// This function is disabled and will return an error
     pub fn resolve_market(
-        ctx: Context<ResolveMarket>,
-        outcome: MatchOutcome,
+        _ctx: Context<ResolveMarket>,
+        _outcome: MatchOutcome,
     ) -> Result<()> {
-        let market = &mut ctx.accounts.market;
-        let resolver = ctx.accounts.resolver.key();
-        
-        // Validate resolver is either creator or a participant
-        let is_creator = resolver == market.creator;
-        let is_participant = ctx.accounts.participant.is_some();
-        
-        require!(
-            is_creator || is_participant,
-            MarketError::UnauthorizedResolver
-        );
-        
-        // If participant, validate they actually joined this market
-        if let Some(participant) = &ctx.accounts.participant {
-            require!(
-                participant.market == market.key(),
-                MarketError::UnauthorizedResolver
-            );
-        }
-        
-        // Validate market is not already resolved
-        require!(market.status != MarketStatus::Resolved, MarketError::MarketAlreadyResolved);
-        
-        // Validate end time has passed
-        let current_time = Clock::get()?.unix_timestamp;
-        require!(current_time >= market.end_time, MarketError::MarketNotEnded);
-        
-        // Calculate and distribute fees before updating market status
-        let total_pool = market.total_pool;
-        
-        // Calculate fees (2% creator + 3% platform = 5% total)
-        let creator_fee = total_pool.checked_mul(200).unwrap() / 10000; // 2%
-        let platform_fee = total_pool.checked_mul(300).unwrap() / 10000; // 3%
-        let total_fees = creator_fee.checked_add(platform_fee)
-            .ok_or(MarketError::CalculationError)?;
-        
-        // Validate we have enough funds for fees
-        require!(
-            market.to_account_info().lamports() >= total_fees,
-            MarketError::InsufficientFunds
-        );
-        
-        // Transfer creator fee
-        if creator_fee > 0 {
-            **market.to_account_info().try_borrow_mut_lamports()? = market
-                .to_account_info()
-                .lamports()
-                .checked_sub(creator_fee)
-                .ok_or(MarketError::InsufficientFunds)?;
-            
-            **ctx.accounts.creator.to_account_info().try_borrow_mut_lamports()? = ctx
-                .accounts
-                .creator
-                .to_account_info()
-                .lamports()
-                .checked_add(creator_fee)
-                .ok_or(MarketError::CalculationError)?;
-        }
-        
-        // Transfer platform fee
-        if platform_fee > 0 {
-            **market.to_account_info().try_borrow_mut_lamports()? = market
-                .to_account_info()
-                .lamports()
-                .checked_sub(platform_fee)
-                .ok_or(MarketError::InsufficientFunds)?;
-            
-            **ctx.accounts.platform.to_account_info().try_borrow_mut_lamports()? = ctx
-                .accounts
-                .platform
-                .to_account_info()
-                .lamports()
-                .checked_add(platform_fee)
-                .ok_or(MarketError::CalculationError)?;
-        }
-        
-        // Update market status and outcome
-        market.status = MarketStatus::Resolved;
-        market.outcome = Some(outcome.clone());
-        
-        // Calculate winner count
-        let winner_count = match outcome {
-            MatchOutcome::Home => market.home_count,
-            MatchOutcome::Draw => market.draw_count,
-            MatchOutcome::Away => market.away_count,
-        };
-        
-        // Emit events
-        emit!(MarketResolved {
-            market: market.key(),
-            outcome: outcome.clone(),
-            winner_count,
-            total_pool: market.total_pool,
-        });
-        
-        emit!(FeesDistributed {
-            market: market.key(),
-            creator: market.creator,
-            creator_fee,
-            platform: ctx.accounts.platform.key(),
-            platform_fee,
-            total_fees,
-        });
-        
-        msg!("Market resolved with outcome: {:?}, winners: {}", 
-            market.outcome, winner_count);
-        msg!("Fees distributed - Creator: {} lamports, Platform: {} lamports", 
-            creator_fee, platform_fee);
-        
-        Ok(())
+        return Err(MarketError::FeatureDeprecated.into());
     }
 
     /// Withdraw rewards for winning participants
-    pub fn withdraw_rewards(ctx: Context<WithdrawRewards>) -> Result<()> {
-        let market = &mut ctx.accounts.market;
-        let participant = &mut ctx.accounts.participant;
-        
-        // Validate market is resolved
-        require!(market.status == MarketStatus::Resolved, MarketError::MarketNotResolved);
-        
-        // Validate participant hasn't withdrawn
-        require!(!participant.has_withdrawn, MarketError::AlreadyWithdrawn);
-        
-        // Validate participant is a winner
-        let outcome = market.outcome.as_ref().ok_or(MarketError::NoOutcome)?;
-        require!(participant.prediction == *outcome, MarketError::NotAWinner);
-        
-        // Calculate winner count
-        let winner_count = match outcome {
-            MatchOutcome::Home => market.home_count,
-            MatchOutcome::Draw => market.draw_count,
-            MatchOutcome::Away => market.away_count,
-        };
-        
-        // Validate there are winners
-        require!(winner_count > 0, MarketError::NoWinners);
-        
-        // Calculate fees (2% creator + 3% platform = 5% total)
-        let creator_fee = market.total_pool.checked_mul(200).unwrap() / 10000; // 2%
-        let platform_fee = market.total_pool.checked_mul(300).unwrap() / 10000; // 3%
-        let total_fees = creator_fee.checked_add(platform_fee)
-            .ok_or(MarketError::CalculationError)?;
-        
-        // Calculate prize pool after fees (fees already distributed during resolution)
-        let prize_pool = market.total_pool.checked_sub(total_fees)
-            .ok_or(MarketError::CalculationError)?;
-        
-        // Calculate individual reward
-        let reward = prize_pool.checked_div(winner_count as u64)
-            .ok_or(MarketError::CalculationError)?;
-        
-        // Transfer reward to participant
-        **market.to_account_info().try_borrow_mut_lamports()? = market
-            .to_account_info()
-            .lamports()
-            .checked_sub(reward)
-            .ok_or(MarketError::InsufficientFunds)?;
-        
-        **ctx.accounts.user.to_account_info().try_borrow_mut_lamports()? = ctx
-            .accounts
-            .user
-            .to_account_info()
-            .lamports()
-            .checked_add(reward)
-            .ok_or(MarketError::CalculationError)?;
-        
-        // Mark as withdrawn
-        participant.has_withdrawn = true;
-        
-        // Emit event
-        emit!(RewardClaimed {
-            market: market.key(),
-            user: ctx.accounts.user.key(),
-            amount: reward,
-        });
-        
-        msg!("User {} withdrew reward: {} lamports", 
-            ctx.accounts.user.key(), reward);
-        
-        Ok(())
+    /// DEPRECATED: Manual withdrawal is deprecated in favor of automated distribution
+    /// This function is disabled and will return an error
+    pub fn withdraw_rewards(_ctx: Context<WithdrawRewards>) -> Result<()> {
+        return Err(MarketError::FeatureDeprecated.into());
     }
 }
 
@@ -632,4 +462,6 @@ pub enum MarketError {
     InsufficientFunds,
     #[msg("Invalid creator account")]
     InvalidCreator,
+    #[msg("This feature has been deprecated")]
+    FeatureDeprecated,
 }

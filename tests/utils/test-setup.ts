@@ -265,6 +265,7 @@ export async function joinMarket(
 
 /**
  * Resolve a market with a specific outcome
+ * @deprecated Manual resolution is deprecated in favor of automated resolution
  */
 export async function resolveMarket(
   context: TestContext,
@@ -272,21 +273,12 @@ export async function resolveMarket(
   outcome: { home: {} } | { draw: {} } | { away: {} },
   creator?: Keypair
 ): Promise<void> {
-  const creatorKey = creator ? creator.publicKey : context.authority.publicKey;
-  const signers = creator ? [creator] : [];
-
-  await context.marketProgram.methods
-    .resolveMarket(outcome)
-    .accounts({
-      market: market.marketPda,
-      creator: creatorKey,
-    })
-    .signers(signers)
-    .rpc();
+  throw new Error('Manual market resolution has been disabled. Markets are now resolved automatically.')
 }
 
 /**
  * Withdraw rewards for a participant
+ * @deprecated Manual withdrawal is deprecated in favor of automated distribution
  */
 export async function withdrawRewards(
   context: TestContext,
@@ -294,16 +286,7 @@ export async function withdrawRewards(
   user: TestUser,
   participantPda: PublicKey
 ): Promise<void> {
-  await context.marketProgram.methods
-    .withdrawRewards()
-    .accounts({
-      market: market.marketPda,
-      participant: participantPda,
-      user: user.publicKey,
-      systemProgram: SystemProgram.programId,
-    })
-    .signers([user.keypair])
-    .rpc();
+  throw new Error('Manual withdrawal has been disabled. Winnings are automatically distributed when markets resolve.')
 }
 
 /**

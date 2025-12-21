@@ -158,77 +158,7 @@ vi.mock('../market-service', async () => {
         return participant
       },
       resolveMarket: async (params: any) => {
-        const market = await MockDatabaseService.getMarketById(params.marketId)
-        if (!market) {
-          throw new Error('Market not found')
-        }
-
-        if (market.status !== 'active') {
-          throw new Error('Market is not active')
-        }
-
-        // Get all participants
-        const participants = await MockDatabaseService.getMarketParticipants(params.marketId)
-        
-        // Use the same fee structure
-        const totalPool = market.total_pool
-        const creatorFee = (totalPool * 200) / 10000 // 2%
-        const platformFee = (totalPool * 300) / 10000 // 3%
-        const participantPool = (totalPool * 9500) / 10000 // 95%
-        
-        // Find winners and calculate winnings
-        const winners = participants.filter(p => p.prediction === params.outcome)
-        const winningsPerWinner = winners.length > 0 ? participantPool / winners.length : 0
-
-        // Update market status
-        await MockDatabaseService.updateMarket(params.marketId, {
-          status: 'resolved',
-          resolution_outcome: params.outcome,
-          updated_at: new Date().toISOString(),
-        })
-
-        // Update participant winnings and create transaction records
-        for (const participant of participants) {
-          const actualWinnings = participant.prediction === params.outcome ? winningsPerWinner : 0
-          
-          // Update participant with actual winnings
-          await MockDatabaseService.updateParticipant(participant.id, {
-            actual_winnings: actualWinnings,
-          })
-
-          // Create winnings transaction record for winners
-          if (actualWinnings > 0) {
-            await MockDatabaseService.createTransaction({
-              user_id: participant.user_id,
-              market_id: params.marketId,
-              type: 'winnings',
-              amount: actualWinnings,
-              description: `Winnings from market resolution: ${params.outcome}`,
-            })
-          }
-        }
-
-        // Create creator reward transaction
-        if (creatorFee > 0) {
-          await MockDatabaseService.createTransaction({
-            user_id: market.creator_id,
-            market_id: params.marketId,
-            type: 'creator_reward',
-            amount: creatorFee,
-            description: `Creator reward from market resolution`,
-          })
-        }
-
-        // Create platform fee transaction
-        if (platformFee > 0) {
-          await MockDatabaseService.createTransaction({
-            user_id: market.creator_id,
-            market_id: params.marketId,
-            type: 'platform_fee',
-            amount: platformFee,
-            description: `Platform fee from market resolution`,
-          })
-        }
+        throw new Error('Manual market resolution has been disabled. Markets are now resolved automatically.')
       },
       getMarketById: MockDatabaseService.getMarketById,
       updateMarket: MockDatabaseService.updateMarket,

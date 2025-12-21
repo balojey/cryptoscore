@@ -123,7 +123,7 @@
   - **Property 11: Transaction atomicity in resolution**
   - **Validates: Requirements 5.6**
 
-- [ ] 10. Remove manual resolution and withdrawal features
+- [x] 10. Remove manual resolution and withdrawal features
   - Remove manual market resolution UI components and functions
   - Remove withdrawal buttons and manual payout interfaces
   - Clean up manual resolution API endpoints

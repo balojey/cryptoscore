@@ -306,13 +306,9 @@ export class DatabaseService {
   }
 
   // Market resolution
+  // Note: Manual resolution is deprecated in favor of automated resolution
   static async resolveMarket(marketId: string, winningOutcome: string): Promise<void> {
-    const { error } = await supabase.rpc('resolve_market', {
-      market_id_param: marketId,
-      winning_outcome: winningOutcome,
-    })
-
-    if (error) throw error
+    throw new Error('Manual market resolution has been disabled. Markets are now resolved automatically.')
   }
 
   // Real-time subscriptions

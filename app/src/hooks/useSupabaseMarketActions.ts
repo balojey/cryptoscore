@@ -227,124 +227,19 @@ export function useSupabaseMarketActions() {
 
   /**
    * Resolve a market with the match outcome
+   * @deprecated Manual resolution is deprecated in favor of automated resolution
    */
   const resolveMarket = useCallback(async (params: ResolveMarketParams) => {
-    if (!publicKey) {
-      toast.error('Wallet not connected')
-      return null
-    }
-
-    setIsLoading(true)
-    setLastOperationId(null)
-
-    try {
-      // Show preparing transaction toast
-      toast.info('Resolving market', {
-        description: 'Processing market resolution and calculating winnings...',
-      })
-
-      // Get current user
-      const user = await getCurrentUser()
-
-      // Check if user can resolve this market
-      const canResolve = await MarketService.canUserResolveMarket(params.marketId, user.id)
-      if (!canResolve) {
-        throw new Error('You are not authorized to resolve this market')
-      }
-
-      // Resolve market in Supabase
-      await MarketService.resolveMarket({
-        marketId: params.marketId,
-        outcome: params.outcome,
-      })
-
-      setLastOperationId(params.marketId)
-
-      // Handle success
-      toast.success('Market resolved successfully!', {
-        description: `Market resolved with outcome: ${params.outcome}. Winnings have been distributed.`,
-      })
-
-      // Invalidate relevant queries
-      queryClient.invalidateQueries({ queryKey: ['markets'] })
-      queryClient.invalidateQueries({ queryKey: ['market', 'details', params.marketId] })
-      queryClient.invalidateQueries({ queryKey: ['user-markets'] })
-
-      return params.marketId
-    }
-    catch (error: any) {
-      console.error('[resolveMarket] Error occurred:', error)
-
-      const errorMessage = error.message || 'Failed to resolve market'
-      toast.error('Failed to resolve market', {
-        description: errorMessage,
-      })
-
-      return null
-    }
-    finally {
-      setIsLoading(false)
-    }
-  }, [publicKey, getCurrentUser, queryClient])
+    throw new Error('Manual market resolution has been disabled. Markets are now resolved automatically.')
+  }, [])
 
   /**
    * Withdraw rewards from a resolved market
-   * Note: In Supabase version, winnings are automatically calculated and recorded
-   * This function is kept for interface compatibility but doesn't perform actual withdrawal
+   * @deprecated Manual withdrawal is deprecated in favor of automated distribution
    */
   const withdrawRewards = useCallback(async (marketId: string) => {
-    if (!publicKey) {
-      toast.error('Wallet not connected')
-      return null
-    }
-
-    setIsLoading(true)
-    setLastOperationId(null)
-
-    try {
-      // Get current user
-      const user = await getCurrentUser()
-
-      // Get user's participation in this market
-      const participation = await MarketService.getUserMarketParticipation(user.id, marketId)
-      if (!participation) {
-        throw new Error('You did not participate in this market')
-      }
-
-      if (!participation.actual_winnings || participation.actual_winnings <= 0) {
-        throw new Error('No winnings available for withdrawal')
-      }
-
-      setLastOperationId(marketId)
-
-      // In a real implementation, this would trigger actual token/currency transfer
-      // For now, we just show success since winnings are already recorded in the database
-      toast.success('🎉 Rewards available!', {
-        description: `Your winnings of ${participation.actual_winnings.toFixed(4)} are recorded and ready for future token integration`,
-      })
-
-      // Invalidate relevant queries
-      queryClient.invalidateQueries({ queryKey: ['markets'] })
-      queryClient.invalidateQueries({ queryKey: ['market', 'details', marketId] })
-      queryClient.invalidateQueries({ queryKey: ['participant', marketId, user.id] })
-      queryClient.invalidateQueries({ queryKey: ['user'] })
-
-      return marketId
-    }
-    catch (error: any) {
-      console.error('[withdrawRewards] Error occurred:', error)
-
-      const errorMessage = error.message || 'Failed to process rewards'
-      toast.error('Failed to process rewards', {
-        description: errorMessage,
-      })
-
-      return null
-    }
-    finally {
-      setIsLoading(false)
-    }
-  }, [publicKey, getCurrentUser, queryClient])
+    throw new Error('Manual withdrawal has been disabled. Winnings are automatically distributed when markets resolve.')
+  }, [])
 
   /**
    * Get operation link (placeholder for future blockchain integration)
