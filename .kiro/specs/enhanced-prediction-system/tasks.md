@@ -136,10 +136,10 @@
   - Ensure real-time updates broadcast for all user predictions
   - _Requirements: 6.5, 8.5_
 
-- [ ] 12. Checkpoint - Ensure all tests pass
+- [x] 12. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 12.1 Write property test for full automation
+- [x] 12.1 Write property test for full automation
   - **Property 15: Full automation of market lifecycle**
   - **Validates: Requirements 9.5**
 

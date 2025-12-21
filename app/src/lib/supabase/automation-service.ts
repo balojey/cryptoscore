@@ -245,18 +245,18 @@ export class AutomationService {
         throw new Error('Match outcome could not be determined')
       }
 
-      // Calculate winnings
-      const winningsCalc = await this.calculateWinnings(market.id)
-
-      // Distribute winnings and rewards
-      const distributionResults = await this.distributeWinnings(market.id)
-
-      // Update market status to resolved
+      // Update market with resolution outcome FIRST
       await DatabaseService.updateMarket(market.id, {
         status: 'resolved',
         resolution_outcome: outcome,
         updated_at: new Date().toISOString(),
       })
+
+      // Calculate winnings (now that market has resolution_outcome)
+      const winningsCalc = await this.calculateWinnings(market.id)
+
+      // Distribute winnings and rewards
+      const distributionResults = await this.distributeWinnings(market.id)
 
       return {
         marketId: market.id,
