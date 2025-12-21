@@ -5,7 +5,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    setupFiles: [],
+    setupFiles: ['./src/lib/supabase/__tests__/vitest-setup.ts'],
   },
   resolve: {
     alias: {

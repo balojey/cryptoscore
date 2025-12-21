@@ -2,43 +2,21 @@
  * Property-based tests for Market Service
  * 
  * Tests market creation, participation, and data consistency
- * using property-based testing with fast-check.
+ * using property-based testing with fast-check and mock database.
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import fc from 'fast-check'
-
-// Mock DatabaseService before importing
-vi.mock('../database-service', () => ({
-  DatabaseService: {
-    createMarket: vi.fn(),
-    getMarketById: vi.fn(),
-    getMarkets: vi.fn(),
-    joinMarket: vi.fn(),
-    updateMarket: vi.fn(),
-    updateParticipant: vi.fn(),
-    getMarketParticipants: vi.fn(),
-    getUserMarketParticipation: vi.fn(),
-    createTransaction: vi.fn(),
-    getPlatformConfig: vi.fn(),
-    supabase: {
-      from: vi.fn(() => ({
-        update: vi.fn(() => ({ eq: vi.fn(() => ({ error: null })) })),
-      })),
-    },
-  },
-}))
-
 import { MarketService, type CreateMarketParams } from '../market-service'
-import { DatabaseService } from '../database-service'
+import { MockTestSetup, TestScenarios, MockDatabaseTestUtils } from './test-utils'
 
 describe('MarketService Property Tests', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
+  beforeEach(async () => {
+    await MockTestSetup.setupWithDefaults()
   })
 
   afterEach(() => {
-    vi.restoreAllMocks()
+    MockDatabaseTestUtils.reset()
   })
 
   /**
@@ -58,44 +36,13 @@ describe('MarketService Property Tests', () => {
           title: fc.string({ minLength: 5, maxLength: 200 }).filter(s => s.trim().length >= 5),
           description: fc.string({ minLength: 10, maxLength: 1000 }).filter(s => s.trim().length >= 10),
           entryFee: fc.float({ min: Math.fround(0.001), max: Math.fround(100), noNaN: true }),
-          endTime: fc.date({ min: new Date(), max: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) }).map(d => d.toISOString()),
+          endTime: fc.integer({ min: 1, max: 365 }).map(days => new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString()),
           isPublic: fc.boolean(),
           creatorId: fc.uuid(),
         }),
         async (params: CreateMarketParams) => {
-          // Mock platform config
-          vi.mocked(DatabaseService.getPlatformConfig).mockResolvedValue({
-            key: 'platform_fee_percentage',
-            value: 5,
-            updated_at: new Date().toISOString(),
-          })
-
-          // Mock successful market creation
-          const mockMarket = {
-            id: 'market-123',
-            creator_id: params.creatorId,
-            title: params.title,
-            description: params.description,
-            entry_fee: params.entryFee,
-            end_time: params.endTime,
-            status: 'active' as const,
-            resolution_outcome: null,
-            total_pool: 0,
-            platform_fee_percentage: 5,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          }
-
-          vi.mocked(DatabaseService.createMarket).mockResolvedValue(mockMarket)
-          vi.mocked(DatabaseService.createTransaction).mockResolvedValue({
-            id: 'tx-123',
-            user_id: params.creatorId,
-            market_id: mockMarket.id,
-            type: 'market_entry',
-            amount: 0,
-            description: `Created market: ${params.title}`,
-            created_at: new Date().toISOString(),
-          })
+          // Create test user first
+          const creator = MockDatabaseTestUtils.createTestUser({ id: params.creatorId })
 
           // Test market creation
           const result = await MarketService.createMarket(params)
@@ -108,28 +55,17 @@ describe('MarketService Property Tests', () => {
           expect(result.creator_id).toBe(params.creatorId)
           expect(result.status).toBe('active')
           expect(result.total_pool).toBe(0)
-          expect(result.platform_fee_percentage).toBe(5)
+          expect(result.platform_fee_percentage).toBe(5) // From default config
 
-          // Verify database operations were called with correct data
-          expect(DatabaseService.createMarket).toHaveBeenCalledWith({
-            creator_id: params.creatorId,
-            title: params.title,
-            description: params.description,
-            entry_fee: params.entryFee,
-            end_time: params.endTime,
-            status: 'active',
-            total_pool: 0,
-            platform_fee_percentage: 5,
-          })
+          // Verify market exists in database
+          const storedMarket = await MarketService.getMarketById(result.id)
+          expect(storedMarket).toEqual(result)
 
-          // Verify transaction record was created
-          expect(DatabaseService.createTransaction).toHaveBeenCalledWith({
-            user_id: params.creatorId,
-            market_id: result.id,
-            type: 'market_entry',
-            amount: 0,
-            description: `Created market: ${params.title}`,
-          })
+          // Verify transaction was created
+          const transactions = await MarketService.getUserTransactions(params.creatorId)
+          expect(transactions).toHaveLength(1)
+          expect(transactions[0].type).toBe('market_entry')
+          expect(transactions[0].amount).toBe(0)
         }
       ),
       { numRuns: 100 }
@@ -140,107 +76,43 @@ describe('MarketService Property Tests', () => {
     await fc.assert(
       fc.asyncProperty(
         fc.record({
-          marketId: fc.uuid(),
-          userId: fc.uuid(),
           prediction: fc.oneof(fc.constant('Home'), fc.constant('Draw'), fc.constant('Away')),
           entryAmount: fc.float({ min: Math.fround(0.001), max: Math.fround(10), noNaN: true }),
         }),
         async (joinParams) => {
-          // Mock existing market
-          const mockMarket = {
-            id: joinParams.marketId,
-            creator_id: 'creator-123',
-            title: 'Test Market',
-            description: 'Test Description',
-            entry_fee: joinParams.entryAmount,
-            end_time: new Date(Date.now() + 86400000).toISOString(), // 1 day from now
-            status: 'active' as const,
-            resolution_outcome: null,
-            total_pool: 0,
-            platform_fee_percentage: 5,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          }
-
-          // Mock existing participants
-          const mockParticipants = [
-            {
-              id: 'p1',
-              market_id: joinParams.marketId,
-              user_id: 'user1',
-              prediction: 'Home',
-              entry_amount: joinParams.entryAmount,
-              potential_winnings: joinParams.entryAmount * 2,
-              actual_winnings: null,
-              joined_at: new Date().toISOString(),
-            },
-          ]
-
-          const mockNewParticipant = {
-            id: 'new-participant',
-            market_id: joinParams.marketId,
-            user_id: joinParams.userId,
-            prediction: joinParams.prediction,
-            entry_amount: joinParams.entryAmount,
-            potential_winnings: joinParams.entryAmount * 1.5, // Calculated based on pool
-            actual_winnings: null,
-            joined_at: new Date().toISOString(),
-          }
-
-          // Setup mocks
-          vi.mocked(DatabaseService.getMarketById).mockResolvedValue(mockMarket)
-          vi.mocked(DatabaseService.getUserMarketParticipation).mockResolvedValue(null)
-          vi.mocked(DatabaseService.getMarketParticipants).mockResolvedValue(mockParticipants)
-          vi.mocked(DatabaseService.joinMarket).mockResolvedValue(mockNewParticipant)
-          vi.mocked(DatabaseService.updateMarket).mockResolvedValue({
-            ...mockMarket,
-            total_pool: mockMarket.total_pool + joinParams.entryAmount,
+          // Create test scenario
+          const scenario = await TestScenarios.createMarketScenario({ 
+            participantCount: 2,
+            withTransactions: false 
           })
-          vi.mocked(DatabaseService.createTransaction).mockResolvedValue({
-            id: 'tx-join',
-            user_id: joinParams.userId,
-            market_id: joinParams.marketId,
-            type: 'market_entry',
-            amount: joinParams.entryAmount,
-            description: `Joined market with ${joinParams.prediction} prediction`,
-            created_at: new Date().toISOString(),
-          })
+          
+          // Create new user to join market
+          const newUser = MockDatabaseTestUtils.createTestUser()
 
           // Test joining market
-          const result = await MarketService.joinMarket(joinParams)
+          const result = await MarketService.joinMarket({
+            marketId: scenario.market.id,
+            userId: newUser.id,
+            prediction: joinParams.prediction,
+            entryAmount: joinParams.entryAmount,
+          })
 
           // Verify participant data consistency
-          expect(result.market_id).toBe(joinParams.marketId)
-          expect(result.user_id).toBe(joinParams.userId)
+          expect(result.market_id).toBe(scenario.market.id)
+          expect(result.user_id).toBe(newUser.id)
           expect(result.prediction).toBe(joinParams.prediction)
           expect(result.entry_amount).toBe(joinParams.entryAmount)
           expect(result.potential_winnings).toBeGreaterThan(0)
 
-          // Verify database operations maintain consistency
-          expect(DatabaseService.joinMarket).toHaveBeenCalledWith({
-            market_id: joinParams.marketId,
-            user_id: joinParams.userId,
-            prediction: joinParams.prediction,
-            entry_amount: joinParams.entryAmount,
-            potential_winnings: expect.any(Number),
-          })
-
           // Verify market pool was updated
-          expect(DatabaseService.updateMarket).toHaveBeenCalledWith(
-            joinParams.marketId,
-            expect.objectContaining({
-              total_pool: mockMarket.total_pool + joinParams.entryAmount,
-            })
-          )
+          const updatedMarket = await MarketService.getMarketById(scenario.market.id)
+          expect(updatedMarket!.total_pool).toBe(scenario.market.total_pool + joinParams.entryAmount)
 
           // Verify transaction was recorded
-          expect(DatabaseService.createTransaction).toHaveBeenCalledWith({
-            user_id: joinParams.userId,
-            market_id: joinParams.marketId,
-            type: 'market_entry',
-            amount: joinParams.entryAmount,
-            description: `Joined market with ${joinParams.prediction} prediction`,
-          })
+          const transactions = await MarketService.getUserTransactions(newUser.id)
+          expect(transactions).toHaveLength(1)
+          expect(transactions[0].type).toBe('market_entry')
+          expect(transactions[0].amount).toBe(joinParams.entryAmount)
         }
       ),
       { numRuns: 100 }
@@ -251,104 +123,50 @@ describe('MarketService Property Tests', () => {
     await fc.assert(
       fc.asyncProperty(
         fc.record({
-          marketId: fc.uuid(),
           outcome: fc.oneof(fc.constant('Home'), fc.constant('Draw'), fc.constant('Away')),
-          totalPool: fc.float({ min: Math.fround(100), max: Math.fround(1000), noNaN: true }),
-          platformFeePercentage: fc.integer({ min: 1, max: 10 }),
         }),
         async (resolveParams) => {
-          // Clear mocks for this iteration
-          vi.clearAllMocks()
-          
-          // Mock market data
-          const mockMarket = {
-            id: resolveParams.marketId,
-            creator_id: 'creator-123',
-            title: 'Test Market',
-            description: 'Test Description',
-            entry_fee: 0.1,
-            end_time: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
-            status: 'active' as const,
-            resolution_outcome: null,
-            total_pool: resolveParams.totalPool,
-            platform_fee_percentage: resolveParams.platformFeePercentage,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          }
-
-          // Mock participants with different predictions
-          const mockParticipants = [
-            {
-              id: 'p1',
-              market_id: resolveParams.marketId,
-              user_id: 'user1',
-              prediction: resolveParams.outcome, // Winner
-              entry_amount: 0.1,
-              potential_winnings: 0.2,
-              actual_winnings: null,
-              joined_at: new Date().toISOString(),
-            },
-            {
-              id: 'p2',
-              market_id: resolveParams.marketId,
-              user_id: 'user2',
-              prediction: resolveParams.outcome === 'Home' ? 'Away' : 'Home', // Loser
-              entry_amount: 0.1,
-              potential_winnings: 0.2,
-              actual_winnings: null,
-              joined_at: new Date().toISOString(),
-            },
-          ]
-
-          // Setup mocks
-          vi.mocked(DatabaseService.getMarketById).mockResolvedValue(mockMarket)
-          vi.mocked(DatabaseService.getMarketParticipants).mockResolvedValue(mockParticipants)
-          vi.mocked(DatabaseService.updateMarket).mockResolvedValue({
-            ...mockMarket,
-            status: 'resolved',
-            resolution_outcome: resolveParams.outcome,
-          })
-          vi.mocked(DatabaseService.updateParticipant).mockResolvedValue({
-            ...mockParticipants[0],
-            actual_winnings: 100,
-          })
-          vi.mocked(DatabaseService.createTransaction).mockResolvedValue({
-            id: 'tx-resolve',
-            user_id: 'user1',
-            market_id: resolveParams.marketId,
-            type: 'winnings',
-            amount: 100,
-            description: `Winnings from market resolution: ${resolveParams.outcome}`,
-            created_at: new Date().toISOString(),
+          // Create test scenario with participants
+          const scenario = await TestScenarios.createMarketScenario({ 
+            participantCount: 6,
+            withTransactions: true 
           })
 
           // Test market resolution
           await MarketService.resolveMarket({
-            marketId: resolveParams.marketId,
+            marketId: scenario.market.id,
             outcome: resolveParams.outcome,
           })
 
           // Verify market status was updated consistently
-          expect(DatabaseService.updateMarket).toHaveBeenCalledWith(
-            resolveParams.marketId,
-            expect.objectContaining({
-              status: 'resolved',
-              resolution_outcome: resolveParams.outcome,
-            })
-          )
+          const resolvedMarket = await MarketService.getMarketById(scenario.market.id)
+          expect(resolvedMarket!.status).toBe('resolved')
+          expect(resolvedMarket!.resolution_outcome).toBe(resolveParams.outcome)
 
-          // Verify winnings calculations are consistent
-          const winners = mockParticipants.filter(p => p.prediction === resolveParams.outcome)
-          const platformFee = resolveParams.totalPool * (resolveParams.platformFeePercentage / 100)
-          const winnerPool = resolveParams.totalPool - platformFee
-          const expectedWinningsPerWinner = winners.length > 0 ? winnerPool / winners.length : 0
+          // Verify participants were updated with winnings
+          const participants = await MarketService.getMarketParticipants(scenario.market.id)
+          const winners = participants.filter(p => p.prediction === resolveParams.outcome)
+          const losers = participants.filter(p => p.prediction !== resolveParams.outcome)
 
-          // Verify participant updates were called for each participant
-          expect(DatabaseService.updateParticipant).toHaveBeenCalledTimes(mockParticipants.length)
+          // Winners should have actual winnings
+          for (const winner of winners) {
+            expect(winner.actual_winnings).toBeGreaterThan(0)
+          }
+
+          // Losers should have zero winnings
+          for (const loser of losers) {
+            expect(loser.actual_winnings).toBe(0)
+          }
 
           // Verify transaction records were created
-          // At minimum, there should be creator reward and platform fee transactions
-          expect(DatabaseService.createTransaction).toHaveBeenCalled()
+          const allTransactions = await MarketService.getMarketTransactions(scenario.market.id)
+          const winningsTransactions = allTransactions.filter(t => t.type === 'winnings')
+          const creatorRewardTransactions = allTransactions.filter(t => t.type === 'creator_reward')
+          const platformFeeTransactions = allTransactions.filter(t => t.type === 'platform_fee')
+
+          expect(winningsTransactions).toHaveLength(winners.length)
+          expect(creatorRewardTransactions).toHaveLength(1)
+          expect(platformFeeTransactions).toHaveLength(1)
         }
       ),
       { numRuns: 100 }
@@ -375,6 +193,9 @@ describe('MarketService Property Tests', () => {
           ),
         }),
         async (edgeParams) => {
+          // Create test user
+          const creator = MockDatabaseTestUtils.createTestUser()
+
           const params: CreateMarketParams = {
             matchId: 'edge-test',
             title: edgeParams.title,
@@ -382,42 +203,8 @@ describe('MarketService Property Tests', () => {
             entryFee: edgeParams.entryFee,
             endTime: edgeParams.endTime,
             isPublic: true,
-            creatorId: 'creator-edge',
+            creatorId: creator.id,
           }
-
-          // Mock platform config
-          vi.mocked(DatabaseService.getPlatformConfig).mockResolvedValue({
-            key: 'platform_fee_percentage',
-            value: 5,
-            updated_at: new Date().toISOString(),
-          })
-
-          // Mock successful creation
-          const mockMarket = {
-            id: 'edge-market',
-            creator_id: params.creatorId,
-            title: params.title,
-            description: params.description,
-            entry_fee: params.entryFee,
-            end_time: params.endTime,
-            status: 'active' as const,
-            resolution_outcome: null,
-            total_pool: 0,
-            platform_fee_percentage: 5,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          }
-
-          vi.mocked(DatabaseService.createMarket).mockResolvedValue(mockMarket)
-          vi.mocked(DatabaseService.createTransaction).mockResolvedValue({
-            id: 'tx-edge',
-            user_id: params.creatorId,
-            market_id: mockMarket.id,
-            type: 'market_entry',
-            amount: 0,
-            description: `Created market: ${params.title}`,
-            created_at: new Date().toISOString(),
-          })
 
           // Test edge case handling
           const result = await MarketService.createMarket(params)

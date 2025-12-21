@@ -2,40 +2,21 @@
  * Property-based tests for User Service
  * 
  * Tests authentication data persistence and user profile management
- * using property-based testing with fast-check.
+ * using property-based testing with fast-check and mock database.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import fc from 'fast-check'
-
-// Mock DatabaseService before importing
-vi.mock('../database-service', () => ({
-  DatabaseService: {
-    supabase: {
-      from: () => ({
-        insert: () => ({ select: () => ({ single: () => ({ data: null, error: null }) }) }),
-        select: () => ({ eq: () => ({ single: () => ({ data: null, error: null }) }) }),
-        update: () => ({ eq: () => ({ select: () => ({ single: () => ({ data: null, error: null }) }) }) }),
-        delete: () => ({ eq: () => ({ error: null }) }),
-      }),
-    },
-    createUser: vi.fn(),
-    getUserByEmail: vi.fn(),
-    getUserByWalletAddress: vi.fn(),
-    updateUser: vi.fn(),
-  },
-}))
-
 import { UserService, type CrossmintUser } from '../user-service'
-import { DatabaseService } from '../database-service'
+import { MockTestSetup, MockDatabaseTestUtils } from './test-utils'
 
 describe('UserService Property Tests', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
+  beforeEach(async () => {
+    await MockTestSetup.setupWithDefaults()
   })
 
   afterEach(() => {
-    vi.restoreAllMocks()
+    MockDatabaseTestUtils.reset()
   })
 
   /**
@@ -60,24 +41,7 @@ describe('UserService Property Tests', () => {
           const validWalletAddress = UserService.isValidEvmAddress(crossmintUser.walletAddress!)
           expect(validWalletAddress).toBe(true)
 
-          // Mock database responses for new user creation
-          const mockUser = {
-            id: 'user-123',
-            wallet_address: crossmintUser.walletAddress!,
-            email: crossmintUser.email!,
-            display_name: crossmintUser.displayName || null,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          }
-
-          // Mock getUserByEmail to return null (new user)
-          vi.mocked(DatabaseService.getUserByEmail).mockResolvedValue(null)
-          // Mock getUserByWalletAddress to return null (new user)
-          vi.mocked(DatabaseService.getUserByWalletAddress).mockResolvedValue(null)
-          // Mock createUser to return the new user
-          vi.mocked(DatabaseService.createUser).mockResolvedValue(mockUser)
-
-          // Test authentication
+          // Test authentication for new user
           const result = await UserService.authenticateUser(crossmintUser)
 
           // Verify user data persistence
@@ -86,13 +50,13 @@ describe('UserService Property Tests', () => {
           expect(result.user.email).toBe(crossmintUser.email)
           expect(result.isNewUser).toBe(true)
 
-          // Verify database operations were called correctly
-          expect(DatabaseService.getUserByEmail).toHaveBeenCalledWith(crossmintUser.email)
-          expect(DatabaseService.createUser).toHaveBeenCalledWith({
-            wallet_address: crossmintUser.walletAddress,
-            email: crossmintUser.email,
-            display_name: crossmintUser.displayName || null,
-          })
+          // Verify user exists in database
+          const storedUser = await UserService.getUserByEmail(crossmintUser.email!)
+          expect(storedUser).toEqual(result.user)
+
+          // Verify user can be found by wallet address
+          const userByWallet = await UserService.getUserByWalletAddress(crossmintUser.walletAddress!)
+          expect(userByWallet).toEqual(result.user)
         }
       ),
       { numRuns: 100 }
@@ -104,33 +68,26 @@ describe('UserService Property Tests', () => {
       fc.asyncProperty(
         fc.record({
           id: fc.string({ minLength: 1, maxLength: 50 }).filter(s => s.trim().length > 0),
-          email: fc.emailAddress(),
+          email: fc.emailAddress().map(email => `${Date.now()}-${Math.random()}-${email}`), // Ensure unique emails
           walletAddress: fc.string({ minLength: 40, maxLength: 40 }).map(s => '0x' + s.replace(/[^a-fA-F0-9]/g, '0').padStart(40, '0')),
           displayName: fc.option(fc.string({ minLength: 1, maxLength: 100 }).filter(s => s.trim().length > 0)),
         }),
         async (crossmintUser: CrossmintUser) => {
-          // Mock existing user
-          const existingUser = {
-            id: 'existing-user-123',
-            wallet_address: crossmintUser.walletAddress!,
+          // Manually reset database for this iteration to ensure isolation
+          MockDatabaseTestUtils.reset()
+          await MockTestSetup.setupWithDefaults()
+          
+          // Create existing user first with the SAME email as crossmintUser
+          const existingUser = MockDatabaseTestUtils.createTestUser({
             email: crossmintUser.email!,
+            wallet_address: crossmintUser.walletAddress!,
             display_name: 'Old Name',
-            created_at: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-            updated_at: new Date(Date.now() - 86400000).toISOString(),
-          }
+          })
 
-          const updatedUser = {
-            ...existingUser,
-            display_name: crossmintUser.displayName || existingUser.display_name,
-            updated_at: new Date().toISOString(),
-          }
+          // Ensure the user was created with the correct email
+          expect(existingUser.email).toBe(crossmintUser.email)
 
-          // Mock getUserByEmail to return existing user
-          vi.mocked(DatabaseService.getUserByEmail).mockResolvedValue(existingUser)
-          // Mock updateUser to return updated user
-          vi.mocked(DatabaseService.updateUser).mockResolvedValue(updatedUser)
-
-          // Test authentication
+          // Test authentication for existing user
           const result = await UserService.authenticateUser(crossmintUser)
 
           // Verify user data was updated
@@ -138,15 +95,16 @@ describe('UserService Property Tests', () => {
           expect(result.user.wallet_address).toBe(crossmintUser.walletAddress)
           expect(result.user.email).toBe(crossmintUser.email)
           expect(result.isNewUser).toBe(false)
+          expect(result.user.id).toBe(existingUser.id) // Same user ID
 
-          // Verify database operations were called correctly
-          expect(DatabaseService.getUserByEmail).toHaveBeenCalledWith(crossmintUser.email)
-          expect(DatabaseService.updateUser).toHaveBeenCalledWith(
-            existingUser.id,
-            expect.objectContaining({
-              wallet_address: crossmintUser.walletAddress,
-              display_name: crossmintUser.displayName || existingUser.display_name,
-            })
+          // Verify display name was updated if provided
+          if (crossmintUser.displayName) {
+            expect(result.user.display_name).toBe(crossmintUser.displayName)
+          }
+
+          // Verify updated timestamp is newer or equal (updates can be very fast)
+          expect(new Date(result.user.updated_at).getTime()).toBeGreaterThanOrEqual(
+            new Date(existingUser.updated_at).getTime()
           )
         }
       ),
@@ -194,6 +152,43 @@ describe('UserService Property Tests', () => {
         }
       ),
       { numRuns: 50 }
+    )
+  })
+
+  it('should handle user profile updates correctly', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.record({
+          displayName: fc.option(fc.string({ minLength: 1, maxLength: 100 }).filter(s => s.trim().length > 0)),
+          email: fc.option(fc.emailAddress()),
+        }),
+        async (updates) => {
+          // Create test user
+          const user = MockDatabaseTestUtils.createTestUser()
+
+          // Test profile update
+          const result = await UserService.updateProfile(user.id, updates)
+
+          // Verify updates were applied
+          expect(result.id).toBe(user.id)
+          if (updates.displayName !== undefined) {
+            expect(result.display_name).toBe(updates.displayName)
+          }
+          if (updates.email !== undefined) {
+            expect(result.email).toBe(updates.email)
+          }
+
+          // Verify updated timestamp is newer (allow for same timestamp if update was very fast)
+          expect(new Date(result.updated_at).getTime()).toBeGreaterThanOrEqual(
+            new Date(user.updated_at).getTime()
+          )
+
+          // Verify user can still be found
+          const updatedUser = await UserService.getUserById(user.id)
+          expect(updatedUser).toEqual(result)
+        }
+      ),
+      { numRuns: 100 }
     )
   })
 })
