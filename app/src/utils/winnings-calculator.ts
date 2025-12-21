@@ -215,12 +215,12 @@ export class WinningsCalculator {
     marketData: MarketData, 
     participantData: ParticipantData
   ): number {
-    if (!marketData.outcome || marketData.outcome !== participantData.prediction) {
+    if (!marketData.resolution_outcome || marketData.resolution_outcome !== participantData.prediction) {
       return 0
     }
 
-    const participantPool = this.calculateParticipantPool(marketData.totalPool)
-    const winnerCount = this.getPredictionCount(marketData, marketData.outcome)
+    const participantPool = this.calculateParticipantPool(marketData.total_pool)
+    const winnerCount = this.getPredictionCount(marketData, marketData.resolution_outcome)
     
     if (winnerCount === 0) {
       return 0

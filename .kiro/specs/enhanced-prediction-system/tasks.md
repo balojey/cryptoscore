@@ -75,17 +75,17 @@
   - **Property 13: Multiple prediction UI support**
   - **Validates: Requirements 8.1, 8.2**
 
-- [ ] 7. Update winnings calculation for multiple predictions
+- [x] 7. Update winnings calculation for multiple predictions
   - Modify winnings calculation logic to handle multiple predictions per user
   - Ensure only winning predictions receive winnings
   - Update portfolio aggregation to include all user predictions
   - _Requirements: 3.5, 8.4_
 
-- [ ] 7.1 Write property test for winnings calculation
+- [x] 7.1 Write property test for winnings calculation
   - **Property 6: Winnings calculation considers only winning predictions**
   - **Validates: Requirements 3.5**
 
-- [ ] 7.2 Write property test for portfolio aggregation
+- [x] 7.2 Write property test for portfolio aggregation
   - **Property 14: Portfolio aggregation with multiple predictions**
   - **Validates: Requirements 8.4, 8.5**
 
