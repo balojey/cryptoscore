@@ -638,7 +638,10 @@ export class MockDatabaseTestUtils {
       type: 'market_entry',
       amount: 0.1,
       description: 'Test transaction',
+      status: 'COMPLETED',
+      metadata: null,
       created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
       ...overrides,
     }
     

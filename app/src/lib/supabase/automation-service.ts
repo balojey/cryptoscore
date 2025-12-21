@@ -353,13 +353,30 @@ export class AutomationService {
             actual_winnings: winningsCalc.winningsPerWinner,
           })
 
-          // Create winnings transaction
+          // Create winnings transaction with detailed metadata
+          const winningsMetadata = {
+            predictionId: winner.id,
+            matchId: market.match_id,
+            prediction: winner.prediction,
+            entryAmount: winner.entry_amount,
+            automatedTransfer: true,
+            resolutionOutcome: market.resolution_outcome,
+          }
+
           const transaction = await DatabaseService.createTransaction({
             user_id: winner.user_id,
             market_id: marketId,
             type: 'winnings',
             amount: winningsCalc.winningsPerWinner,
             description: `Automated winnings from market resolution: ${market.resolution_outcome}`,
+            status: 'PENDING',
+            metadata: winningsMetadata,
+          })
+
+          // Mark transaction as completed
+          await DatabaseService.updateTransactionStatus(transaction.id, 'COMPLETED', {
+            ...winningsMetadata,
+            completedAt: new Date().toISOString(),
           })
 
           results.push({
@@ -398,15 +415,31 @@ export class AutomationService {
         }
       }
 
-      // Record platform fee transaction
+      // Record platform fee transaction with detailed metadata
       if (winningsCalc.platformFee > 0) {
         try {
+          const platformFeeMetadata = {
+            marketId: marketId,
+            matchId: market.match_id,
+            totalPool: winningsCalc.totalPool,
+            feePercentage: market.platform_fee_percentage,
+            automatedTransfer: true,
+          }
+
           const platformFeeTransaction = await DatabaseService.createTransaction({
             user_id: market.creator_id, // Associate with market creator for tracking
             market_id: marketId,
             type: 'platform_fee',
             amount: winningsCalc.platformFee,
             description: 'Automated platform fee from market resolution',
+            status: 'PENDING',
+            metadata: platformFeeMetadata,
+          })
+
+          // Mark platform fee transaction as completed
+          await DatabaseService.updateTransactionStatus(platformFeeTransaction.id, 'COMPLETED', {
+            ...platformFeeMetadata,
+            completedAt: new Date().toISOString(),
           })
 
           results.push({
@@ -459,12 +492,28 @@ export class AutomationService {
     const creatorReward = await this.calculateCreatorReward(marketId)
 
     try {
+      const creatorRewardMetadata = {
+        marketId: marketId,
+        matchId: market.match_id,
+        totalPool: market.total_pool,
+        rewardPercentage: market.creator_reward_percentage,
+        automatedTransfer: true,
+      }
+
       const transaction = await DatabaseService.createTransaction({
         user_id: market.creator_id,
         market_id: marketId,
         type: 'creator_reward',
         amount: creatorReward,
         description: 'Automated creator reward from market resolution',
+        status: 'PENDING',
+        metadata: creatorRewardMetadata,
+      })
+
+      // Mark transaction as completed
+      await DatabaseService.updateTransactionStatus(transaction.id, 'COMPLETED', {
+        ...creatorRewardMetadata,
+        completedAt: new Date().toISOString(),
       })
 
       return {

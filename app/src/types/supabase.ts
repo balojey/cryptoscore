@@ -129,7 +129,10 @@ export interface Database {
           type: 'market_entry' | 'winnings' | 'platform_fee' | 'creator_reward' | 'automated_transfer'
           amount: number
           description: string
+          status: 'PENDING' | 'COMPLETED' | 'FAILED'
+          metadata: any | null
           created_at: string
+          updated_at: string
         }
         Insert: {
           id?: string
@@ -138,7 +141,10 @@ export interface Database {
           type: 'market_entry' | 'winnings' | 'platform_fee' | 'creator_reward' | 'automated_transfer'
           amount: number
           description: string
+          status?: 'PENDING' | 'COMPLETED' | 'FAILED'
+          metadata?: any | null
           created_at?: string
+          updated_at?: string
         }
         Update: {
           id?: string
@@ -147,6 +153,9 @@ export interface Database {
           type?: 'market_entry' | 'winnings' | 'platform_fee' | 'creator_reward' | 'automated_transfer'
           amount?: number
           description?: string
+          status?: 'PENDING' | 'COMPLETED' | 'FAILED'
+          metadata?: any | null
+          updated_at?: string
         }
       }
       platform_config: {

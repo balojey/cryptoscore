@@ -186,9 +186,39 @@ export class DatabaseService {
 
   // Transaction operations
   static async createTransaction(transactionData: Tables['transactions']['Insert']): Promise<Transaction> {
+    // Set default status and metadata if not provided
+    const enhancedTransactionData = {
+      status: 'PENDING' as const,
+      metadata: null,
+      ...transactionData,
+      created_at: transactionData.created_at || new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }
+
     const { data, error } = await supabase
       .from('transactions')
-      .insert(transactionData)
+      .insert(enhancedTransactionData)
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  }
+
+  static async updateTransactionStatus(transactionId: string, status: Transaction['status'], metadata?: any): Promise<Transaction> {
+    const updates: Tables['transactions']['Update'] = {
+      status,
+      updated_at: new Date().toISOString(),
+    }
+
+    if (metadata !== undefined) {
+      updates.metadata = metadata
+    }
+
+    const { data, error } = await supabase
+      .from('transactions')
+      .update(updates)
+      .eq('id', transactionId)
       .select()
       .single()
 
@@ -217,6 +247,29 @@ export class DatabaseService {
 
     if (error) throw error
     return data || []
+  }
+
+  static async getTransactionsByStatus(status: Transaction['status'], limit = 50): Promise<Transaction[]> {
+    const { data, error } = await supabase
+      .from('transactions')
+      .select()
+      .eq('status', status)
+      .order('created_at', { ascending: false })
+      .limit(limit)
+
+    if (error) throw error
+    return data || []
+  }
+
+  static async getTransactionById(transactionId: string): Promise<Transaction | null> {
+    const { data, error } = await supabase
+      .from('transactions')
+      .select()
+      .eq('id', transactionId)
+      .single()
+
+    if (error && error.code !== 'PGRST116') throw error
+    return data
   }
 
   // Platform configuration operations
