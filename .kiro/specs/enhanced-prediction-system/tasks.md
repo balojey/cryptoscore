@@ -30,14 +30,14 @@
   - Verify test cleanup and isolation
   - _Requirements: 7.1, 7.2, 7.3, 7.5_
 
-- [ ] 4. Create football-data API integration service
+- [x] 4. Create football-data API integration service
   - Implement FootballDataService interface for API communication
   - Create match data retrieval and status monitoring functions
   - Implement error handling for API failures and rate limiting
   - Add configuration for API endpoints and authentication
   - _Requirements: 1.2, 1.4, 1.5_
 
-- [ ] 4.1 Write property test for status synchronization
+- [x] 4.1 Write property test for status synchronization
   - **Property 2: Status synchronization maintains consistency**
   - **Validates: Requirements 1.2, 1.4, 1.5**
 
