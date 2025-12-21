@@ -22,6 +22,42 @@ export type {
   UpdateParticipant,
 } from './supabase'
 
+// Re-export MNEE types
+export type {
+  MNEEConfig,
+  Environment,
+  MneeBalance,
+  MneeTransferRequest,
+  MneeTransferRecipient,
+  MneeTransferResult,
+  MneeConfiguration,
+  MneeFeeTier,
+  MneeTransactionHistory,
+  MneeFormatOptions,
+  MneeValidationResult,
+  MneeServiceInterface,
+  MneeContextType,
+  BalanceCallback,
+  TransferCallback,
+  ErrorCallback,
+  HistoryOptions,
+  MneeError,
+  MneeConfigurationError,
+  MneeTransferError,
+  MneeBalanceError,
+  SendMNEE,
+  TransferResponse,
+  TransferStatus,
+  MNEEBalance,
+  SdkConfig
+} from './mnee'
+
+export {
+  MNEE_CONSTANTS,
+  isMneeBalance,
+  isMneeTransferResult,
+} from './mnee'
+
 // Football API types (unchanged)
 export interface Match {
   id: number
