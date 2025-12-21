@@ -89,18 +89,18 @@
   - **Property 14: Portfolio aggregation with multiple predictions**
   - **Validates: Requirements 8.4, 8.5**
 
-- [ ] 8. Implement automated market resolution system
+- [x] 8. Implement automated market resolution system
   - Create AutomationService for automated market operations
   - Implement automatic market resolution when matches finish
   - Add automated winnings calculation and distribution
   - Implement creator reward calculation and distribution
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 5.1, 5.3_
 
-- [ ] 8.1 Write property test for automated resolution
+- [x] 8.1 Write property test for automated resolution
   - **Property 7: Automated resolution triggers on match completion**
   - **Validates: Requirements 4.1, 4.4**
 
-- [ ] 8.2 Write property test for automated distribution
+- [x] 8.2 Write property test for automated distribution
   - **Property 8: Automated winnings and rewards distribution**
   - **Validates: Requirements 4.2, 4.3, 5.1, 5.3**
 
