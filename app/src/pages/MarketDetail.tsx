@@ -904,14 +904,6 @@ export function MarketDetail() {
   // Check if user is the creator
   const isCreator = userAddress && marketInfo?.creator === userAddress
 
-  // Determine user status
-  const isUserWinner = hasJoined 
-    && marketData?.status === 'resolved'
-    && marketData.outcome
-    && participantData.prediction === marketData.outcome
-  const hasUserWithdrawn = participantData?.hasWithdrawn || false
-  const canUserWithdraw = isUserWinner && !hasUserWithdrawn
-
   // Debug logging
   useEffect(() => {
     console.log('Market Detail Debug:', {

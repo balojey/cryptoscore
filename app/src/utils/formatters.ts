@@ -247,3 +247,50 @@ export function formatWithMNEEEquivalent(
 
   return { primary, equivalent }
 }
+
+/**
+ * Formats SOL amounts with proper decimal places and symbol
+ * @param amount - Amount in lamports or SOL (depending on context)
+ * @param decimals - Number of decimal places to show (default: 4)
+ * @param showSymbol - Whether to show SOL symbol (default: true)
+ * @returns Formatted SOL amount string
+ */
+export function formatSOL(
+  amount: number,
+  decimals: number = 4,
+  showSymbol: boolean = true,
+): string {
+  // Convert lamports to SOL if amount is very large (likely lamports)
+  const solAmount = amount > 1_000_000 ? amount / 1_000_000_000 : amount
+  const formatted = solAmount.toFixed(decimals)
+  return showSymbol ? `${formatted} SOL` : formatted
+}
+
+/**
+ * Format amount with SOL equivalent display
+ * Returns both the primary formatted value and the SOL equivalent
+ * @param amount - Amount in decimal format
+ * @param currency - Target currency
+ * @param exchangeRates - Current exchange rates (should include SOL rates)
+ * @returns Object with primary and equivalent formatted strings
+ */
+export function formatWithSOLEquivalent(
+  amount: number,
+  currency: 'MNEE' | 'USD' | 'EUR' | 'GBP' | 'SOL',
+  exchangeRates: { MNEE_USD: number, MNEE_EUR: number, MNEE_GBP: number, SOL_USD?: number } | null,
+): { primary: string, equivalent: string } {
+  const primary = currency === 'SOL' 
+    ? formatSOL(amount)
+    : formatCurrency(amount, currency, exchangeRates)
+
+  // If already in SOL, no equivalent needed
+  if (currency === 'SOL') {
+    return { primary, equivalent: '' }
+  }
+
+  // For SOL equivalent, we need to convert from the current currency
+  // This is a simplified conversion - in practice you'd need proper exchange rates
+  const solEquivalent = formatSOL(amount * 0.001, 4) // Placeholder conversion rate
+  
+  return { primary, equivalent: solEquivalent }
+}
