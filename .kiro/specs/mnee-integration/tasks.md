@@ -6,8 +6,8 @@
   - Set up API key management and validation
   - _Requirements: 2.1, 2.5_
 
-- [ ] 2. Create MNEE service layer and core utilities
-  - [ ] 2.1 Implement MneeService class with SDK integration
+- [x] 2. Create MNEE service layer and core utilities
+  - [x] 2.1 Implement MneeService class with SDK integration
     - Create service class with initialization, balance queries, and transfer methods
     - Implement error handling and retry logic with circuit breaker pattern
     - Add configuration management and environment switching
@@ -21,7 +21,7 @@
     - **Property 3: Transfer operation integration**
     - **Validates: Requirements 2.3, 6.1, 6.2, 6.3**
 
-  - [ ] 2.4 Implement unit conversion utilities
+  - [x] 2.4 Implement unit conversion utilities
     - Create functions for converting between atomic units and MNEE tokens
     - Add formatting functions with consistent decimal precision
     - Implement amount validation and range checking
