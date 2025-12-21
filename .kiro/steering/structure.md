@@ -1,160 +1,76 @@
 # Project Structure & Organization
 
-## Root Directory Layout
+## Root Level
 
-```
-cryptoscore-solana/
-├── programs/           # Solana programs (Rust/Anchor)
-├── app/               # React frontend application
-├── tests/             # Integration tests for Solana programs
-├── scripts/           # Build, deployment, and utility scripts
-├── migrations/        # Database-like migration scripts
-├── deployments/       # Deployment artifacts and configs
-├── solana/           # Solana-specific configuration files
-└── target/           # Compiled Rust artifacts (generated)
-```
+- **src/** - Main application source code
+- **supabase/** - Database migrations and schema
+- **public/** - Static assets (icons, manifest, service worker)
+- **scripts/** - Utility scripts for diagnostics and verification
+- **docs/** - Documentation files
+- **.kiro/** - Kiro IDE configuration and steering files
 
-## Solana Programs (`/programs/`)
+## Source Code Organization (`src/`)
 
-Three modular programs following single-responsibility principle:
+### Core Application
+- **App.tsx** - Main app component with routing and providers
+- **main.tsx** - Application entry point
+- **style.css** - Global styles and CSS variables
 
-```
-programs/
-├── factory/          # Market creation and registry
-│   ├── src/lib.rs   # Factory program logic
-│   └── Cargo.toml   # Rust dependencies
-├── market/           # Core prediction market logic
-│   ├── src/lib.rs   # Market program logic  
-│   └── Cargo.toml   # Rust dependencies
-└── dashboard/        # Data aggregation and queries
-    ├── src/lib.rs   # Dashboard program logic
-    └── Cargo.toml   # Rust dependencies
-```
+### Components (`src/components/`)
+- **ui/** - Reusable UI components (shadcn/ui based)
+- **auth/** - Authentication-related components
+- **cards/** - Card-based display components
+- **charts/** - Data visualization components
+- **examples/** - Example/demo components
+- **landing/** - Landing page specific components
+- **layout/** - Layout components (Header, Footer)
+- **market/** - Market-specific components
+- **terminal/** - Trading terminal components
+- **index.ts** - Component exports
 
-### Program Responsibilities
-- **Factory**: Market creation, registry management, platform fees
-- **Market**: Participant management, predictions, resolution, rewards
-- **Dashboard**: Data aggregation, analytics, cross-program queries
+### Business Logic
+- **hooks/** - Custom React hooks for data fetching and state
+- **lib/** - Core business logic and utilities
+  - **supabase/** - Database service layer
+  - **crossmint/** - Wallet integration utilities
+  - **football-data/** - Sports data integration
+- **utils/** - Pure utility functions
+- **contexts/** - React context providers
 
-## Frontend Application (`/app/`)
+### Configuration & Types
+- **config/** - Application configuration files
+- **types/** - TypeScript type definitions
+- **pages/** - Route components
+- **styles/** - Additional CSS files
 
-React application following feature-based organization:
+## Key Architectural Patterns
 
-```
-app/src/
-├── components/       # Reusable UI components
-│   ├── ui/          # Base UI primitives (shadcn/ui style)
-│   ├── auth/        # Authentication components
-│   ├── market/      # Market-specific components
-│   ├── terminal/    # Trading terminal components
-│   ├── landing/     # Landing page components
-│   ├── layout/      # Layout components (Header, Footer)
-│   └── charts/      # Chart and visualization components
-├── pages/           # Route-level page components
-├── hooks/           # Custom React hooks
-├── contexts/        # React context providers
-├── lib/             # Utility libraries and services
-│   ├── solana/     # Solana-specific utilities
-│   └── crossmint/  # Crossmint integration
-├── config/          # Configuration files
-├── types/           # TypeScript type definitions
-├── utils/           # General utility functions
-├── styles/          # CSS files and styling
-└── idl/            # Generated Anchor IDL files
-```
+### Data Layer
+- **Service Layer**: `src/lib/supabase/` contains all database operations
+- **Custom Hooks**: Data fetching hooks in `src/hooks/` use TanStack Query
+- **Real-time**: Supabase subscriptions for live updates
 
-## Component Organization Patterns
+### Component Architecture
+- **Compound Components**: Complex UI built from smaller, focused components
+- **Lazy Loading**: Pages are lazy-loaded for performance
+- **Provider Pattern**: Context providers for theme, currency, auth state
 
-### UI Components (`/components/ui/`)
-- Base components following shadcn/ui patterns
-- Radix UI primitives with custom styling
-- Reusable across the entire application
-
-### Feature Components (`/components/[feature]/`)
-- Domain-specific components (market, auth, terminal)
-- Business logic encapsulation
-- Feature-focused organization
-
-### Page Components (`/pages/`)
-- Route-level components
-- Lazy-loaded for performance
-- Minimal logic, compose feature components
-
-## Custom Hooks Pattern (`/hooks/`)
-
-Hooks follow naming convention `use[Feature][Action]`:
-- `useMarketData()` - Fetch market information
-- `useMarketActions()` - Market transaction methods
-- `useSolanaProgram()` - Program initialization
-- `useWinnings()` - Calculate user winnings
-- `useRealtimeMarkets()` - WebSocket market updates
-
-## Configuration Management (`/config/`)
-
-Environment-specific configurations:
-- `solana.ts` - Network and RPC configuration
-- `programs.ts` - Program ID management
-- `crossmint.ts` - Social login configuration
-- `fees.ts` - Fee calculation constants
-
-## Testing Structure (`/tests/`)
-
-```
-tests/
-├── cryptoscore.ts           # Main program test suite
-├── integration/             # End-to-end integration tests
-│   ├── comprehensive-e2e.ts # Full workflow tests
-│   ├── end-to-end.ts       # Basic E2E scenarios
-│   └── stress-tests.ts     # Performance and load tests
-└── utils/                   # Test utilities and helpers
-    ├── test-setup.ts       # Test environment setup
-    ├── test-accounts.ts    # Account generation utilities
-    └── test-assertions.ts  # Custom assertion helpers
-```
+### Testing Structure
+- **Co-located Tests**: `__tests__/` folders next to source code
+- **Integration Tests**: `src/__tests__/integration/` for end-to-end scenarios
+- **Mock Services**: `src/lib/supabase/__tests__/mock-database-service.ts`
 
 ## File Naming Conventions
 
-### React Components
-- **PascalCase**: `MarketCard.tsx`, `UserProfile.tsx`
-- **Feature prefixes**: `MarketFilters.tsx`, `TerminalHeader.tsx`
+- **Components**: PascalCase (e.g., `MarketCard.tsx`)
+- **Hooks**: camelCase with `use` prefix (e.g., `useMarketData.ts`)
+- **Utilities**: camelCase (e.g., `winnings-calculator.ts`)
+- **Types**: camelCase (e.g., `supabase.ts`)
+- **Tests**: Match source file with `.test.ts` suffix
 
-### Hooks and Utilities
-- **camelCase**: `useMarketData.ts`, `formatCurrency.ts`
-- **Descriptive names**: `winnings-calculator.ts`, `solana-helpers.ts`
+## Import Patterns
 
-### Rust Programs
-- **snake_case**: Following Rust conventions
-- **lib.rs**: Main program entry point
-- **Descriptive modules**: Clear separation of concerns
-
-## Import Organization
-
-### Absolute Imports (Preferred)
-```typescript
-import { MarketCard } from '@/components/market/MarketCard'
-import { useMarketData } from '@/hooks/useMarketData'
-import { formatCurrency } from '@/utils/formatters'
-```
-
-### Import Grouping Order
-1. External libraries (React, Solana, etc.)
-2. Internal components and hooks (@ alias)
-3. Relative imports (./filename)
-4. Type-only imports (separate from value imports)
-
-## Environment Files
-
-Multiple environment configurations:
-- `.env` - Default/development
-- `.env.devnet` - Devnet configuration
-- `.env.testnet` - Testnet configuration  
-- `.env.mainnet-beta` - Production configuration
-- `.env.example` - Template with required variables
-
-## Build Artifacts
-
-Generated files (should not be edited manually):
-- `target/` - Rust compilation artifacts
-- `app/dist/` - Frontend build output
-- `app/src/idl/` - Generated Anchor IDL files
-- `deployments/` - Deployment addresses and metadata
+- **Path Aliases**: Use `@/` for src imports
+- **Barrel Exports**: Components exported through `index.ts` files
+- **Type-only Imports**: Use `import type` for TypeScript types
+- **Lazy Imports**: Dynamic imports for code splitting
