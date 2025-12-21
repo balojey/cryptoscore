@@ -82,6 +82,7 @@ export function useRealtimeNotifications(options: NotificationOptions = {}) {
 
   /**
    * Detect and notify about new participants
+   * Enhanced to handle multiple predictions per user
    */
   const detectNewParticipants = useCallback((currentMarkets: Market[], previousMarkets: Market[]) => {
     const previousMap = new Map(previousMarkets.map(m => [m.marketAddress, m]))
@@ -96,7 +97,15 @@ export function useRealtimeNotifications(options: NotificationOptions = {}) {
           const cooldownKey = `participant-${current.marketAddress}-${currParticipants}`
           if (!isInCooldown(cooldownKey)) {
             const newParticipantCount = currParticipants - prevParticipants
-            marketToast.newParticipant(newParticipantCount)
+            
+            // Enhanced notification for multiple predictions
+            if (newParticipantCount === 1) {
+              marketToast.newParticipant(newParticipantCount)
+            } else {
+              // Multiple new predictions - could be from same user or different users
+              marketToast.newPredictions(newParticipantCount)
+            }
+            
             addToCooldown(cooldownKey, 120000) // 2 minutes
             onNewParticipant?.(current.marketAddress, newParticipantCount)
             invalidateMarketCache(current.marketAddress)

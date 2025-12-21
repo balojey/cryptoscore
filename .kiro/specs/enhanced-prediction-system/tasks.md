@@ -130,7 +130,7 @@
   - Remove manual resolution database functions
   - _Requirements: 9.1, 9.2, 9.3, 9.4_
 
-- [ ] 11. Update real-time functionality for multiple predictions
+- [x] 11. Update real-time functionality for multiple predictions
   - Modify real-time subscriptions to handle multiple predictions per user
   - Update notification system for automated operations
   - Ensure real-time updates broadcast for all user predictions

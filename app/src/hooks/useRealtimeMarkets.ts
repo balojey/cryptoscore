@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { useRealtimeNotifications } from './useRealtimeNotifications'
+import { useAutomatedOperationNotifications } from './useAutomatedOperationNotifications'
 import { useSupabaseRealtimeMarkets } from './useSupabaseRealtimeMarkets'
 
 interface RealtimeOptions {
@@ -79,6 +80,25 @@ export function useRealtimeMarkets(options: RealtimeOptions = {}) {
     },
   })
 
+  // Automated operation notifications for enhanced prediction system
+  useAutomatedOperationNotifications({
+    enabled,
+    onMarketResolved: (marketId, outcome) => {
+      console.log('Automated market resolution:', marketId, outcome)
+      queryClient.invalidateQueries({ queryKey: ['market', 'details', marketId] })
+      queryClient.invalidateQueries({ queryKey: ['markets'] })
+    },
+    onWinningsDistributed: (userId, amount, marketId) => {
+      console.log('Automated winnings distribution:', userId, amount, marketId)
+      queryClient.invalidateQueries({ queryKey: ['user', 'portfolio', userId] })
+      queryClient.invalidateQueries({ queryKey: ['participant', 'multiple', marketId, userId] })
+    },
+    onCreatorRewardDistributed: (userId, amount, marketId) => {
+      console.log('Automated creator reward distribution:', userId, amount, marketId)
+      queryClient.invalidateQueries({ queryKey: ['user', 'portfolio', userId] })
+    },
+  })
+
   /**
    * Log warning if legacy WebSocket options are used
    */
@@ -118,6 +138,13 @@ export const marketToast = {
   newParticipant: (count: number = 1) => {
     toast.success(`${count} new ${count === 1 ? 'participant' : 'participants'} joined!`, {
       description: '👥 Market activity is heating up',
+      duration: 3000,
+    })
+  },
+
+  newPredictions: (count: number) => {
+    toast.success(`${count} new predictions placed!`, {
+      description: '🎯 Multiple predictions are coming in',
       duration: 3000,
     })
   },
@@ -167,6 +194,35 @@ export const marketToast = {
   error: (message: string) => {
     toast.error(message, {
       duration: 4000,
+    })
+  },
+
+  // Automated operation notifications
+  automatedResolution: (marketTitle: string) => {
+    toast.success('Market automatically resolved!', {
+      description: `🤖 ${marketTitle} has been resolved automatically`,
+      duration: 5000,
+    })
+  },
+
+  automatedDistribution: (amount: number, currency: string = 'USDC') => {
+    toast.success('Winnings distributed!', {
+      description: `💰 ${amount} ${currency} has been automatically transferred to your account`,
+      duration: 6000,
+    })
+  },
+
+  automatedCreatorReward: (amount: number, currency: string = 'USDC') => {
+    toast.success('Creator reward received!', {
+      description: `🎉 ${amount} ${currency} creator reward has been transferred`,
+      duration: 5000,
+    })
+  },
+
+  multiplePredictionsUpdate: (marketTitle: string, predictionCount: number) => {
+    toast.info('Multiple predictions updated', {
+      description: `📊 ${predictionCount} predictions updated for ${marketTitle}`,
+      duration: 3000,
     })
   },
 }

@@ -172,6 +172,22 @@ export class DatabaseService {
     return data
   }
 
+  /**
+   * Get all predictions for a user in a specific market
+   * Supports multiple predictions per user (up to 3, one per outcome)
+   */
+  static async getUserMarketPredictions(userId: string, marketId: string): Promise<Participant[]> {
+    const { data, error } = await supabase
+      .from('participants')
+      .select()
+      .eq('user_id', userId)
+      .eq('market_id', marketId)
+      .order('joined_at', { ascending: true })
+
+    if (error) throw error
+    return data || []
+  }
+
   static async updateParticipant(participantId: string, updates: Tables['participants']['Update']): Promise<Participant> {
     const { data, error } = await supabase
       .from('participants')
@@ -345,6 +361,44 @@ export class DatabaseService {
           event: '*', 
           schema: 'public', 
           table: 'transactions',
+          filter: `user_id=eq.${userId}`
+        },
+        callback
+      )
+      .subscribe()
+  }
+
+  /**
+   * Subscribe to automated operations for real-time notifications
+   * Listens for automated resolution and distribution events
+   */
+  static subscribeToAutomatedOperations(callback: (payload: any) => void) {
+    return supabase
+      .channel('automated-operations')
+      .on('postgres_changes', 
+        { 
+          event: 'UPDATE', 
+          schema: 'public', 
+          table: 'markets',
+          filter: 'status=eq.FINISHED'
+        },
+        callback
+      )
+      .subscribe()
+  }
+
+  /**
+   * Subscribe to user's multiple predictions across all markets
+   * Enhanced for multiple predictions per user support
+   */
+  static subscribeToUserPredictions(userId: string, callback: (payload: any) => void) {
+    return supabase
+      .channel(`user-${userId}-predictions`)
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'participants',
           filter: `user_id=eq.${userId}`
         },
         callback

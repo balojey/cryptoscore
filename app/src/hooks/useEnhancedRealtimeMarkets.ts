@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { marketToast, useRealtimeMarkets } from './useRealtimeMarkets'
 import { useSupabaseRealtimeMarkets } from './useSupabaseRealtimeMarkets'
+import { useAutomatedOperationNotifications } from './useAutomatedOperationNotifications'
 
 interface EnhancedRealtimeOptions {
   enabled?: boolean
@@ -54,10 +55,13 @@ export function useEnhancedRealtimeMarkets(options: EnhancedRealtimeOptions = {}
     onParticipantUpdate: (marketId, participantId, eventType) => {
       console.log(`Supabase participant update: ${eventType} ${participantId} in ${marketId}`)
       
-      // Invalidate relevant queries
+      // Enhanced cache invalidation for multiple predictions
       queryClient.invalidateQueries({ queryKey: ['market', 'details', marketId] })
       queryClient.invalidateQueries({ queryKey: ['market', 'participants', marketId] })
       queryClient.invalidateQueries({ queryKey: ['user', 'participation'] })
+      
+      // Invalidate multiple predictions cache
+      queryClient.invalidateQueries({ queryKey: ['participant', 'multiple', marketId] })
       
       setLastUpdateTime(Date.now())
     },
@@ -89,6 +93,28 @@ export function useEnhancedRealtimeMarkets(options: EnhancedRealtimeOptions = {}
           statusReportedRef.current = mappedStatus
         }
       }
+    },
+  })
+
+  // Automated operation notifications for enhanced prediction system
+  useAutomatedOperationNotifications({
+    enabled,
+    onMarketResolved: (marketId, outcome) => {
+      console.log('Enhanced: Automated market resolution:', marketId, outcome)
+      queryClient.invalidateQueries({ queryKey: ['market', 'details', marketId] })
+      queryClient.invalidateQueries({ queryKey: ['markets'] })
+      setLastUpdateTime(Date.now())
+    },
+    onWinningsDistributed: (userId, amount, marketId) => {
+      console.log('Enhanced: Automated winnings distribution:', userId, amount, marketId)
+      queryClient.invalidateQueries({ queryKey: ['user', 'portfolio', userId] })
+      queryClient.invalidateQueries({ queryKey: ['participant', 'multiple', marketId, userId] })
+      setLastUpdateTime(Date.now())
+    },
+    onCreatorRewardDistributed: (userId, amount, marketId) => {
+      console.log('Enhanced: Automated creator reward distribution:', userId, amount, marketId)
+      queryClient.invalidateQueries({ queryKey: ['user', 'portfolio', userId] })
+      setLastUpdateTime(Date.now())
     },
   })
 

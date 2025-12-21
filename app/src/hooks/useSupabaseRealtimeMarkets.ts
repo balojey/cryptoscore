@@ -115,16 +115,18 @@ export function useSupabaseRealtimeMarkets(options: SupabaseRealtimeOptions = {}
 
   /**
    * Handle participant table changes from Supabase real-time
+   * Enhanced to support multiple predictions per user
    */
   const handleParticipantChange = useCallback((payload: RealtimePostgresChangesPayload<ParticipantRow>) => {
     const { eventType, new: newRecord, old: oldRecord } = payload
     const participantId = newRecord?.id || oldRecord?.id
     const marketId = newRecord?.market_id || oldRecord?.market_id
     const userId = newRecord?.user_id || oldRecord?.user_id
+    const prediction = newRecord?.prediction || oldRecord?.prediction
 
     if (!participantId || !marketId) return
 
-    console.log('Supabase participant update:', { eventType, participantId, marketId, newRecord })
+    console.log('Supabase participant update:', { eventType, participantId, marketId, userId, prediction, newRecord })
 
     throttledUpdate(() => {
       // Update tracking state
@@ -132,14 +134,29 @@ export function useSupabaseRealtimeMarkets(options: SupabaseRealtimeOptions = {}
       setLastUpdateType('participant')
       setLastUpdateTime(Date.now())
 
-      // Efficient cache invalidation
+      // Enhanced cache invalidation for multiple predictions
       if (userId) {
+        // Invalidate single prediction cache (backward compatibility)
         cacheInvalidation.invalidateMarketParticipation(queryClient, marketId, userId)
+        
+        // Invalidate multiple predictions cache
+        queryClient.invalidateQueries({ 
+          queryKey: ['participant', 'multiple', marketId, userId] 
+        })
+        
+        // Invalidate user-specific queries that might be affected by multiple predictions
+        queryClient.invalidateQueries({ 
+          queryKey: ['user', 'predictions', userId] 
+        })
+        queryClient.invalidateQueries({ 
+          queryKey: ['user', 'portfolio', userId] 
+        })
       } else {
+        // Fallback to market-wide invalidation
         cacheInvalidation.invalidateMarket(queryClient, marketId)
       }
 
-      // Call callback if provided
+      // Call callback with enhanced information
       onParticipantUpdate?.(marketId, participantId, eventType)
     })
   }, [queryClient, onParticipantUpdate, throttledUpdate])
