@@ -33,42 +33,60 @@ export interface Database {
         Row: {
           id: string
           creator_id: string
+          match_id: number | null
+          home_team_id: number | null
+          home_team_name: string | null
+          away_team_id: number | null
+          away_team_name: string | null
           title: string
           description: string
           entry_fee: number
           end_time: string
-          status: 'active' | 'resolved' | 'cancelled'
+          status: 'SCHEDULED' | 'LIVE' | 'IN_PLAY' | 'PAUSED' | 'FINISHED' | 'POSTPONED' | 'CANCELLED' | 'SUSPENDED'
           resolution_outcome: string | null
           total_pool: number
           platform_fee_percentage: number
+          creator_reward_percentage: number | null
           created_at: string
           updated_at: string
         }
         Insert: {
           id?: string
           creator_id: string
+          match_id?: number | null
+          home_team_id?: number | null
+          home_team_name?: string | null
+          away_team_id?: number | null
+          away_team_name?: string | null
           title: string
           description: string
           entry_fee: number
           end_time: string
-          status?: 'active' | 'resolved' | 'cancelled'
+          status?: 'SCHEDULED' | 'LIVE' | 'IN_PLAY' | 'PAUSED' | 'FINISHED' | 'POSTPONED' | 'CANCELLED' | 'SUSPENDED'
           resolution_outcome?: string | null
           total_pool?: number
           platform_fee_percentage?: number
+          creator_reward_percentage?: number | null
           created_at?: string
           updated_at?: string
         }
         Update: {
           id?: string
           creator_id?: string
+          match_id?: number | null
+          home_team_id?: number | null
+          home_team_name?: string | null
+          away_team_id?: number | null
+          away_team_name?: string | null
           title?: string
           description?: string
           entry_fee?: number
           end_time?: string
-          status?: 'active' | 'resolved' | 'cancelled'
+          status?: 'SCHEDULED' | 'LIVE' | 'IN_PLAY' | 'PAUSED' | 'FINISHED' | 'POSTPONED' | 'CANCELLED' | 'SUSPENDED'
           resolution_outcome?: string | null
           total_pool?: number
           platform_fee_percentage?: number
+          creator_reward_percentage?: number | null
           updated_at?: string
         }
       }
@@ -108,7 +126,7 @@ export interface Database {
           id: string
           user_id: string
           market_id: string | null
-          type: 'market_entry' | 'winnings' | 'platform_fee' | 'creator_reward'
+          type: 'market_entry' | 'winnings' | 'platform_fee' | 'creator_reward' | 'automated_transfer'
           amount: number
           description: string
           created_at: string
@@ -117,7 +135,7 @@ export interface Database {
           id?: string
           user_id: string
           market_id?: string | null
-          type: 'market_entry' | 'winnings' | 'platform_fee' | 'creator_reward'
+          type: 'market_entry' | 'winnings' | 'platform_fee' | 'creator_reward' | 'automated_transfer'
           amount: number
           description: string
           created_at?: string
@@ -126,7 +144,7 @@ export interface Database {
           id?: string
           user_id?: string
           market_id?: string | null
-          type?: 'market_entry' | 'winnings' | 'platform_fee' | 'creator_reward'
+          type?: 'market_entry' | 'winnings' | 'platform_fee' | 'creator_reward' | 'automated_transfer'
           amount?: number
           description?: string
         }

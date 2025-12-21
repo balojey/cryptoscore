@@ -41,18 +41,18 @@
   - **Property 2: Status synchronization maintains consistency**
   - **Validates: Requirements 1.2, 1.4, 1.5**
 
-- [ ] 5. Update market creation to support match data
+- [x] 5. Update market creation to support match data
   - Modify market creation API to accept match information
   - Update MarketService to store match_id and team data
   - Implement validation for match data completeness
   - Update market creation UI to display team information
   - _Requirements: 1.1, 2.1, 2.2, 2.3, 2.4_
 
-- [ ] 5.1 Write property test for market creation with match data
+- [x] 5.1 Write property test for market creation with match data
   - **Property 1: Market creation stores complete match data**
   - **Validates: Requirements 1.1, 2.1, 2.2, 2.3**
 
-- [ ] 5.2 Write property test for market display
+- [x] 5.2 Write property test for market display
   - **Property 3: Market display includes team information**
   - **Validates: Requirements 2.4**
 

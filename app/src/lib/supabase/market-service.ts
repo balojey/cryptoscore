@@ -25,6 +25,10 @@ export interface CreateMarketParams {
   endTime: string // ISO timestamp
   isPublic: boolean
   creatorId: string
+  homeTeamId: number
+  homeTeamName: string
+  awayTeamId: number
+  awayTeamName: string
 }
 
 /**
@@ -70,19 +74,29 @@ export class MarketService {
    * @returns Created market data
    */
   static async createMarket(params: CreateMarketParams): Promise<Market> {
-    // Get platform fee percentage from config (default to 0.05 for 5%)
+    // Get platform fee percentage from config (default to 0.03 for 3%)
     const platformConfig = await DatabaseService.getPlatformConfig('default_platform_fee_percentage')
-    const platformFeePercentage = platformConfig?.value ? parseFloat(platformConfig.value as string) : 0.05
+    const platformFeePercentage = platformConfig?.value ? parseFloat(platformConfig.value as string) : 0.03
+
+    // Get creator reward percentage from config (default to 0.02 for 2%)
+    const creatorRewardConfig = await DatabaseService.getPlatformConfig('default_creator_reward_percentage')
+    const creatorRewardPercentage = creatorRewardConfig?.value ? parseFloat(creatorRewardConfig.value as string) : 0.02
 
     const marketData: MarketInsert = {
       creator_id: params.creatorId,
+      match_id: parseInt(params.matchId),
+      home_team_id: params.homeTeamId,
+      home_team_name: params.homeTeamName,
+      away_team_id: params.awayTeamId,
+      away_team_name: params.awayTeamName,
       title: params.title,
       description: params.description,
       entry_fee: params.entryFee,
       end_time: params.endTime,
-      status: 'active',
+      status: 'SCHEDULED',
       total_pool: 0, // Will be updated as participants join
       platform_fee_percentage: platformFeePercentage,
+      creator_reward_percentage: creatorRewardPercentage,
     }
 
     const market = await DatabaseService.createMarket(marketData)
