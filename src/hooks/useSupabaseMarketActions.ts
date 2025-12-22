@@ -11,6 +11,7 @@ import { toast } from 'sonner'
 import { MarketService } from '../lib/supabase/market-service'
 import { UserService } from '../lib/supabase/user-service'
 import { useUnifiedWallet } from '../contexts/UnifiedWalletContext'
+import { useMnee } from '../hooks/useMnee'
 
 export type MatchOutcomeType = 'Home' | 'Draw' | 'Away'
 
@@ -18,14 +19,18 @@ export interface CreateMarketParams {
   matchId: string
   title: string
   description: string
-  entryFee: number // in decimal format (e.g., 0.1)
+  entryFee: number // in MNEE tokens (will be converted to atomic units)
   endTime: number // Unix timestamp
   isPublic: boolean
+  homeTeamId?: number
+  homeTeamName?: string
+  awayTeamId?: number
+  awayTeamName?: string
 }
 
 export interface JoinMarketParams {
   marketId: string
-  prediction: MatchOutcomeType
+  prediction: 'HOME_WIN' | 'DRAW' | 'AWAY_WIN'
 }
 
 export interface ResolveMarketParams {
@@ -47,6 +52,7 @@ export interface CreateSimilarMarketParams {
  */
 export function useSupabaseMarketActions() {
   const { publicKey, user } = useUnifiedWallet()
+  const { refreshBalance } = useMnee()
   const queryClient = useQueryClient()
   const [isLoading, setIsLoading] = useState(false)
   const [lastOperationId, setLastOperationId] = useState<string | null>(null)
@@ -98,6 +104,13 @@ export function useSupabaseMarketActions() {
       // Convert Unix timestamp to ISO string
       const endTime = new Date(params.endTime * 1000).toISOString()
 
+      // Extract team IDs and names from matchId if not provided
+      // For now, we'll use placeholder values if not provided
+      const homeTeamId = params.homeTeamId || 0
+      const homeTeamName = params.homeTeamName || 'Home Team'
+      const awayTeamId = params.awayTeamId || 0
+      const awayTeamName = params.awayTeamName || 'Away Team'
+
       // Create market in Supabase
       const market = await MarketService.createMarket({
         matchId: params.matchId,
@@ -107,6 +120,10 @@ export function useSupabaseMarketActions() {
         endTime,
         isPublic: params.isPublic,
         creatorId: user.id,
+        homeTeamId,
+        homeTeamName,
+        awayTeamId,
+        awayTeamName,
       })
 
       setLastOperationId(market.id)
@@ -115,6 +132,11 @@ export function useSupabaseMarketActions() {
       toast.success('Market created successfully!', {
         description: 'Your market is now live and ready for participants',
       })
+
+      // Refresh MNEE balance after successful market creation
+      setTimeout(() => {
+        refreshBalance()
+      }, 1000)
 
       // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ['markets'] })
@@ -187,12 +209,12 @@ export function useSupabaseMarketActions() {
         throw new Error('Market not found')
       }
 
-      // Join market in Supabase
+      // Join market in Supabase (entry_fee is stored in atomic units, convert to MNEE tokens)
       const participant = await MarketService.joinMarket({
         marketId: params.marketId,
         userId: user.id,
         prediction: params.prediction,
-        entryAmount: market.entry_fee,
+        entryAmount: (market.entry_fee || 0) / 100000, // Convert atomic units to MNEE tokens, handle null
       })
 
       setLastOperationId(participant.id)
@@ -201,6 +223,11 @@ export function useSupabaseMarketActions() {
       toast.success('Joined market successfully!', {
         description: `Your ${params.prediction} prediction has been recorded`,
       })
+
+      // Refresh MNEE balance after successful market join
+      setTimeout(() => {
+        refreshBalance()
+      }, 1000)
 
       // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ['markets'] })
@@ -229,7 +256,7 @@ export function useSupabaseMarketActions() {
    * Resolve a market with the match outcome
    * @deprecated Manual resolution is deprecated in favor of automated resolution
    */
-  const resolveMarket = useCallback(async (params: ResolveMarketParams) => {
+  const resolveMarket = useCallback(async (_params: ResolveMarketParams) => {
     throw new Error('Manual market resolution has been disabled. Markets are now resolved automatically.')
   }, [])
 
@@ -237,7 +264,7 @@ export function useSupabaseMarketActions() {
    * Withdraw rewards from a resolved market
    * @deprecated Manual withdrawal is deprecated in favor of automated distribution
    */
-  const withdrawRewards = useCallback(async (marketId: string) => {
+  const withdrawRewards = useCallback(async (_marketId: string) => {
     throw new Error('Manual withdrawal has been disabled. Winnings are automatically distributed when markets resolve.')
   }, [])
 

@@ -165,7 +165,7 @@ export class WinningsErrorHandler {
           type: 'potential',
           amount: marketData?.entryFee || 0,
           status: 'eligible',
-          message: 'Currency conversion unavailable - showing SOL estimate',
+          message: 'Currency conversion unavailable - showing MNEE estimate',
           displayVariant: 'warning',
           icon: 'AlertTriangle',
         }

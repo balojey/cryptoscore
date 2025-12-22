@@ -39,7 +39,6 @@ const mockMarketData: MarketData = {
   homeCount: 4,
   drawCount: 2,
   awayCount: 4,
-}
   kickoffTime: Date.now() + 3600000, // 1 hour from now
   isPrivate: false,
 }
@@ -168,7 +167,6 @@ export function WinningsErrorHandlingExample() {
               potential_winnings: 0.19,
               actual_winnings: null,
               joined_at: new Date().toISOString(),
-            }}
               hasWithdrawn: false,
             }}
             userAddress="mock-user-address"

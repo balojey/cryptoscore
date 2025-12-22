@@ -44,8 +44,6 @@ const mockParticipantData: ParticipantData = {
   actual_winnings: null,
   joined_at: new Date().toISOString(),
 }
-  joinedAt: Date.now(),
-}
 
 const mockMatchData: EnhancedMatchData = {
   id: 12345,

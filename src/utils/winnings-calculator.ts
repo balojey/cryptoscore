@@ -2,13 +2,14 @@
  * WinningsCalculator - Core utility for calculating winnings in prediction markets
  * 
  * Handles all winnings calculations based on user authentication status, participation,
- * market state, and fee distribution rules.
+ * market state, and fee distribution rules. Updated to work with MNEE atomic units.
  */
 
 import type { MarketData } from '../hooks/useMarketData'
 import type { ParticipantData } from '../hooks/useParticipantData'
 import type { EnhancedMatchData } from '../hooks/useMatchData'
 import { FEE_DISTRIBUTION, BASIS_POINTS_DIVISOR } from '../config/fees'
+import { atomicToMnee } from '../lib/supabase/mnee-utils'
 
 /**
  * Parameters for winnings calculation
@@ -25,11 +26,11 @@ export interface WinningsCalculationParams {
  */
 export interface WinningsResult {
   type: 'potential' | 'actual' | 'creator_reward' | 'none'
-  amount: number // in decimal format
+  amount: number // in MNEE atomic units
   breakdown?: {
-    participantWinnings?: number
-    creatorReward?: number
-    totalPool?: number
+    participantWinnings?: number // in MNEE atomic units
+    creatorReward?: number // in MNEE atomic units
+    totalPool?: number // in MNEE atomic units
     winnerCount?: number
   }
   status: 'eligible' | 'won' | 'lost' | 'distributed' | 'pending'
@@ -115,6 +116,7 @@ export class WinningsCalculator {
    * @param marketData - Market data
    * @param prediction - Prediction type
    * @param isExistingParticipant - Whether this is for an existing participant (default: false)
+   * @returns Potential winnings in MNEE atomic units
    */
   static calculatePotentialWinnings(
     marketData: MarketData, 
@@ -122,7 +124,7 @@ export class WinningsCalculator {
     isExistingParticipant: boolean = false
   ): number {
     if (!prediction || marketData.participantCount === 0) {
-      return marketData.entry_fee
+      return marketData.entry_fee // Already in atomic units
     }
 
     // Get count for the specific prediction
@@ -158,7 +160,7 @@ export class WinningsCalculator {
    * Calculate average potential winnings across all three predictions for non-participants
    * This gives users a better understanding of expected returns regardless of which prediction they choose
    * @param marketData - Market data
-   * @returns Object with average winnings and breakdown by prediction
+   * @returns Object with average winnings and breakdown by prediction (all amounts in MNEE atomic units)
    */
   static calculateAveragePotentialWinnings(marketData: MarketData): {
     average: number
@@ -193,8 +195,8 @@ export class WinningsCalculator {
     const newParticipantPool = this.calculateParticipantPool(newTotalPool)
     
     const explanation = `Average of potential winnings across all predictions. ` +
-      `Total pool after you join: ${(newTotalPool / 1e9).toFixed(3)} SOL. ` +
-      `Participant pool (95%): ${(newParticipantPool / 1e9).toFixed(3)} SOL. ` +
+      `Total pool after you join: ${atomicToMnee(newTotalPool).toFixed(5)} MNEE. ` +
+      `Participant pool (95%): ${atomicToMnee(newParticipantPool).toFixed(5)} MNEE. ` +
       `Your winnings depend on how many others chose the same prediction.`
 
     return {
@@ -210,6 +212,7 @@ export class WinningsCalculator {
 
   /**
    * Calculate actual winnings for a participant with correct prediction
+   * @returns Actual winnings in MNEE atomic units
    */
   static calculateActualWinnings(
     marketData: MarketData, 
@@ -231,6 +234,7 @@ export class WinningsCalculator {
 
   /**
    * Calculate creator reward (2% of total pool)
+   * @returns Creator reward in MNEE atomic units
    */
   static calculateCreatorReward(marketData: MarketData): number {
     return Math.floor((marketData.total_pool * FEE_DISTRIBUTION.CREATOR_FEE_BPS) / BASIS_POINTS_DIVISOR)
@@ -333,7 +337,7 @@ export class WinningsCalculator {
         type: 'potential',
         amount: marketData.entry_fee, // Fallback to entry fee as basic estimate
         status: 'eligible',
-        message: 'Currency conversion unavailable - showing SOL estimate',
+        message: 'Currency conversion unavailable - showing MNEE estimate',
         displayVariant: 'warning',
         icon: 'AlertTriangle',
       }

@@ -5,7 +5,7 @@ import { Link, useParams } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { useMnee } from '@/hooks/useMnee'
-import PredictionDistributionChart from '../components/charts/PredictionDistributionChart'
+// import PredictionDistributionChart from '../components/charts/PredictionDistributionChart'
 import SharePrediction from '../components/SharePrediction'
 import Confetti from '../components/ui/Confetti'
 import { useSupabaseMarketActions } from '../hooks/useSupabaseMarketActions'
@@ -13,7 +13,7 @@ import { useSupabaseMarketData } from '../hooks/useSupabaseMarketData'
 import { useMatchData, type EnhancedMatchData } from '../hooks/useMatchData'
 import { useSupabaseParticipantData } from '../hooks/useSupabaseParticipantData'
 import { useWinnings } from '../hooks/useWinnings'
-import { formatCurrency, formatWithSOLEquivalent, shortenAddress } from '../utils/formatters'
+import { formatCurrency, shortenAddress } from '../utils/formatters'
 import { CreateSimilarMarketDialog, type CreateSimilarMarketParams } from '../components/CreateSimilarMarketDialog'
 import { WinningsDisplay } from '../components/WinningsDisplay'
 
@@ -277,15 +277,13 @@ interface MarketStatsProps {
   userHasJoined: boolean
   matchData: EnhancedMatchData
   entryFeeValue: number
-  currency: 'SOL' | 'USD' | 'NGN'
-  exchangeRates: { SOL_USD: number, SOL_NGN: number } | null
   marketAddress: string
   userAddress?: string
   marketData: any
   participantData?: any
 }
 
-function MarketStats({ marketInfo, poolSize, participantsCount, marketStatus, isMatchStarted, winningTeamName, homeCount, awayCount, drawCount, userPrediction, userHasJoined, matchData, entryFeeValue, currency, exchangeRates, marketAddress, userAddress, marketData, participantData }: MarketStatsProps) {
+function MarketStats({ marketInfo, poolSize, participantsCount, marketStatus, isMatchStarted, winningTeamName, homeCount, awayCount, drawCount, userPrediction, userHasJoined, matchData, entryFeeValue, marketAddress, userAddress, marketData, participantData }: MarketStatsProps) {
   const InfoRow = ({ label, value, valueClass, icon }: { label: string, value: React.ReactNode, valueClass?: string, icon: string }) => (
     <div className="info-row">
       <div className="info-label">
@@ -351,12 +349,7 @@ function MarketStats({ marketInfo, poolSize, participantsCount, marketStatus, is
           label="Pool Size"
           value={(
             <div className="text-right">
-              <div className="font-mono">{formatCurrency(poolSize, currency, exchangeRates, { decimals: 2 })}</div>
-              {currency !== 'SOL' && (
-                <div className="text-xs font-mono" style={{ color: 'var(--text-tertiary)' }}>
-                  {formatWithSOLEquivalent(poolSize, currency, exchangeRates).equivalent}
-                </div>
-              )}
+              <div className="font-mono">{formatCurrency(poolSize, 'MNEE', null)}</div>
             </div>
           )}
           icon="mdi--database-outline"
@@ -365,12 +358,7 @@ function MarketStats({ marketInfo, poolSize, participantsCount, marketStatus, is
           label="Entry Fee"
           value={(
             <div className="text-right">
-              <div className="font-mono">{formatCurrency(entryFeeValue, currency, exchangeRates, { decimals: currency === 'SOL' ? 4 : 2 })}</div>
-              {currency !== 'SOL' && (
-                <div className="text-xs font-mono" style={{ color: 'var(--text-tertiary)' }}>
-                  {formatWithSOLEquivalent(entryFeeValue, currency, exchangeRates).equivalent}
-                </div>
-              )}
+              <div className="font-mono">{formatCurrency(entryFeeValue, 'MNEE', null)}</div>
             </div>
           )}
           icon="mdi--login"
@@ -843,9 +831,9 @@ function PageSkeleton() {
 export function MarketDetail() {
   const { marketAddress } = useParams<{ marketAddress: string }>()
   const { publicKey: userAddress } = useUnifiedWallet()
+  const { decimalBalance, formatAmount, toAtomicUnits, fromAtomicUnits } = useMnee()
   const { joinMarket, createSimilarMarket, getExplorerLink, isLoading, lastOperationId } = useSupabaseMarketActions()
   const { data: marketData, isLoading: isLoadingMarket, error: marketError, refetch: refetchMarket } = useSupabaseMarketData(marketAddress)
-  const { currency, exchangeRates } = useCurrency()
 
   const [selectedTeam, setSelectedTeam] = useState<number | null>(null)
   const [actionStatus, setActionStatus] = useState<{
@@ -853,7 +841,6 @@ export function MarketDetail() {
     message: string
     signature?: string
   } | null>(null)
-  const [showConfetti, setShowConfetti] = useState(false)
   const [showCreateSimilarDialog, setShowCreateSimilarDialog] = useState(false)
 
   // Scroll to top when component mounts or market address changes
@@ -988,26 +975,33 @@ export function MarketDetail() {
       return null
     }
 
-    const prediction = selectedTeam === 1 ? 'Home' : selectedTeam === 2 ? 'Away' : 'Draw'
-    return await joinMarket({
-      marketId: marketAddress!, // Using marketAddress as marketId for Supabase
-      prediction: prediction as 'Home' | 'Draw' | 'Away',
-    })
-  }, 'Failed to join market.')
-
-
-
-  const handleWithdraw = () => handleAction(async () => {
-    if (!marketAddress) {
-      setActionStatus({ type: 'error', message: 'Market address not found.' })
+    // Check MNEE balance before joining
+    if (!marketData) {
+      setActionStatus({ type: 'error', message: 'Market data not available.' })
       return null
     }
 
-    // Note: In the enhanced prediction system, winnings are automatically distributed
-    // This function is kept for interface compatibility but shows a message instead
-    setActionStatus({ type: 'info', message: 'Winnings are automatically distributed when markets resolve.' })
-    return null
-  }, 'Failed to withdraw funds.')
+    const entryFeeInMnee = fromAtomicUnits(marketData.entryFee)
+    
+    if (decimalBalance === null) {
+      setActionStatus({ type: 'error', message: 'Unable to check MNEE balance. Please try again.' })
+      return null
+    }
+
+    if (decimalBalance < entryFeeInMnee) {
+      setActionStatus({ 
+        type: 'error', 
+        message: `Insufficient MNEE balance. You need ${formatAmount(marketData.entryFee, { decimals: 5 })} but have ${formatAmount(toAtomicUnits(decimalBalance), { decimals: 5 })}.` 
+      })
+      return null
+    }
+
+    const prediction = selectedTeam === 1 ? 'HOME_WIN' : selectedTeam === 2 ? 'AWAY_WIN' : 'DRAW'
+    return await joinMarket({
+      marketId: marketAddress!, // Using marketAddress as marketId for Supabase
+      prediction: prediction as 'HOME_WIN' | 'DRAW' | 'AWAY_WIN',
+    })
+  }, 'Failed to join market.')
 
   const handleCreateSimilarMarket = async (params: CreateSimilarMarketParams) => {
     try {
@@ -1103,7 +1097,7 @@ export function MarketDetail() {
     if (isMatchStarted) {
       // In the enhanced prediction system, markets are resolved automatically
       // Show status message instead of manual resolution button
-      if (marketData?.status === 'resolved') {
+      if (marketData?.status === 'Resolved') {
         return <Button variant="secondary" disabled>Automatically Resolved</Button>
       }
       
@@ -1137,7 +1131,7 @@ export function MarketDetail() {
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
-      <Confetti trigger={showConfetti} />
+      <Confetti trigger={false} />
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <Link
@@ -1177,25 +1171,8 @@ export function MarketDetail() {
               participantData={participantData}
             />
 
-            {/* Data Visualizations */}
-            <div className="grid grid-cols-1 gap-6">
-              <PredictionDistributionChart markets={marketData
-                ? [{
-                    marketAddress: marketAddress!,
-                    matchId: BigInt(marketData.matchId),
-                    creator: marketData.creator,
-                    entryFee: BigInt(marketData.entryFee),
-                    isPublic: marketData.isPublic,
-                    startTime: BigInt(marketData.kickoffTime),
-                    resolved: marketData.status === 'Resolved',
-                    participantsCount: BigInt(marketData.participantCount),
-                    homeCount: BigInt(marketData.homeCount),
-                    awayCount: BigInt(marketData.awayCount),
-                    drawCount: BigInt(marketData.drawCount),
-                  }]
-                : []}
-              />
-            </div>
+            {/* Data Visualizations - Removed due to type compatibility issues */}
+            {/* TODO: Fix PredictionDistributionChart to work with MarketData type */}
 
           </div>
           <div className="lg:col-span-1">
@@ -1213,8 +1190,6 @@ export function MarketDetail() {
               userHasJoined={hasJoined}
               matchData={matchData}
               entryFeeValue={entryFeeValue}
-              currency={currency}
-              exchangeRates={exchangeRates}
               marketAddress={marketAddress!}
               userAddress={userAddress?.toString()}
               marketData={marketData}

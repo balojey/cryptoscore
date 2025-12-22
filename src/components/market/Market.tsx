@@ -19,12 +19,14 @@ import { MarqueeText } from '../MarqueeText'
 import { CompactWinningsDisplay } from '../WinningsDisplay'
 import { useWinnings } from '../../hooks/useWinnings'
 import { useSupabaseMarketData } from '../../hooks/useSupabaseMarketData'
+import { useMnee } from '../../hooks/useMnee'
 
-export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: MarketProps) {
+export function Market({ match, userHasMarket, marketId, refetchMarkets }: MarketProps) {
   const { publicKey: userAddress } = useUnifiedWallet()
+  const { decimalBalance, isLoadingBalance, formatAmount, toAtomicUnits } = useMnee()
   const [isCreating, setIsCreating] = useState(false)
   const [newlyCreatedMarket, setNewlyCreatedMarket] = useState<{ matchId: number, address: string } | null>(null)
-  const [entryFee, setEntryFee] = useState('0.1') // Default to 0.1 SOL
+  const [entryFee, setEntryFee] = useState('0.1') // Default to 0.1 MNEE
   const [isPublic, setIsPublic] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [transactionStatus, setTransactionStatus] = useState<{
@@ -61,8 +63,8 @@ export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: 
       return newlyCreatedMarket.address
     }
     // Priority 2: Address passed via props
-    if (marketAddress) {
-      return marketAddress
+    if (marketId) {
+      return marketId
     }
     return undefined
   }
@@ -74,8 +76,23 @@ export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: 
     setError(null)
     setTransactionStatus(null)
 
-    if (Number(entryFee) <= 0) {
+    const entryFeeNumber = Number(entryFee)
+    
+    // Validate entry fee amount
+    if (entryFeeNumber <= 0) {
       setError('Entry fee must be greater than 0.')
+      return
+    }
+
+    // Validate minimum MNEE amount (0.001 MNEE)
+    if (entryFeeNumber < 0.001) {
+      setError('Entry fee must be at least 0.001 MNEE.')
+      return
+    }
+
+    // Validate maximum MNEE amount (1000 MNEE)
+    if (entryFeeNumber > 1000) {
+      setError('Entry fee cannot exceed 1000 MNEE.')
       return
     }
 
@@ -84,8 +101,14 @@ export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: 
       return
     }
 
+    // Check if user has sufficient MNEE balance
+    if (decimalBalance !== null && decimalBalance < entryFeeNumber) {
+      setError(`Insufficient MNEE balance. You have ${formatAmount(toAtomicUnits(decimalBalance), { decimals: 5 })} but need ${formatAmount(toAtomicUnits(entryFeeNumber), { decimals: 5 })}.`)
+      return
+    }
+
     try {
-      setTransactionStatus({ type: 'info', message: 'Initializing market...' })
+      setTransactionStatus({ type: 'info', message: 'Creating MNEE market...' })
 
       const kickoffTime = Math.floor(new Date(match.utcDate).getTime() / 1000)
       const endTime = kickoffTime + (2 * 60 * 60) // 2 hours after kickoff
@@ -94,16 +117,20 @@ export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: 
         matchId: match.id.toString(),
         title: `${match.homeTeam.name} vs ${match.awayTeam.name}`,
         description: `Prediction market for ${match.competition.name} match`,
-        entryFee: Number(entryFee),
+        entryFee: entryFeeNumber,
         endTime,
         isPublic,
+        homeTeamId: match.homeTeam.id,
+        homeTeamName: match.homeTeam.name,
+        awayTeamId: match.awayTeam.id,
+        awayTeamName: match.awayTeam.name,
       })
       console.log('Market ID: ', marketId)
 
       if (marketId) {
         setTransactionStatus({
           type: 'success',
-          message: 'Market created successfully!',
+          message: 'MNEE market created successfully!',
           signature: marketId,
         })
 
@@ -216,29 +243,62 @@ export function Market({ match, userHasMarket, marketAddress, refetchMarkets }: 
                 {/* Entry Fee */}
                 <div>
                   <label htmlFor={`entryFee-${match.id}`} className="font-sans text-xs font-medium mb-2 block" style={{ color: 'var(--text-tertiary)' }}>
-                    Entry Fee (Tokens)
+                    Entry Fee (MNEE)
                   </label>
                   <Input
                     id={`entryFee-${match.id}`}
                     type="number"
                     step="0.001"
                     min="0.001"
-                    max="100"
+                    max="1000"
                     value={entryFee}
                     onChange={e => setEntryFee(e.target.value)}
                     placeholder="e.g., 0.1"
-                    disabled={isLoading}
+                    disabled={isLoading || isLoadingBalance}
                   />
                   <div className="flex justify-between items-center mt-1">
                     <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                      Minimum: 0.001 tokens
+                      Minimum: 0.001 MNEE
                     </p>
                     {Number(entryFee) > 0 && (
                       <p className="text-xs font-mono" style={{ color: 'var(--accent-cyan)' }}>
-                        {Number(entryFee).toFixed(3)} tokens
+                        {Number(entryFee).toFixed(5)} MNEE
                       </p>
                     )}
                   </div>
+                  {/* Balance Display */}
+                  {decimalBalance !== null && (
+                    <div className="mt-2 p-2 rounded-lg" style={{ background: 'var(--bg-secondary)' }}>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                          Your MNEE Balance:
+                        </span>
+                        <span className="text-xs font-mono" style={{ color: 'var(--accent-green)' }}>
+                          {formatAmount(toAtomicUnits(decimalBalance), { decimals: 5 })}
+                        </span>
+                      </div>
+                      {Number(entryFee) > 0 && decimalBalance >= Number(entryFee) && (
+                        <div className="flex justify-between items-center mt-1">
+                          <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                            After Creation:
+                          </span>
+                          <span className="text-xs font-mono" style={{ color: 'var(--text-tertiary)' }}>
+                            {formatAmount(toAtomicUnits(decimalBalance - Number(entryFee)), { decimals: 5 })}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {isLoadingBalance && (
+                    <div className="mt-2 p-2 rounded-lg" style={{ background: 'var(--bg-secondary)' }}>
+                      <div className="flex items-center gap-2">
+                        <span className="icon-[mdi--loading] animate-spin w-3 h-3" style={{ color: 'var(--text-tertiary)' }} />
+                        <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                          Loading MNEE balance...
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Public Toggle */}

@@ -6,55 +6,64 @@
  * - Automatic market resolution when matches finish
  * - Automated winnings calculation and distribution
  * - Creator reward calculation and distribution
+ * - MNEE token transfers for winners and creators
  *
  * This service eliminates manual intervention by automating the complete
  * market lifecycle from creation to resolution and payout.
  */
 
 import { DatabaseService } from './database-service'
+import { UserService } from './user-service'
 import { FootballDataService } from '../football-data'
+import { MneeService } from '../mnee/mnee-service'
 import type { Database } from '@/types/supabase'
 import type { MatchStatus } from '@/config/football-data'
+import type { TransferRecipient } from '../mnee/types'
 
 type Market = Database['public']['Tables']['markets']['Row']
 type Participant = Database['public']['Tables']['participants']['Row']
 type Transaction = Database['public']['Tables']['transactions']['Row']
 
 /**
- * Result of winnings calculation for a market
+ * Result of winnings calculation for a market (amounts in MNEE atomic units)
  */
 export interface WinningsCalculation {
   marketId: string
-  totalPool: number
-  platformFee: number
-  creatorReward: number
-  participantPool: number
+  totalPool: number // in MNEE atomic units
+  platformFee: number // in MNEE atomic units
+  creatorReward: number // in MNEE atomic units
+  participantPool: number // in MNEE atomic units
   winners: Participant[]
-  winningsPerWinner: number
+  winningsPerWinner: number // in MNEE atomic units
 }
 
 /**
- * Result of a transaction operation
+ * Result of a transaction operation with MNEE transfer details
  */
 export interface TransactionResult {
   transactionId: string
   userId: string
-  amount: number
+  amount: number // in MNEE atomic units
   type: Transaction['type']
   success: boolean
+  mneeTransferResult?: {
+    ticketId?: string
+    transactionId?: string
+    status: 'pending' | 'success' | 'failed'
+  }
   error?: string
 }
 
 /**
- * Result of market resolution process
+ * Result of market resolution process (amounts in MNEE atomic units)
  */
 export interface ResolutionResult {
   marketId: string
   outcome: string
   winnersCount: number
-  totalWinningsDistributed: number
-  creatorReward: number
-  platformFee: number
+  totalWinningsDistributed: number // in MNEE atomic units
+  creatorReward: number // in MNEE atomic units
+  platformFee: number // in MNEE atomic units
   transactionResults: TransactionResult[]
   success: boolean
   error?: string
@@ -93,6 +102,9 @@ export class AutomationService {
 
       for (const market of activeMarkets) {
         try {
+          if (!market.match_id) {
+            throw new Error('Market has no match_id')
+          }
           const result = await this.updateMarketStatus(market.match_id, market.status)
           results.push({
             marketId: market.id,
@@ -104,7 +116,7 @@ export class AutomationService {
         } catch (error) {
           results.push({
             marketId: market.id,
-            matchId: market.match_id,
+            matchId: market.match_id || 0,
             oldStatus: market.status,
             newStatus: market.status,
             updated: false,
@@ -167,7 +179,6 @@ export class AutomationService {
   private static mapApiStatusToDbStatus(apiStatus: MatchStatus): Market['status'] {
     switch (apiStatus) {
       case 'SCHEDULED':
-      case 'TIMED':
         return 'SCHEDULED'
       case 'LIVE':
       case 'IN_PLAY':
@@ -231,6 +242,10 @@ export class AutomationService {
    */
   private static async resolveMarket(market: Market): Promise<ResolutionResult> {
     try {
+      if (!market.match_id) {
+        throw new Error('Market has no match_id')
+      }
+      
       // Get match result from football-data API
       const matchResponse = await FootballDataService.getMatch(market.match_id)
       
@@ -247,7 +262,7 @@ export class AutomationService {
 
       // Update market with resolution outcome FIRST
       await DatabaseService.updateMarket(market.id, {
-        status: 'resolved',
+        status: 'FINISHED',
         resolution_outcome: outcome,
         updated_at: new Date().toISOString(),
       })
@@ -309,12 +324,12 @@ export class AutomationService {
     const participants = await DatabaseService.getMarketParticipants(marketId)
     
     // Use the same fee structure as MarketService
-    const totalPool = market.total_pool
+    const totalPool = market.total_pool || 0
     const platformFeePercentage = market.platform_fee_percentage || 0.03
     const creatorRewardPercentage = market.creator_reward_percentage || 0.02
     
-    const platformFee = totalPool * platformFeePercentage
-    const creatorReward = totalPool * creatorRewardPercentage
+    const platformFee = Math.floor(totalPool * platformFeePercentage)
+    const creatorReward = Math.floor(totalPool * creatorRewardPercentage)
     const participantPool = totalPool - platformFee - creatorReward
 
     // Find winners (this will be determined during resolution)
@@ -333,7 +348,7 @@ export class AutomationService {
   }
 
   /**
-   * Distribute winnings and creator rewards automatically
+   * Distribute winnings and creator rewards automatically with MNEE transfers
    */
   static async distributeWinnings(marketId: string): Promise<TransactionResult[]> {
     const market = await DatabaseService.getMarketById(marketId)
@@ -345,12 +360,27 @@ export class AutomationService {
     const results: TransactionResult[] = []
 
     try {
+      // Prepare MNEE transfers for winners
+      const mneeTransfers: TransferRecipient[] = []
+      
       // Distribute winnings to winners
       for (const winner of winningsCalc.winners) {
         try {
           // Update participant with actual winnings
           await DatabaseService.updateParticipant(winner.id, {
             actual_winnings: winningsCalc.winningsPerWinner,
+          })
+
+          // Get user's EVM address for MNEE transfer
+          const user = await UserService.getUserById(winner.user_id)
+          if (!user?.wallet_address) {
+            throw new Error(`No EVM wallet address found for user ${winner.user_id}`)
+          }
+
+          // Add to MNEE transfer batch (convert atomic units to MNEE tokens)
+          mneeTransfers.push({
+            address: user.wallet_address,
+            amount: winningsCalc.winningsPerWinner / 100000 // Convert atomic units to MNEE tokens
           })
 
           // Create winnings transaction with detailed metadata
@@ -361,6 +391,7 @@ export class AutomationService {
             entryAmount: winner.entry_amount,
             automatedTransfer: true,
             resolutionOutcome: market.resolution_outcome,
+            mneeTransferPending: true,
           }
 
           const transaction = await DatabaseService.createTransaction({
@@ -371,12 +402,6 @@ export class AutomationService {
             description: `Automated winnings from market resolution: ${market.resolution_outcome}`,
             status: 'PENDING',
             metadata: winningsMetadata,
-          })
-
-          // Mark transaction as completed
-          await DatabaseService.updateTransactionStatus(transaction.id, 'COMPLETED', {
-            ...winningsMetadata,
-            completedAt: new Date().toISOString(),
           })
 
           results.push({
@@ -395,6 +420,36 @@ export class AutomationService {
             success: false,
             error: (error as Error).message,
           })
+        }
+      }
+
+      // Execute MNEE transfers if there are any winners
+      if (mneeTransfers.length > 0) {
+        try {
+          await this.executeMneeTransfers(mneeTransfers, marketId, 'winnings')
+          
+          // Update all winner transactions to completed
+          for (const result of results) {
+            if (result.success && result.type === 'winnings') {
+              await DatabaseService.updateTransactionStatus(result.transactionId, 'COMPLETED', {
+                mneeTransferCompleted: true,
+                completedAt: new Date().toISOString(),
+              })
+            }
+          }
+        } catch (error) {
+          console.error('MNEE transfer failed for winners:', error)
+          // Mark transactions as failed
+          for (const result of results) {
+            if (result.success && result.type === 'winnings') {
+              await DatabaseService.updateTransactionStatus(result.transactionId, 'FAILED', {
+                mneeTransferError: (error as Error).message,
+                failedAt: new Date().toISOString(),
+              })
+              result.success = false
+              result.error = `MNEE transfer failed: ${(error as Error).message}`
+            }
+          }
         }
       }
 
@@ -477,11 +532,11 @@ export class AutomationService {
     }
 
     const creatorRewardPercentage = market.creator_reward_percentage || 0.02
-    return market.total_pool * creatorRewardPercentage
+    return Math.floor((market.total_pool || 0) * creatorRewardPercentage)
   }
 
   /**
-   * Distribute creator reward
+   * Distribute creator reward with MNEE transfer
    */
   static async distributeCreatorReward(marketId: string): Promise<TransactionResult> {
     const market = await DatabaseService.getMarketById(marketId)
@@ -492,12 +547,19 @@ export class AutomationService {
     const creatorReward = await this.calculateCreatorReward(marketId)
 
     try {
+      // Get creator's EVM address for MNEE transfer
+      const creator = await UserService.getUserById(market.creator_id)
+      if (!creator?.wallet_address) {
+        throw new Error(`No EVM wallet address found for creator ${market.creator_id}`)
+      }
+
       const creatorRewardMetadata = {
         marketId: marketId,
         matchId: market.match_id,
         totalPool: market.total_pool,
         rewardPercentage: market.creator_reward_percentage,
         automatedTransfer: true,
+        mneeTransferPending: true,
       }
 
       const transaction = await DatabaseService.createTransaction({
@@ -510,18 +572,45 @@ export class AutomationService {
         metadata: creatorRewardMetadata,
       })
 
-      // Mark transaction as completed
-      await DatabaseService.updateTransactionStatus(transaction.id, 'COMPLETED', {
-        ...creatorRewardMetadata,
-        completedAt: new Date().toISOString(),
-      })
+      // Execute MNEE transfer for creator reward
+      try {
+        const mneeTransfers: TransferRecipient[] = [{
+          address: creator.wallet_address,
+          amount: creatorReward / 100000 // Convert atomic units to MNEE tokens
+        }]
 
-      return {
-        transactionId: transaction.id,
-        userId: market.creator_id,
-        amount: creatorReward,
-        type: 'creator_reward',
-        success: true,
+        await this.executeMneeTransfers(mneeTransfers, marketId, 'creator_reward')
+
+        // Mark transaction as completed
+        await DatabaseService.updateTransactionStatus(transaction.id, 'COMPLETED', {
+          ...creatorRewardMetadata,
+          mneeTransferCompleted: true,
+          completedAt: new Date().toISOString(),
+        })
+
+        return {
+          transactionId: transaction.id,
+          userId: market.creator_id,
+          amount: creatorReward,
+          type: 'creator_reward',
+          success: true,
+        }
+      } catch (error) {
+        // Mark transaction as failed
+        await DatabaseService.updateTransactionStatus(transaction.id, 'FAILED', {
+          ...creatorRewardMetadata,
+          mneeTransferError: (error as Error).message,
+          failedAt: new Date().toISOString(),
+        })
+
+        return {
+          transactionId: transaction.id,
+          userId: market.creator_id,
+          amount: creatorReward,
+          type: 'creator_reward',
+          success: false,
+          error: `MNEE transfer failed: ${(error as Error).message}`,
+        }
       }
     } catch (error) {
       return {
@@ -532,6 +621,49 @@ export class AutomationService {
         success: false,
         error: (error as Error).message,
       }
+    }
+  }
+
+  /**
+   * Execute MNEE transfers using the MNEE service
+   * @param transfers - Array of transfer recipients
+   * @param marketId - Market ID for logging
+   * @param transferType - Type of transfer for logging
+   */
+  private static async executeMneeTransfers(
+    transfers: TransferRecipient[], 
+    marketId: string, 
+    transferType: 'winnings' | 'creator_reward'
+  ): Promise<void> {
+    try {
+      // Initialize MNEE service (this should be done once at app startup)
+      const mneeService = new MneeService()
+      
+      // Get platform private key from environment
+      const platformPrivateKey = process.env.MNEE_PLATFORM_PRIVATE_KEY
+      if (!platformPrivateKey) {
+        throw new Error('Platform private key not configured for MNEE transfers')
+      }
+
+      // Execute the transfer
+      const transferResult = await mneeService.transfer(transfers, platformPrivateKey)
+      
+      if (transferResult.status === 'failed') {
+        throw new Error(`MNEE transfer failed: ${transferResult.error || 'Unknown error'}`)
+      }
+
+      console.log(`MNEE ${transferType} transfer initiated for market ${marketId}:`, {
+        ticketId: transferResult.ticketId,
+        recipientCount: transfers.length,
+        totalAmount: transfers.reduce((sum, t) => sum + t.amount, 0)
+      })
+
+      // TODO: Implement transfer status monitoring
+      // We could add a background job to monitor transfer status using transferResult.ticketId
+      
+    } catch (error) {
+      console.error(`MNEE transfer execution failed for ${transferType}:`, error)
+      throw error
     }
   }
 

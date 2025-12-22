@@ -84,8 +84,8 @@
 - [x] 5. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 6. Integrate MNEE operations in market functionality
-  - [ ] 6.1 Update market creation to use MNEE
+- [x] 6. Integrate MNEE operations in market functionality
+  - [x] 6.1 Update market creation to use MNEE
     - Modify market creation forms to accept MNEE entry fees
     - Update validation to check MNEE amounts and ranges
     - Store entry fees in atomic units in database
@@ -95,7 +95,7 @@
     - **Property 5: Market operation MNEE integration**
     - **Validates: Requirements 5.1, 5.2, 5.3**
 
-  - [ ] 6.3 Update market joining logic for MNEE
+  - [x] 6.3 Update market joining logic for MNEE
     - Implement MNEE balance validation before allowing participation
     - Update participant creation to deduct MNEE from user balance
     - Add real-time balance updates after market joining
@@ -105,7 +105,7 @@
     - **Property 11: Real-time balance updates**
     - **Validates: Requirements 3.2, 12.1, 12.2, 12.4**
 
-  - [ ] 6.5 Implement MNEE-based winnings calculation and distribution
+  - [x] 6.5 Implement MNEE-based winnings calculation and distribution
     - Update winnings calculation to use MNEE atomic units
     - Implement automatic MNEE transfer for winners
     - Add creator reward distribution in MNEE tokens
