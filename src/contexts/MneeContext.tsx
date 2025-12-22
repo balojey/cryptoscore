@@ -1,11 +1,14 @@
 import type { TransferRecipient, TransferResult, FormatOptions, BalanceSubscriptionOptions } from '@/lib/mnee/types'
 import { createContext, use, useCallback, useEffect, useMemo, useState } from 'react'
 import { MneeService } from '@/lib/mnee/mnee-service'
+import { MneeErrorHandler } from '@/lib/mnee/error-handler'
+import type { UserFriendlyError } from '@/lib/mnee/error-handler'
 import { getNotificationService } from '@/lib/mnee/notification-service'
 import { MNEE_SDK_CONFIG, MNEE_UNITS } from '@/config/mnee'
 import { useUnifiedWallet } from './UnifiedWalletContext'
 import { UserService } from '@/lib/supabase/user-service'
 import type { Database } from '@/types/supabase'
+import { toast } from 'sonner'
 
 type User = Database['public']['Tables']['users']['Row']
 
@@ -27,6 +30,10 @@ export interface MneeContextType {
   isSubscribedToBalance: boolean
   subscriptionError: string | null
   
+  // Error Handling
+  lastError: UserFriendlyError | null
+  errorHistory: UserFriendlyError[]
+  
   // Operations
   refreshBalance(): Promise<void>
   transfer(recipients: TransferRecipient[]): Promise<TransferResult>
@@ -43,6 +50,8 @@ export interface MneeContextType {
   
   // Error Handling
   clearErrors(): void
+  retryLastOperation(): Promise<void>
+  getErrorStats(): any
 }
 
 const MneeContext = createContext<MneeContextType | undefined>(undefined)
@@ -64,6 +73,11 @@ export function MneeProvider({ children }: { children: React.ReactNode }) {
   const [isInitialized, setIsInitialized] = useState(false)
   const [isSubscribedToBalance, setIsSubscribedToBalance] = useState(false)
   const [subscriptionError, setSubscriptionError] = useState<string | null>(null)
+  
+  // Enhanced error handling state
+  const [lastError, setLastError] = useState<UserFriendlyError | null>(null)
+  const [errorHistory, setErrorHistory] = useState<UserFriendlyError[]>([])
+  const [lastFailedOperation, setLastFailedOperation] = useState<(() => Promise<any>) | null>(null)
   
   // Supabase user state
   const [supabaseUser, setSupabaseUser] = useState<User | null>(null)
@@ -109,7 +123,34 @@ export function MneeProvider({ children }: { children: React.ReactNode }) {
   }, [mneeService])
 
   /**
-   * Fetch balance for current user with optimistic updates
+   * Handle errors with user-friendly messages
+   */
+  const handleError = useCallback((error: unknown, operation: string) => {
+    const userFriendlyError = MneeErrorHandler.getUserFriendlyError(error, { operation })
+    
+    setLastError(userFriendlyError)
+    setErrorHistory(prev => [userFriendlyError, ...prev].slice(0, 10)) // Keep last 10 errors
+    
+    // Show toast notification for user
+    if (userFriendlyError.severity === 'high') {
+      toast.error(userFriendlyError.title, {
+        description: userFriendlyError.message,
+        action: userFriendlyError.canRetry ? {
+          label: 'Retry',
+          onClick: () => retryLastOperation()
+        } : undefined
+      })
+    } else if (userFriendlyError.severity === 'medium') {
+      toast.warning(userFriendlyError.title, {
+        description: userFriendlyError.message
+      })
+    }
+    
+    return userFriendlyError
+  }, [])
+
+  /**
+   * Fetch balance for current user with enhanced error handling
    */
   const refreshBalance = useCallback(async () => {
     if (!isInitialized || !walletAddress) {
@@ -118,34 +159,40 @@ export function MneeProvider({ children }: { children: React.ReactNode }) {
 
     setIsLoadingBalance(true)
     setBalanceError(null)
+    setLastError(null)
 
-    try {
-      const balanceData = await mneeService.getBalance(walletAddress)
-      
-      // Update state with optimistic updates
-      setBalance(balanceData.amount)
-      setDecimalBalance(balanceData.decimalAmount)
-      
-      // Update database cache if user is available
-      if (supabaseUser?.id) {
-        try {
-          const { DatabaseService } = await import('@/lib/supabase/database-service')
-          await DatabaseService.updateMneeBalanceCache(supabaseUser.id, walletAddress, balanceData.amount)
-        } catch (cacheError) {
-          console.warn('Failed to update balance cache:', cacheError)
+    const operation = async () => {
+      try {
+        const balanceData = await mneeService.getBalance(walletAddress)
+        
+        // Update state with optimistic updates
+        setBalance(balanceData.amount)
+        setDecimalBalance(balanceData.decimalAmount)
+        
+        // Update database cache if user is available
+        if (supabaseUser?.id) {
+          try {
+            const { DatabaseService } = await import('@/lib/supabase/database-service')
+            await DatabaseService.updateMneeBalanceCache(supabaseUser.id, walletAddress, balanceData.amount)
+          } catch (cacheError) {
+            console.warn('Failed to update balance cache:', cacheError)
+          }
         }
+      } catch (error) {
+        const userError = handleError(error, 'refreshBalance')
+        setBalanceError(userError.message)
+        throw error
+      } finally {
+        setIsLoadingBalance(false)
       }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch balance'
-      setBalanceError(errorMessage)
-      console.error('Balance fetch error:', error)
-    } finally {
-      setIsLoadingBalance(false)
     }
-  }, [mneeService, isInitialized, walletAddress, supabaseUser?.id])
+
+    setLastFailedOperation(() => operation)
+    await operation()
+  }, [mneeService, isInitialized, walletAddress, supabaseUser?.id, handleError])
 
   /**
-   * Transfer MNEE tokens with optimistic updates
+   * Transfer MNEE tokens with enhanced error handling and optimistic updates
    */
   const transfer = useCallback(async (recipients: TransferRecipient[]): Promise<TransferResult> => {
     if (!isInitialized) {
@@ -165,40 +212,54 @@ export function MneeProvider({ children }: { children: React.ReactNode }) {
     const originalBalance = balance
     const originalDecimalBalance = decimalBalance
     
-    try {
-      // Optimistic update - subtract transfer amount immediately
-      if (balance !== null && decimalBalance !== null) {
-        const newBalance = balance - totalAmount
-        const newDecimalBalance = MNEE_UNITS.fromAtomicUnits(newBalance)
-        setBalance(newBalance)
-        setDecimalBalance(newDecimalBalance)
-      }
-      
-      const result = await mneeService.transfer(recipients, privateKey)
-      
-      // If transfer failed, rollback optimistic update
-      if (result.status === 'failed') {
+    const operation = async () => {
+      try {
+        // Optimistic update - subtract transfer amount immediately
+        if (balance !== null && decimalBalance !== null) {
+          const newBalance = balance - totalAmount
+          const newDecimalBalance = MNEE_UNITS.fromAtomicUnits(newBalance)
+          setBalance(newBalance)
+          setDecimalBalance(newDecimalBalance)
+        }
+        
+        const result = await mneeService.transfer(recipients, privateKey)
+        
+        // If transfer failed, rollback optimistic update
+        if (result.status === 'failed') {
+          setBalance(originalBalance)
+          setDecimalBalance(originalDecimalBalance)
+          
+          const error = new Error(result.error || 'Transfer failed')
+          handleError(error, 'transfer')
+        } else {
+          // Show success notification
+          toast.success('Transfer Initiated', {
+            description: `Transfer of ${MNEE_UNITS.formatMneeAmount(totalAmount)} MNEE has been initiated`
+          })
+          
+          // Refresh balance after successful transfer to get accurate amount
+          setTimeout(() => {
+            refreshBalance()
+          }, 2000)
+        }
+        
+        return result
+      } catch (error) {
+        // Rollback optimistic update on error
         setBalance(originalBalance)
         setDecimalBalance(originalDecimalBalance)
-      } else {
-        // Refresh balance after successful transfer to get accurate amount
-        setTimeout(() => {
-          refreshBalance()
-        }, 2000)
+        
+        handleError(error, 'transfer')
+        throw error
       }
-      
-      return result
-    } catch (error) {
-      // Rollback optimistic update on error
-      setBalance(originalBalance)
-      setDecimalBalance(originalDecimalBalance)
-      console.error('Transfer error:', error)
-      throw error
     }
-  }, [mneeService, isInitialized, refreshBalance, balance, decimalBalance])
+
+    setLastFailedOperation(() => operation)
+    return await operation()
+  }, [mneeService, isInitialized, refreshBalance, balance, decimalBalance, handleError])
 
   /**
-   * Enable real-time balance subscription
+   * Enable real-time balance subscription with enhanced error handling
    */
   const enableBalanceSubscription = useCallback((options?: BalanceSubscriptionOptions) => {
     if (!isInitialized || !walletAddress || isSubscribedToBalance) {
@@ -207,6 +268,7 @@ export function MneeProvider({ children }: { children: React.ReactNode }) {
 
     try {
       setSubscriptionError(null)
+      setLastError(null)
       
       // Subscribe to balance changes
       const unsubscribeBalance = mneeService.subscribeToBalance(
@@ -245,11 +307,10 @@ export function MneeProvider({ children }: { children: React.ReactNode }) {
       
       console.log('Balance subscription enabled for:', walletAddress)
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to enable balance subscription'
-      setSubscriptionError(errorMessage)
-      console.error('Balance subscription error:', error)
+      const userError = handleError(error, 'enableBalanceSubscription')
+      setSubscriptionError(userError.message)
     }
-  }, [mneeService, isInitialized, walletAddress, isSubscribedToBalance, supabaseUser?.id, notificationService])
+  }, [mneeService, isInitialized, walletAddress, isSubscribedToBalance, supabaseUser?.id, notificationService, handleError])
 
   /**
    * Disable real-time balance subscription
@@ -301,6 +362,37 @@ export function MneeProvider({ children }: { children: React.ReactNode }) {
   const clearErrors = useCallback(() => {
     setBalanceError(null)
     setSubscriptionError(null)
+    setLastError(null)
+    setLastFailedOperation(null)
+  }, [])
+
+  /**
+   * Retry the last failed operation
+   */
+  const retryLastOperation = useCallback(async () => {
+    if (!lastFailedOperation) {
+      console.warn('No failed operation to retry')
+      return
+    }
+
+    try {
+      await lastFailedOperation()
+      setLastFailedOperation(null)
+      setLastError(null)
+      toast.success('Operation Successful', {
+        description: 'The operation completed successfully'
+      })
+    } catch (error) {
+      console.error('Retry failed:', error)
+      // Error is already handled by the operation itself
+    }
+  }, [lastFailedOperation])
+
+  /**
+   * Get error statistics from error handler
+   */
+  const getErrorStats = useCallback(() => {
+    return MneeErrorHandler.getErrorStats()
   }, [])
 
   /**
@@ -371,6 +463,8 @@ export function MneeProvider({ children }: { children: React.ReactNode }) {
       isInitialized,
       isSubscribedToBalance,
       subscriptionError,
+      lastError,
+      errorHistory,
       refreshBalance,
       transfer,
       enableBalanceSubscription,
@@ -380,6 +474,8 @@ export function MneeProvider({ children }: { children: React.ReactNode }) {
       toAtomicUnits,
       fromAtomicUnits,
       clearErrors,
+      retryLastOperation,
+      getErrorStats,
     }),
     [
       balance,
@@ -391,6 +487,8 @@ export function MneeProvider({ children }: { children: React.ReactNode }) {
       isInitialized,
       isSubscribedToBalance,
       subscriptionError,
+      lastError,
+      errorHistory,
       refreshBalance,
       transfer,
       enableBalanceSubscription,
@@ -400,6 +498,8 @@ export function MneeProvider({ children }: { children: React.ReactNode }) {
       toAtomicUnits,
       fromAtomicUnits,
       clearErrors,
+      retryLastOperation,
+      getErrorStats,
     ],
   )
 

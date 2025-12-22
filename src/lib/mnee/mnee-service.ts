@@ -23,6 +23,7 @@ import {
   MneeConfigurationError
 } from './types'
 import { MneeCircuitBreaker } from './circuit-breaker'
+import { DatabaseConsistencyService } from './database-consistency'
 import {
   retryWithBackoff,
   isValidEvmAddress,
@@ -32,6 +33,7 @@ import {
   batchArray,
   generateCorrelationId
 } from './utils'
+import { MneeErrorHandler } from './error-handler'
 import { MNEE_TOKEN_CONFIG, MNEE_FEE_CONFIG } from '../../config/mnee'
 import { getBalanceSubscriptionService } from './balance-subscription-service'
 import type { BalanceSubscriptionOptions } from './balance-subscription-service'
@@ -40,7 +42,6 @@ export class MneeService implements MneeServiceInterface {
   private sdk: Mnee | null = null
   private config: MneeConfig | null = null
   private circuitBreaker: MneeCircuitBreaker
-  private balanceSubscriptions = new Map<string, Set<BalanceCallback>>()
   private isInitialized = false
 
   // Default configurations
@@ -116,7 +117,7 @@ export class MneeService implements MneeServiceInterface {
   }
 
   /**
-   * Get balance for a single address
+   * Get balance for a single address with enhanced error handling
    */
   async getBalance(address: string): Promise<MneeBalance> {
     this.ensureInitialized()
@@ -124,36 +125,40 @@ export class MneeService implements MneeServiceInterface {
 
     const correlationId = generateCorrelationId()
     
-    try {
-      return await this.circuitBreaker.execute(async () => {
-        return await retryWithBackoff(async () => {
-          console.log(`[${correlationId}] Fetching balance for address: ${address}`)
-          
-          const response: MNEEBalance = await withTimeout(
-            this.sdk!.balance(address),
-            10000, // 10 second timeout
-            'Balance query timed out'
-          )
+    return await MneeErrorHandler.handleOperation(
+      async () => {
+        console.log(`[${correlationId}] Fetching balance for address: ${address}`)
+        
+        const response: MNEEBalance = await withTimeout(
+          this.sdk!.balance(address),
+          10000, // 10 second timeout
+          'Balance query timed out'
+        )
 
-          const atomicAmount = response.amount || 0
-          const balance: MneeBalance = {
-            address,
-            amount: atomicAmount,
-            decimalAmount: response.decimalAmount || this.fromAtomicUnits(atomicAmount),
-            lastUpdated: Date.now()
-          }
+        const atomicAmount = response.amount || 0
+        const balance: MneeBalance = {
+          address,
+          amount: atomicAmount,
+          decimalAmount: response.decimalAmount || this.fromAtomicUnits(atomicAmount),
+          lastUpdated: Date.now()
+        }
 
-          console.log(`[${correlationId}] Balance fetched: ${this.formatMneeAmount(atomicAmount)}`)
-          return balance
-        }, this.getRetryConfig())
-      })
-    } catch (error) {
-      console.error(`[${correlationId}] Balance query failed:`, error)
-      throw new MneeNetworkError(
-        `Failed to get balance for address ${address}: ${formatErrorMessage(error)}`,
-        { address, correlationId, originalError: error }
-      )
-    }
+        console.log(`[${correlationId}] Balance fetched: ${this.formatMneeAmount(atomicAmount)}`)
+        return balance
+      },
+      {
+        operation: 'getBalance',
+        correlationId,
+        address
+      },
+      this.getRetryConfig(),
+      {
+        enableRetry: true,
+        fallbackToCache: true,
+        notifyUser: false, // Don't notify for balance queries
+        logError: true
+      }
+    )
   }
 
   /**
@@ -210,7 +215,7 @@ export class MneeService implements MneeServiceInterface {
   }
 
   /**
-   * Transfer MNEE tokens to recipients
+   * Transfer MNEE tokens to recipients with enhanced error handling
    */
   async transfer(recipients: TransferRecipient[], privateKey: string): Promise<TransferResult> {
     this.ensureInitialized()
@@ -218,41 +223,47 @@ export class MneeService implements MneeServiceInterface {
     this.validateTransferRecipients(recipients)
 
     const correlationId = generateCorrelationId()
+    const totalAmount = recipients.reduce((sum, r) => sum + this.toAtomicUnits(r.amount), 0)
+    
     console.log(`[${correlationId}] Initiating transfer to ${recipients.length} recipients`)
 
-    try {
-      return await this.circuitBreaker.execute(async () => {
-        return await retryWithBackoff(async () => {
-          // Convert recipients to the format expected by SDK
-          const sendMneeRequests: SendMNEE[] = recipients.map(recipient => ({
-            address: recipient.address,
-            amount: this.toAtomicUnits(recipient.amount)
-          }))
+    return await MneeErrorHandler.handleOperation(
+      async () => {
+        // Convert recipients to the format expected by SDK
+        const sendMneeRequests: SendMNEE[] = recipients.map(recipient => ({
+          address: recipient.address,
+          amount: this.toAtomicUnits(recipient.amount)
+        }))
 
-          const response: TransferResponse = await withTimeout(
-            this.sdk!.transfer(sendMneeRequests, privateKey),
-            30000, // 30 second timeout for transfers
-            'Transfer operation timed out'
-          )
+        const response: TransferResponse = await withTimeout(
+          this.sdk!.transfer(sendMneeRequests, privateKey),
+          30000, // 30 second timeout for transfers
+          'Transfer operation timed out'
+        )
 
-          const result: TransferResult = {
-            ticketId: response.ticketId,
-            transactionId: response.rawtx ? 'pending' : undefined,
-            status: response.ticketId ? 'pending' : 'failed'
-          }
+        const result: TransferResult = {
+          ticketId: response.ticketId,
+          transactionId: response.rawtx ? 'pending' : undefined,
+          status: response.ticketId ? 'pending' : 'failed'
+        }
 
-          console.log(`[${correlationId}] Transfer initiated with ticket ID: ${result.ticketId}`)
-          return result
-        }, this.getRetryConfig())
-      })
-    } catch (error) {
-      console.error(`[${correlationId}] Transfer failed:`, error)
-      
-      throw new MneeNetworkError(
-        `Transfer failed: ${formatErrorMessage(error)}`,
-        { recipients, correlationId, originalError: error }
-      )
-    }
+        console.log(`[${correlationId}] Transfer initiated with ticket ID: ${result.ticketId}`)
+        return result
+      },
+      {
+        operation: 'transfer',
+        correlationId,
+        amount: totalAmount
+      },
+      this.getRetryConfig(),
+      {
+        enableRetry: true,
+        maxRetries: 2, // Fewer retries for transfers to avoid double-spending
+        fallbackToCache: false,
+        notifyUser: true,
+        logError: true
+      }
+    )
   }
 
   /**
@@ -277,7 +288,7 @@ export class MneeService implements MneeServiceInterface {
   }
 
   /**
-   * Get transaction status by ticket ID
+   * Get transaction status by ticket ID with enhanced error handling
    */
   async getTransactionStatus(ticketId: string): Promise<TransactionStatus> {
     this.ensureInitialized()
@@ -288,41 +299,45 @@ export class MneeService implements MneeServiceInterface {
 
     const correlationId = generateCorrelationId()
 
-    try {
-      return await this.circuitBreaker.execute(async () => {
-        return await retryWithBackoff(async () => {
-          console.log(`[${correlationId}] Checking status for ticket: ${ticketId}`)
-          
-          const response: TransferStatus = await withTimeout(
-            this.sdk!.getTxStatus(ticketId),
-            10000,
-            'Transaction status query timed out'
-          )
+    return await MneeErrorHandler.handleOperation(
+      async () => {
+        console.log(`[${correlationId}] Checking status for ticket: ${ticketId}`)
+        
+        const response: TransferStatus = await withTimeout(
+          this.sdk!.getTxStatus(ticketId),
+          10000,
+          'Transaction status query timed out'
+        )
 
-          // Map SDK status to our status format
-          let status: 'pending' | 'confirmed' | 'failed' = 'pending'
-          if (response.status === 'SUCCESS' || response.status === 'MINED') {
-            status = 'confirmed'
-          } else if (response.status === 'FAILED') {
-            status = 'failed'
-          }
+        // Map SDK status to our status format
+        let status: 'pending' | 'confirmed' | 'failed' = 'pending'
+        if (response.status === 'SUCCESS' || response.status === 'MINED') {
+          status = 'confirmed'
+        } else if (response.status === 'FAILED') {
+          status = 'failed'
+        }
 
-          return {
-            ticketId,
-            status,
-            confirmations: response.status === 'MINED' ? 1 : 0,
-            timestamp: new Date(response.createdAt).getTime(),
-            error: response.errors || undefined
-          }
-        }, this.getRetryConfig())
-      })
-    } catch (error) {
-      console.error(`[${correlationId}] Transaction status query failed:`, error)
-      throw new MneeNetworkError(
-        `Failed to get transaction status: ${formatErrorMessage(error)}`,
-        { ticketId, correlationId, originalError: error }
-      )
-    }
+        return {
+          ticketId,
+          status,
+          confirmations: response.status === 'MINED' ? 1 : 0,
+          timestamp: new Date(response.createdAt).getTime(),
+          error: response.errors || undefined
+        }
+      },
+      {
+        operation: 'getTransactionStatus',
+        correlationId,
+        ticketId
+      },
+      this.getRetryConfig(),
+      {
+        enableRetry: true,
+        fallbackToCache: false,
+        notifyUser: false,
+        logError: true
+      }
+    )
   }
 
   /**
@@ -482,5 +497,33 @@ export class MneeService implements MneeServiceInterface {
    */
   getBalanceSubscriptionService() {
     return getBalanceSubscriptionService(this)
+  }
+
+  /**
+   * Get the database consistency service instance
+   */
+  getDatabaseConsistencyService() {
+    return DatabaseConsistencyService
+  }
+
+  /**
+   * Perform balance reconciliation for a user
+   */
+  async reconcileUserBalance(userId: string, address: string): Promise<any> {
+    return await DatabaseConsistencyService.reconcileBalance(userId, address, this)
+  }
+
+  /**
+   * Rollback a failed transaction
+   */
+  async rollbackTransaction(transactionId: string, reason: string): Promise<any> {
+    return await DatabaseConsistencyService.rollbackTransaction(transactionId, reason)
+  }
+
+  /**
+   * Log audit entry for MNEE operations
+   */
+  async logAuditEntry(entry: any): Promise<void> {
+    return await DatabaseConsistencyService.logAuditEntry(entry)
   }
 }

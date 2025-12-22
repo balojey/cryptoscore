@@ -2,6 +2,9 @@
 export { MneeService } from './mnee-service.js'
 export { MneeCircuitBreaker } from './circuit-breaker.js'
 export { MneeUnitConverter } from './unit-conversion.js'
+export { MneeErrorHandler } from './error-handler.js'
+export { DatabaseConsistencyService } from './database-consistency.js'
+export { MneeTransactionService } from './transaction-service.js'
 export { 
   MneeBalanceSubscriptionService, 
   getBalanceSubscriptionService, 
