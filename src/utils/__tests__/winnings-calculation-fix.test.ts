@@ -8,20 +8,23 @@ describe('Winnings Calculation Fix - User Scenario', () => {
     // Person 1: Home, Person 2: Away, Person 3: Draw
     // 4th user wants to see potential winnings
     const marketData: MarketData = {
-      marketAddress: 'test-market-address',
-      creator: 'test-creator-address',
+      id: 'test-market-id',
+      creator_id: 'test-creator-address',
       matchId: 'test-match-123',
-      entryFee: 100000000, // 0.1 SOL in lamports
-      kickoffTime: Date.now() + 3600000,
-      endTime: Date.now() + 7200000,
-      status: 'Open',
-      outcome: null,
-      totalPool: 300000000, // 3 * 0.1 SOL = 0.3 SOL
+      title: 'Test Market',
+      description: 'Test market description',
+      entry_fee: 100000000, // 0.1 SOL in lamports
+      end_time: new Date(Date.now() + 7200000).toISOString(),
+      status: 'active',
+      resolution_outcome: null,
+      total_pool: 300000000, // 3 * 0.1 SOL = 0.3 SOL
+      platform_fee_percentage: 5,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
       participantCount: 3,
       homeCount: 1, // Person 1
       drawCount: 1, // Person 3
-      awayCount: 1, // Person 2
-      isPublic: true
+      awayCount: 1 // Person 2
     }
 
     // Calculate potential winnings for 4th user joining with Home prediction
@@ -44,20 +47,23 @@ describe('Winnings Calculation Fix - User Scenario', () => {
   it('should calculate correct potential winnings when 5th user joins after 4th', () => {
     // Scenario continues: 4th user joined with Home, now 5th user wants to join with Home too
     const marketDataAfter4thUser: MarketData = {
-      marketAddress: 'test-market-address',
-      creator: 'test-creator-address',
+      id: 'test-market-id',
+      creator_id: 'test-creator-address',
       matchId: 'test-match-123',
-      entryFee: 100000000, // 0.1 SOL in lamports
-      kickoffTime: Date.now() + 3600000,
-      endTime: Date.now() + 7200000,
-      status: 'Open',
-      outcome: null,
-      totalPool: 400000000, // 4 * 0.1 SOL = 0.4 SOL
+      title: 'Test Market',
+      description: 'Test market description',
+      entry_fee: 100000000, // 0.1 SOL in lamports
+      end_time: new Date(Date.now() + 7200000).toISOString(),
+      status: 'active',
+      resolution_outcome: null,
+      total_pool: 400000000, // 4 * 0.1 SOL = 0.4 SOL
+      platform_fee_percentage: 5,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
       participantCount: 4,
       homeCount: 2, // Person 1 + 4th user
       drawCount: 1, // Person 3
-      awayCount: 1, // Person 2
-      isPublic: true
+      awayCount: 1 // Person 2
     }
 
     // Calculate potential winnings for 5th user joining with Home prediction
@@ -80,20 +86,23 @@ describe('Winnings Calculation Fix - User Scenario', () => {
   it('should show higher potential winnings for unpredicted outcomes', () => {
     // Market with only Home and Away predictions, no Draw predictions yet
     const marketData: MarketData = {
-      marketAddress: 'test-market-address',
-      creator: 'test-creator-address',
+      id: 'test-market-id',
+      creator_id: 'test-creator-address',
       matchId: 'test-match-123',
-      entryFee: 100000000, // 0.1 SOL in lamports
-      kickoffTime: Date.now() + 3600000,
-      endTime: Date.now() + 7200000,
-      status: 'Open',
-      outcome: null,
-      totalPool: 300000000, // 3 * 0.1 SOL = 0.3 SOL
+      title: 'Test Market',
+      description: 'Test market description',
+      entry_fee: 100000000, // 0.1 SOL in lamports
+      end_time: new Date(Date.now() + 7200000).toISOString(),
+      status: 'active',
+      resolution_outcome: null,
+      total_pool: 300000000, // 3 * 0.1 SOL = 0.3 SOL
+      platform_fee_percentage: 5,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
       participantCount: 3,
       homeCount: 2,
       drawCount: 0, // No Draw predictions yet
-      awayCount: 1,
-      isPublic: true
+      awayCount: 1
     }
 
     const drawWinnings = WinningsCalculator.calculatePotentialWinnings(marketData, 'Draw')

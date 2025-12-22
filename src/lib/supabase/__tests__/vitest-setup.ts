@@ -38,7 +38,6 @@ vi.mock('../market-service', async () => {
   return {
     ...actual,
     MarketService: {
-      ...actual.MarketService,
       // Override methods to use MockDatabaseService
       getUserTransactions: MockDatabaseService.getUserTransactions,
       getMarketTransactions: MockDatabaseService.getMarketTransactions,
@@ -159,6 +158,9 @@ vi.mock('../market-service', async () => {
       },
       resolveMarket: async (params: any) => {
         throw new Error('Manual market resolution has been disabled. Markets are now resolved automatically.')
+      },
+      canUserResolveMarket: async (_marketId: string, _userId: string) => {
+        return false // Manual resolution is deprecated
       },
       getMarketById: MockDatabaseService.getMarketById,
       updateMarket: MockDatabaseService.updateMarket,

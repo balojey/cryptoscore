@@ -6,20 +6,23 @@ describe('Average Potential Winnings Calculation', () => {
   it('should calculate correct average potential winnings for balanced market', () => {
     // Market with equal distribution: 1 Home, 1 Draw, 1 Away
     const marketData: MarketData = {
-      marketAddress: 'test-market-address',
-      creator: 'test-creator-address',
+      id: 'test-market-id',
+      creator_id: 'test-creator-address',
       matchId: 'test-match-123',
-      entryFee: 100000000, // 0.1 SOL in lamports
-      kickoffTime: Date.now() + 3600000,
-      endTime: Date.now() + 7200000,
-      status: 'Open',
-      outcome: null,
-      totalPool: 300000000, // 3 * 0.1 SOL = 0.3 SOL
+      title: 'Test Market',
+      description: 'Test market description',
+      entry_fee: 100000000, // 0.1 SOL in lamports
+      end_time: new Date(Date.now() + 7200000).toISOString(),
+      status: 'active',
+      resolution_outcome: null,
+      total_pool: 300000000, // 3 * 0.1 SOL = 0.3 SOL
+      platform_fee_percentage: 5,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
       participantCount: 3,
       homeCount: 1,
       drawCount: 1,
-      awayCount: 1,
-      isPublic: true
+      awayCount: 1
     }
 
     const result = WinningsCalculator.calculateAveragePotentialWinnings(marketData)
@@ -44,20 +47,23 @@ describe('Average Potential Winnings Calculation', () => {
   it('should calculate correct average potential winnings for unbalanced market', () => {
     // Market with uneven distribution: 2 Home, 0 Draw, 1 Away
     const marketData: MarketData = {
-      marketAddress: 'test-market-address',
-      creator: 'test-creator-address',
+      id: 'test-market-id',
+      creator_id: 'test-creator-address',
       matchId: 'test-match-123',
-      entryFee: 100000000, // 0.1 SOL in lamports
-      kickoffTime: Date.now() + 3600000,
-      endTime: Date.now() + 7200000,
-      status: 'Open',
-      outcome: null,
-      totalPool: 300000000, // 3 * 0.1 SOL = 0.3 SOL
+      title: 'Test Market',
+      description: 'Test market description',
+      entry_fee: 100000000, // 0.1 SOL in lamports
+      end_time: new Date(Date.now() + 7200000).toISOString(),
+      status: 'active',
+      resolution_outcome: null,
+      total_pool: 300000000, // 3 * 0.1 SOL = 0.3 SOL
+      platform_fee_percentage: 5,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
       participantCount: 3,
       homeCount: 2,
       drawCount: 0, // No Draw predictions yet
-      awayCount: 1,
-      isPublic: true
+      awayCount: 1
     }
 
     const result = WinningsCalculator.calculateAveragePotentialWinnings(marketData)
@@ -80,20 +86,23 @@ describe('Average Potential Winnings Calculation', () => {
   it('should handle empty market correctly', () => {
     // Market with no participants yet
     const marketData: MarketData = {
-      marketAddress: 'test-market-address',
-      creator: 'test-creator-address',
+      id: 'test-market-id',
+      creator_id: 'test-creator-address',
       matchId: 'test-match-123',
-      entryFee: 100000000, // 0.1 SOL in lamports
-      kickoffTime: Date.now() + 3600000,
-      endTime: Date.now() + 7200000,
-      status: 'Open',
-      outcome: null,
-      totalPool: 0,
+      title: 'Test Market',
+      description: 'Test market description',
+      entry_fee: 100000000, // 0.1 SOL in lamports
+      end_time: new Date(Date.now() + 7200000).toISOString(),
+      status: 'active',
+      resolution_outcome: null,
+      total_pool: 0,
+      platform_fee_percentage: 5,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
       participantCount: 0,
       homeCount: 0,
       drawCount: 0,
-      awayCount: 0,
-      isPublic: true
+      awayCount: 0
     }
 
     const result = WinningsCalculator.calculateAveragePotentialWinnings(marketData)
@@ -109,20 +118,23 @@ describe('Average Potential Winnings Calculation', () => {
   it('should show higher average when unpopular predictions are available', () => {
     // Market where most people chose Home, making Draw/Away more valuable
     const marketData: MarketData = {
-      marketAddress: 'test-market-address',
-      creator: 'test-creator-address',
+      id: 'test-market-id',
+      creator_id: 'test-creator-address',
       matchId: 'test-match-123',
-      entryFee: 100000000, // 0.1 SOL in lamports
-      kickoffTime: Date.now() + 3600000,
-      endTime: Date.now() + 7200000,
-      status: 'Open',
-      outcome: null,
-      totalPool: 500000000, // 5 * 0.1 SOL = 0.5 SOL
+      title: 'Test Market',
+      description: 'Test market description',
+      entry_fee: 100000000, // 0.1 SOL in lamports
+      end_time: new Date(Date.now() + 7200000).toISOString(),
+      status: 'active',
+      resolution_outcome: null,
+      total_pool: 500000000, // 5 * 0.1 SOL = 0.5 SOL
+      platform_fee_percentage: 5,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
       participantCount: 5,
       homeCount: 4, // Most people chose Home
       drawCount: 0,
-      awayCount: 1,
-      isPublic: true
+      awayCount: 1
     }
 
     const result = WinningsCalculator.calculateAveragePotentialWinnings(marketData)

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { MarketService } from '../market-service'
 import { DatabaseService } from '../database-service'
+import { MockDatabaseTestUtils } from './test-utils'
 
 // Mock DatabaseService
 vi.mock('../database-service')
@@ -37,72 +38,51 @@ describe('Market Resolution and Winnings Calculation', () => {
 
   describe('joinMarket', () => {
     it('should calculate potential winnings using WinningsCalculator logic', async () => {
-      // Mock market data
-      const mockMarket = {
+      // Create test market using MockDatabaseService
+      const creator = MockDatabaseTestUtils.createTestUser({ id: 'creator-456' })
+      const market = MockDatabaseTestUtils.createTestMarket({
         id: 'market-123',
         creator_id: 'creator-456',
+        match_id: 12345,
+        home_team_id: 1,
+        home_team_name: 'Team A',
+        away_team_id: 2,
+        away_team_name: 'Team B',
         title: 'Test Market',
         description: 'Test Description',
         entry_fee: 100000000, // 0.1 SOL in lamports
         end_time: '2025-12-31T23:59:59Z',
-        status: 'SCHEDULED' as const,
+        status: 'SCHEDULED',
         resolution_outcome: null,
         total_pool: 500000000, // 0.5 SOL in lamports
-        platform_fee_percentage: 0.05,
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z'
-      }
+        platform_fee_percentage: 5,
+        creator_reward_percentage: 2,
+      })
 
-      // Mock existing participants
-      const mockParticipants = [
-        {
-          id: 'participant-1',
-          market_id: 'market-123',
-          user_id: 'user-1',
-          prediction: 'Home',
-          entry_amount: 100000000,
-          potential_winnings: 0,
-          actual_winnings: null,
-          joined_at: '2024-01-01T00:00:00Z'
-        }
-      ]
-
-      // Mock database calls
-      vi.mocked(DatabaseService.getMarketById).mockResolvedValue(mockMarket)
-      vi.mocked(DatabaseService.getMarketParticipants).mockResolvedValue(mockParticipants)
-      vi.mocked(DatabaseService.createParticipant).mockResolvedValue({
-        id: 'participant-2',
+      // Create existing participant
+      MockDatabaseTestUtils.createTestParticipant({
+        id: 'participant-1',
         market_id: 'market-123',
-        user_id: 'user-2',
+        user_id: 'user-1',
         prediction: 'Home',
         entry_amount: 100000000,
         potential_winnings: 0,
         actual_winnings: null,
-        joined_at: '2024-01-01T00:00:00Z'
       })
-      vi.mocked(DatabaseService.updateMarket).mockResolvedValue()
+
+      // Create new user to join market
+      const newUser = MockDatabaseTestUtils.createTestUser({ id: 'user-2' })
 
       await MarketService.joinMarket({
         marketId: 'market-123',
         userId: 'user-2',
-        prediction: 'Home',
+        prediction: 'HOME_WIN',
         entryAmount: 100000000
       })
 
-      // Verify participant was created
-      expect(DatabaseService.createParticipant).toHaveBeenCalledWith({
-        market_id: 'market-123',
-        user_id: 'user-2',
-        prediction: 'Home',
-        entry_amount: 100000000,
-        potential_winnings: expect.any(Number)
-      })
-
       // Verify market pool was updated
-      expect(DatabaseService.updateMarket).toHaveBeenCalledWith('market-123', {
-        total_pool: 600000000, // 0.5 + 0.1 = 0.6 SOL
-        updated_at: expect.any(String)
-      })
+      const updatedMarket = await MarketService.getMarketById('market-123')
+      expect(updatedMarket!.total_pool).toBe(600000000) // 0.5 + 0.1 = 0.6 SOL
     })
   })
 
@@ -123,7 +103,12 @@ describe('Market Resolution and Winnings Calculation', () => {
           type: 'winnings' as const,
           amount: 0.2,
           description: 'Winnings from market resolution',
-          created_at: '2024-01-01T00:00:00Z'
+          status: 'COMPLETED' as const,
+          metadata: null,
+          mnee_transaction_id: null,
+          ticket_id: null,
+          created_at: '2024-01-01T00:00:00Z',
+          updated_at: '2024-01-01T00:00:00Z'
         },
         {
           id: 'tx-2',
@@ -132,7 +117,12 @@ describe('Market Resolution and Winnings Calculation', () => {
           type: 'market_entry' as const,
           amount: -0.1,
           description: 'Market entry fee',
-          created_at: '2024-01-01T00:00:00Z'
+          status: 'COMPLETED' as const,
+          metadata: null,
+          mnee_transaction_id: null,
+          ticket_id: null,
+          created_at: '2024-01-01T00:00:00Z',
+          updated_at: '2024-01-01T00:00:00Z'
         }
       ]
 

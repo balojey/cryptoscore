@@ -81,7 +81,7 @@
     - **Property 14: Data validation ranges**
     - **Validates: Requirements 11.5**
 
-- [ ] 5. Checkpoint - Ensure all tests pass
+- [x] 5. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 6. Integrate MNEE operations in market functionality

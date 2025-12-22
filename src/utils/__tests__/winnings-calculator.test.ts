@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { WinningsCalculator, MarketDisplayState } from '../winnings-calculator'
+import { WinningsCalculator } from '../winnings-calculator'
 import type { MarketData } from '../../hooks/useMarketData'
 import type { ParticipantData } from '../../hooks/useParticipantData'
 import type { EnhancedMatchData } from '../../hooks/useMatchData'
@@ -7,28 +7,34 @@ import type { EnhancedMatchData } from '../../hooks/useMatchData'
 describe('WinningsCalculator', () => {
   // Mock data for testing
   const mockMarketData: MarketData = {
-    marketAddress: 'test-market-address',
-    creator: 'test-creator-address',
+    id: 'test-market-id',
+    creator_id: 'test-creator-address',
     matchId: 'test-match-123',
-    entryFee: 1000000000, // 1 SOL in lamports
-    kickoffTime: Date.now() + 3600000, // 1 hour from now
-    endTime: Date.now() + 7200000, // 2 hours from now
-    status: 'Open',
-    outcome: null,
-    totalPool: 5000000000, // 5 SOL in lamports
+    title: 'Test Market',
+    description: 'Test market description',
+    entry_fee: 1000000000, // 1 SOL in lamports
+    end_time: new Date(Date.now() + 7200000).toISOString(), // 2 hours from now
+    status: 'active',
+    resolution_outcome: null,
+    total_pool: 5000000000, // 5 SOL in lamports
+    platform_fee_percentage: 5,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
     participantCount: 5,
     homeCount: 2,
     drawCount: 1,
-    awayCount: 2,
-    isPublic: true
+    awayCount: 2
   }
 
   const mockParticipantData: ParticipantData = {
-    market: 'test-market-address',
-    user: 'test-user-address',
+    id: 'test-participant-id',
+    market_id: 'test-market-id',
+    user_id: 'test-user-address',
     prediction: 'Home',
-    hasWithdrawn: false,
-    joinedAt: Date.now() - 1800000 // 30 minutes ago
+    entry_amount: 1000000000,
+    potential_winnings: 0,
+    actual_winnings: null,
+    joined_at: new Date(Date.now() - 1800000).toISOString() // 30 minutes ago
   }
 
   const mockFinishedMatch: EnhancedMatchData = {
@@ -115,8 +121,8 @@ describe('WinningsCalculator', () => {
     it('should calculate actual winnings for correct prediction', () => {
       const resolvedMarket = {
         ...mockMarketData,
-        status: 'Resolved' as const,
-        outcome: 'Home' as const
+        status: 'resolved' as const,
+        resolution_outcome: 'Home' as const
       }
       
       const winnings = WinningsCalculator.calculateActualWinnings(resolvedMarket, mockParticipantData)
@@ -129,8 +135,8 @@ describe('WinningsCalculator', () => {
     it('should return 0 for incorrect prediction', () => {
       const resolvedMarket = {
         ...mockMarketData,
-        status: 'Resolved' as const,
-        outcome: 'Away' as const
+        status: 'resolved' as const,
+        resolution_outcome: 'Away' as const
       }
       
       const winnings = WinningsCalculator.calculateActualWinnings(resolvedMarket, mockParticipantData)
@@ -207,7 +213,7 @@ describe('WinningsCalculator', () => {
     it('should handle winner viewing ended match', () => {
       const liveMarket = {
         ...mockMarketData,
-        status: 'Live' as const
+        status: 'active' as const
       }
 
       const result = WinningsCalculator.calculateWinnings({
@@ -226,8 +232,8 @@ describe('WinningsCalculator', () => {
     it('should handle resolved market with winner', () => {
       const resolvedMarket = {
         ...mockMarketData,
-        status: 'Resolved' as const,
-        outcome: 'Home' as const
+        status: 'resolved' as const,
+        resolution_outcome: 'Home' as const
       }
 
       const result = WinningsCalculator.calculateWinnings({

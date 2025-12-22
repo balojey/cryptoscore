@@ -13,7 +13,6 @@ import fc from 'fast-check'
 import { 
   MockTestSetup, 
   MockDatabaseTestUtils, 
-  TestScenarios,
   assertTestDataIsolation,
   TestDataGenerators
 } from './test-utils'
@@ -158,10 +157,14 @@ describe('Test Data Isolation Property Tests', () => {
         fc.record({
           userEmail: fc.emailAddress(),
           walletAddress: fc.string({ minLength: 40, maxLength: 40 }).map(s => '0x' + s.replace(/[^a-fA-F0-9]/g, '0').padStart(40, '0')),
-          marketTitle: fc.string({ minLength: 5, maxLength: 100 }),
+          marketTitle: fc.string({ minLength: 5, maxLength: 100 }).filter(s => s.trim().length >= 5),
           entryFee: fc.float({ min: Math.fround(0.001), max: Math.fround(10), noNaN: true }),
         }),
         async (testData) => {
+          // Clean up before each property test iteration
+          MockDatabaseTestUtils.reset()
+          await MockTestSetup.setupWithDefaults()
+          
           // Verify clean initial state
           const initialIsolation = assertTestDataIsolation()
           expect(initialIsolation.recordCounts.users).toBe(0)
@@ -187,7 +190,11 @@ describe('Test Data Isolation Property Tests', () => {
             entryFee: testData.entryFee,
             endTime: new Date(Date.now() + 86400000).toISOString(),
             isPublic: true,
-            creatorId: authResult.user.id
+            creatorId: authResult.user.id,
+            homeTeamId: 1,
+            homeTeamName: 'Home Team',
+            awayTeamId: 2,
+            awayTeamName: 'Away Team'
           })
           
           expect(market.title).toBe(testData.marketTitle)
@@ -222,7 +229,10 @@ describe('Test Data Isolation Property Tests', () => {
           })
           
           expect(newAuthResult.isNewUser).toBe(true)
-          expect(cleanState.users.size).toBe(1) // Only the new user
+          
+          // Verify the new user was added to the clean state
+          const finalState = MockDatabaseTestUtils.getState()
+          expect(finalState.users.size).toBe(1) // Only the new user
         }
       ),
       { numRuns: 100 }

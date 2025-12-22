@@ -3,20 +3,23 @@ import { WinningsCalculator } from '../../../utils/winnings-calculator'
 import type { MarketData } from '../../../hooks/useMarketData'
 
 const mockMarketData: MarketData = {
-  marketAddress: 'test-market-address',
-  creator: 'test-creator-address',
+  id: 'test-market-id',
+  creator_id: 'test-creator-address',
   matchId: 'test-match-123',
-  entryFee: 100000000, // 0.1 SOL in lamports
-  kickoffTime: Date.now() + 3600000,
-  endTime: Date.now() + 7200000,
-  status: 'Open',
-  outcome: null,
-  totalPool: 300000000, // 3 * 0.1 SOL = 0.3 SOL
+  title: 'Test Market',
+  description: 'Test market description',
+  entry_fee: 100000000, // 0.1 SOL in lamports
+  end_time: new Date(Date.now() + 7200000).toISOString(),
+  status: 'active',
+  resolution_outcome: null,
+  total_pool: 300000000, // 3 * 0.1 SOL = 0.3 SOL
+  platform_fee_percentage: 5,
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
   participantCount: 3,
   homeCount: 1,
   drawCount: 1,
-  awayCount: 1,
-  isPublic: true
+  awayCount: 1
 }
 
 describe('PotentialWinningsDisplay Logic', () => {
@@ -56,7 +59,7 @@ describe('PotentialWinningsDisplay Logic', () => {
   it('should handle empty market correctly', () => {
     const emptyMarket: MarketData = {
       ...mockMarketData,
-      totalPool: 0,
+      total_pool: 0,
       participantCount: 0,
       homeCount: 0,
       drawCount: 0,

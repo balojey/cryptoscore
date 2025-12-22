@@ -122,7 +122,7 @@ export class WinningsCalculator {
     isExistingParticipant: boolean = false
   ): number {
     if (!prediction || marketData.participantCount === 0) {
-      return marketData.entryFee
+      return marketData.entry_fee
     }
 
     // Get count for the specific prediction
@@ -130,7 +130,7 @@ export class WinningsCalculator {
     
     if (isExistingParticipant) {
       // For existing participants, use current pool and current prediction count
-      const currentParticipantPool = this.calculateParticipantPool(marketData.totalPool)
+      const currentParticipantPool = this.calculateParticipantPool(marketData.total_pool)
       
       if (predictionCount === 0) {
         // This shouldn't happen for existing participants, but handle gracefully
@@ -140,7 +140,7 @@ export class WinningsCalculator {
       return Math.floor(currentParticipantPool / predictionCount)
     } else {
       // For new users, calculate what happens if they join
-      const newTotalPool = marketData.totalPool + marketData.entryFee
+      const newTotalPool = marketData.total_pool + marketData.entry_fee
       const newParticipantPool = this.calculateParticipantPool(newTotalPool)
       
       // If no one has made this prediction yet, user gets the full participant pool
@@ -171,11 +171,11 @@ export class WinningsCalculator {
   } {
     if (marketData.participantCount === 0) {
       return {
-        average: marketData.entryFee,
+        average: marketData.entry_fee,
         breakdown: {
-          Home: marketData.entryFee,
-          Draw: marketData.entryFee,
-          Away: marketData.entryFee
+          Home: marketData.entry_fee,
+          Draw: marketData.entry_fee,
+          Away: marketData.entry_fee
         },
         explanation: "No participants yet - you'd get the full participant pool (95% of total) for any prediction"
       }
@@ -189,7 +189,7 @@ export class WinningsCalculator {
     const average = Math.floor((homeWinnings + drawWinnings + awayWinnings) / 3)
 
     // Generate explanation based on current market state
-    const newTotalPool = marketData.totalPool + marketData.entryFee
+    const newTotalPool = marketData.total_pool + marketData.entry_fee
     const newParticipantPool = this.calculateParticipantPool(newTotalPool)
     
     const explanation = `Average of potential winnings across all predictions. ` +
@@ -233,14 +233,14 @@ export class WinningsCalculator {
    * Calculate creator reward (2% of total pool)
    */
   static calculateCreatorReward(marketData: MarketData): number {
-    return Math.floor((marketData.totalPool * FEE_DISTRIBUTION.CREATOR_FEE_BPS) / BASIS_POINTS_DIVISOR)
+    return Math.floor((marketData.total_pool * FEE_DISTRIBUTION.CREATOR_FEE_BPS) / BASIS_POINTS_DIVISOR)
   }
 
   /**
    * Check if user is the market creator
    */
   static isUserCreator(marketData: MarketData, userAddress?: string): boolean {
-    return !!userAddress && marketData.creator.toLowerCase() === userAddress.toLowerCase()
+    return !!userAddress && marketData.creator_id.toLowerCase() === userAddress.toLowerCase()
   }
 
   /**
@@ -261,7 +261,7 @@ export class WinningsCalculator {
       }
 
       // Validate numeric fields
-      const numericFields = ['entryFee', 'totalPool', 'participantCount', 'homeCount', 'drawCount', 'awayCount']
+      const numericFields = ['entry_fee', 'total_pool', 'participantCount', 'homeCount', 'drawCount', 'awayCount']
       for (const field of numericFields) {
         const value = (marketData as any)[field]
         if (typeof value !== 'number' || value < 0 || !Number.isFinite(value)) {
@@ -271,12 +271,12 @@ export class WinningsCalculator {
       }
 
       // Validate string fields
-      if (!marketData.status || !marketData.creator) {
+      if (!marketData.status || !marketData.creator_id) {
         return false
       }
 
       // Validate status enum
-      const validStatuses = ['Open', 'Live', 'Resolved', 'Cancelled']
+      const validStatuses = ['active', 'resolved', 'cancelled']
       if (!validStatuses.includes(marketData.status)) {
         return false
       }
@@ -295,11 +295,11 @@ export class WinningsCalculator {
       }
 
       // Validate pool consistency
-      const expectedPool = marketData.entryFee * marketData.participantCount
-      if (Math.abs(marketData.totalPool - expectedPool) > marketData.entryFee) {
+      const expectedPool = marketData.entry_fee * marketData.participantCount
+      if (Math.abs(marketData.total_pool - expectedPool) > marketData.entry_fee) {
         console.warn('[WinningsCalculator] Pool amount inconsistency:', {
           expected: expectedPool,
-          actual: marketData.totalPool,
+          actual: marketData.total_pool,
         })
         // Allow for small rounding differences
         return false
@@ -331,7 +331,7 @@ export class WinningsCalculator {
     if (error.message.includes('exchange rate') || error.message.includes('currency')) {
       return {
         type: 'potential',
-        amount: marketData.entryFee, // Fallback to entry fee as basic estimate
+        amount: marketData.entry_fee, // Fallback to entry fee as basic estimate
         status: 'eligible',
         message: 'Currency conversion unavailable - showing SOL estimate',
         displayVariant: 'warning',
@@ -381,55 +381,56 @@ export class WinningsCalculator {
     const isParticipant = this.isUserParticipant(participantData)
     const isAuthenticated = !!userAddress
 
-    // Open market states
-    if (marketData.status === 'Open') {
-      if (!isAuthenticated) {
-        return MarketDisplayState.OPEN_UNAUTHENTICATED
-      }
-      
-      if (isCreator && isParticipant) {
-        return MarketDisplayState.OPEN_CREATOR_PARTICIPANT
-      }
-      
-      if (isCreator && !isParticipant) {
-        return MarketDisplayState.OPEN_CREATOR_NON_PARTICIPANT
-      }
-      
-      if (isParticipant) {
-        return MarketDisplayState.OPEN_PARTICIPANT
-      }
-      
-      return MarketDisplayState.OPEN_AUTHENTICATED_NON_PARTICIPANT
-    }
+    // Active market states - check if match is finished first
+    if (marketData.status === 'active') {
+      // Ended market states (match finished but not resolved)
+      if (matchData?.isFinished) {
+        const isWinner = isParticipant && 
+          matchData.matchResult && 
+          participantData?.prediction === matchData.matchResult
 
-    // Ended market states (match finished but not resolved)
-    if (marketData.status === 'Live' && matchData?.isFinished) {
-      const isWinner = isParticipant && 
-        matchData.matchResult && 
-        participantData?.prediction === matchData.matchResult
-
-      if (isCreator && isParticipant) {
-        return MarketDisplayState.ENDED_CREATOR_PARTICIPANT
-      }
-      
-      if (isCreator && !isParticipant) {
-        return MarketDisplayState.ENDED_CREATOR_NON_PARTICIPANT
-      }
-      
-      if (isParticipant && isWinner) {
-        return MarketDisplayState.ENDED_PARTICIPANT_WINNER
-      }
-      
-      if (isParticipant && !isWinner) {
-        return MarketDisplayState.ENDED_PARTICIPANT_LOSER
+        if (isCreator && isParticipant) {
+          return MarketDisplayState.ENDED_CREATOR_PARTICIPANT
+        }
+        
+        if (isCreator && !isParticipant) {
+          return MarketDisplayState.ENDED_CREATOR_NON_PARTICIPANT
+        }
+        
+        if (isParticipant && isWinner) {
+          return MarketDisplayState.ENDED_PARTICIPANT_WINNER
+        }
+        
+        if (isParticipant && !isWinner) {
+          return MarketDisplayState.ENDED_PARTICIPANT_LOSER
+        }
+      } else {
+        // Open market states (match not finished yet)
+        if (!isAuthenticated) {
+          return MarketDisplayState.OPEN_UNAUTHENTICATED
+        }
+        
+        if (isCreator && isParticipant) {
+          return MarketDisplayState.OPEN_CREATOR_PARTICIPANT
+        }
+        
+        if (isCreator && !isParticipant) {
+          return MarketDisplayState.OPEN_CREATOR_NON_PARTICIPANT
+        }
+        
+        if (isParticipant) {
+          return MarketDisplayState.OPEN_PARTICIPANT
+        }
+        
+        return MarketDisplayState.OPEN_AUTHENTICATED_NON_PARTICIPANT
       }
     }
 
     // Resolved market states
-    if (marketData.status === 'Resolved') {
+    if (marketData.status === 'resolved') {
       const isWinner = isParticipant && 
-        marketData.outcome && 
-        participantData?.prediction === marketData.outcome
+        marketData.resolution_outcome && 
+        participantData?.prediction === marketData.resolution_outcome
 
       if (isCreator) {
         return MarketDisplayState.RESOLVED_CREATOR
@@ -477,7 +478,7 @@ export class WinningsCalculator {
       amount: averageWinnings.average,
       breakdown: {
         participantWinnings: averageWinnings.average,
-        totalPool: marketData.totalPool + marketData.entryFee
+        totalPool: marketData.total_pool + marketData.entry_fee
       },
       status: 'eligible',
       message: 'Average potential winnings across all predictions',
@@ -515,7 +516,7 @@ export class WinningsCalculator {
       breakdown: {
         participantWinnings,
         creatorReward,
-        totalPool: marketData.totalPool
+        totalPool: marketData.total_pool
       },
       status: 'eligible',
       message: `Potential winnings (${participantData.prediction} prediction + creator reward)`,
@@ -550,7 +551,7 @@ export class WinningsCalculator {
       amount: actualWinnings,
       breakdown: {
         participantWinnings: actualWinnings,
-        totalPool: marketData.totalPool,
+        totalPool: marketData.total_pool,
         winnerCount
       },
       status: 'won',
@@ -589,7 +590,7 @@ export class WinningsCalculator {
       breakdown: {
         participantWinnings,
         creatorReward,
-        totalPool: marketData.totalPool
+        totalPool: marketData.total_pool
       },
       status: 'pending',
       message: isWinner 
@@ -618,14 +619,14 @@ export class WinningsCalculator {
     participantData: ParticipantData
   ): WinningsResult {
     const actualWinnings = this.calculateActualWinnings(marketData, participantData)
-    const winnerCount = this.getPredictionCount(marketData, marketData.outcome!)
+    const winnerCount = this.getPredictionCount(marketData, marketData.resolution_outcome!)
     
     return {
       type: 'actual',
       amount: actualWinnings,
       breakdown: {
         participantWinnings: actualWinnings,
-        totalPool: marketData.totalPool,
+        totalPool: marketData.total_pool,
         winnerCount
       },
       status: 'distributed',

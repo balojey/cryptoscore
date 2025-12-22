@@ -8,25 +8,28 @@ describe('Demo: Average Potential Winnings vs Individual Predictions', () => {
     
     // Scenario: Market with uneven distribution
     const marketData: MarketData = {
-      marketAddress: 'demo-market',
-      creator: 'demo-creator',
+      id: 'demo-market',
+      creator_id: 'demo-creator',
       matchId: 'demo-match',
-      entryFee: 100000000, // 0.1 SOL
-      kickoffTime: Date.now() + 3600000,
-      endTime: Date.now() + 7200000,
-      status: 'Open',
-      outcome: null,
-      totalPool: 500000000, // 5 participants × 0.1 SOL = 0.5 SOL
+      title: 'Demo Market',
+      description: 'Demo market description',
+      entry_fee: 100000000, // 0.1 SOL
+      end_time: new Date(Date.now() + 7200000).toISOString(),
+      status: 'active',
+      resolution_outcome: null,
+      total_pool: 500000000, // 5 participants × 0.1 SOL = 0.5 SOL
+      platform_fee_percentage: 5,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
       participantCount: 5,
       homeCount: 3, // Most popular prediction
       drawCount: 0, // No one chose Draw yet
-      awayCount: 2,
-      isPublic: true
+      awayCount: 2
     }
 
     console.log('📊 Market State:')
-    console.log(`   Entry Fee: ${marketData.entryFee / 1e9} SOL`)
-    console.log(`   Total Pool: ${marketData.totalPool / 1e9} SOL`)
+    console.log(`   Entry Fee: ${marketData.entry_fee / 1e9} SOL`)
+    console.log(`   Total Pool: ${marketData.total_pool / 1e9} SOL`)
     console.log(`   Participants: ${marketData.participantCount}`)
     console.log(`   Home: ${marketData.homeCount}, Draw: ${marketData.drawCount}, Away: ${marketData.awayCount}`)
     console.log('')
@@ -72,20 +75,23 @@ describe('Demo: Average Potential Winnings vs Individual Predictions', () => {
     
     // Initial market state
     const initialMarket: MarketData = {
-      marketAddress: 'evolution-demo',
-      creator: 'demo-creator',
+      id: 'evolution-demo',
+      creator_id: 'demo-creator',
       matchId: 'evolution-match',
-      entryFee: 100000000, // 0.1 SOL
-      kickoffTime: Date.now() + 3600000,
-      endTime: Date.now() + 7200000,
-      status: 'Open',
-      outcome: null,
-      totalPool: 100000000, // 1 participant
+      title: 'Evolution Demo Market',
+      description: 'Demo market for evolution',
+      entry_fee: 100000000, // 0.1 SOL
+      end_time: new Date(Date.now() + 7200000).toISOString(),
+      status: 'active',
+      resolution_outcome: null,
+      total_pool: 100000000, // 1 participant
+      platform_fee_percentage: 5,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
       participantCount: 1,
       homeCount: 1,
       drawCount: 0,
-      awayCount: 0,
-      isPublic: true
+      awayCount: 0
     }
 
     console.log('📈 Market Evolution:')
@@ -93,10 +99,10 @@ describe('Demo: Average Potential Winnings vs Individual Predictions', () => {
 
     // Show progression as more users join
     const markets = [
-      { ...initialMarket, totalPool: 100000000, participantCount: 1, homeCount: 1, drawCount: 0, awayCount: 0 },
-      { ...initialMarket, totalPool: 300000000, participantCount: 3, homeCount: 2, drawCount: 0, awayCount: 1 },
-      { ...initialMarket, totalPool: 500000000, participantCount: 5, homeCount: 3, drawCount: 1, awayCount: 1 },
-      { ...initialMarket, totalPool: 800000000, participantCount: 8, homeCount: 4, drawCount: 2, awayCount: 2 }
+      { ...initialMarket, total_pool: 100000000, participantCount: 1, homeCount: 1, drawCount: 0, awayCount: 0 },
+      { ...initialMarket, total_pool: 300000000, participantCount: 3, homeCount: 2, drawCount: 0, awayCount: 1 },
+      { ...initialMarket, total_pool: 500000000, participantCount: 5, homeCount: 3, drawCount: 1, awayCount: 1 },
+      { ...initialMarket, total_pool: 800000000, participantCount: 8, homeCount: 4, drawCount: 2, awayCount: 2 }
     ]
 
     markets.forEach((market, index) => {

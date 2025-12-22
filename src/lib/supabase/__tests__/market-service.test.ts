@@ -5,9 +5,10 @@
  * using property-based testing with fast-check and mock database.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import fc from 'fast-check'
 import { MarketService, type CreateMarketParams } from '../market-service'
+import { DatabaseService } from '../database-service'
 import { MockTestSetup, TestScenarios, MockDatabaseTestUtils } from './test-utils'
 
 describe('MarketService Property Tests', () => {
@@ -39,6 +40,10 @@ describe('MarketService Property Tests', () => {
           endTime: fc.integer({ min: 1, max: 365 }).map(days => new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString()),
           isPublic: fc.boolean(),
           creatorId: fc.uuid(),
+          homeTeamId: fc.integer({ min: 1, max: 1000 }),
+          homeTeamName: fc.string({ minLength: 3, maxLength: 50 }).filter(s => s.trim().length >= 3),
+          awayTeamId: fc.integer({ min: 1, max: 1000 }),
+          awayTeamName: fc.string({ minLength: 3, maxLength: 50 }).filter(s => s.trim().length >= 3),
         }),
         async (params: CreateMarketParams) => {
           // Create test user first
@@ -53,7 +58,7 @@ describe('MarketService Property Tests', () => {
           expect(result.entry_fee).toBe(params.entryFee)
           expect(result.end_time).toBe(params.endTime)
           expect(result.creator_id).toBe(params.creatorId)
-          expect(result.status).toBe('active')
+          expect(result.status).toBe('SCHEDULED')
           expect(result.total_pool).toBe(0)
           expect(result.platform_fee_percentage).toBe(5) // From default config
 
@@ -62,7 +67,7 @@ describe('MarketService Property Tests', () => {
           expect(storedMarket).toEqual(result)
 
           // Verify transaction was created
-          const transactions = await MarketService.getUserTransactions(params.creatorId)
+          const transactions = await DatabaseService.getUserTransactions(params.creatorId)
           expect(transactions).toHaveLength(1)
           expect(transactions[0].type).toBe('market_entry')
           expect(transactions[0].amount).toBe(0)
@@ -76,13 +81,14 @@ describe('MarketService Property Tests', () => {
     await fc.assert(
       fc.asyncProperty(
         fc.record({
-          prediction: fc.oneof(fc.constant('Home'), fc.constant('Draw'), fc.constant('Away')),
+          prediction: fc.oneof(fc.constant('HOME_WIN'), fc.constant('DRAW'), fc.constant('AWAY_WIN')),
           entryAmount: fc.float({ min: Math.fround(0.001), max: Math.fround(10), noNaN: true }),
         }),
         async (joinParams) => {
           // Create test scenario
           const scenario = await TestScenarios.createMarketScenario({ 
             participantCount: 2,
+            marketStatus: 'SCHEDULED',
             withTransactions: false 
           })
           
@@ -100,7 +106,10 @@ describe('MarketService Property Tests', () => {
           // Verify participant data consistency
           expect(result.market_id).toBe(scenario.market.id)
           expect(result.user_id).toBe(newUser.id)
-          expect(result.prediction).toBe(joinParams.prediction)
+          // Database stores predictions in 'Home'/'Draw'/'Away' format
+          const expectedDbPrediction = joinParams.prediction === 'HOME_WIN' ? 'Home' : 
+                                      joinParams.prediction === 'AWAY_WIN' ? 'Away' : 'Draw'
+          expect(result.prediction).toBe(expectedDbPrediction)
           expect(result.entry_amount).toBe(joinParams.entryAmount)
           expect(result.potential_winnings).toBeGreaterThan(0)
 
@@ -109,7 +118,7 @@ describe('MarketService Property Tests', () => {
           expect(updatedMarket!.total_pool).toBe(scenario.market.total_pool + joinParams.entryAmount)
 
           // Verify transaction was recorded
-          const transactions = await MarketService.getUserTransactions(newUser.id)
+          const transactions = await DatabaseService.getUserTransactions(newUser.id)
           expect(transactions).toHaveLength(1)
           expect(transactions[0].type).toBe('market_entry')
           expect(transactions[0].amount).toBe(joinParams.entryAmount)
@@ -123,50 +132,34 @@ describe('MarketService Property Tests', () => {
     await fc.assert(
       fc.asyncProperty(
         fc.record({
-          outcome: fc.oneof(fc.constant('Home'), fc.constant('Draw'), fc.constant('Away')),
+          outcome: fc.oneof(fc.constant('HOME_WIN'), fc.constant('DRAW'), fc.constant('AWAY_WIN')),
         }),
         async (resolveParams) => {
           // Create test scenario with participants
           const scenario = await TestScenarios.createMarketScenario({ 
             participantCount: 6,
+            marketStatus: 'SCHEDULED',
             withTransactions: true 
           })
 
-          // Test market resolution
-          await MarketService.resolveMarket({
+          // Test that manual market resolution is disabled
+          const dbOutcome = resolveParams.outcome === 'HOME_WIN' ? 'Home' : 
+                           resolveParams.outcome === 'AWAY_WIN' ? 'Away' : 'Draw'
+          await expect(MarketService.resolveMarket({
             marketId: scenario.market.id,
-            outcome: resolveParams.outcome,
-          })
+            outcome: dbOutcome,
+          })).rejects.toThrow('Manual market resolution has been disabled. Markets are now resolved automatically.')
 
-          // Verify market status was updated consistently
-          const resolvedMarket = await MarketService.getMarketById(scenario.market.id)
-          expect(resolvedMarket!.status).toBe('resolved')
-          expect(resolvedMarket!.resolution_outcome).toBe(resolveParams.outcome)
+          // Verify market status remains unchanged since manual resolution is disabled
+          const market = await MarketService.getMarketById(scenario.market.id)
+          expect(market!.status).toBe('SCHEDULED') // Should remain unchanged
+          expect(market!.resolution_outcome).toBeNull() // Should remain null
 
-          // Verify participants were updated with winnings
+          // Since manual resolution is disabled, participants should not be updated
           const participants = await MarketService.getMarketParticipants(scenario.market.id)
-          const winners = participants.filter(p => p.prediction === resolveParams.outcome)
-          const losers = participants.filter(p => p.prediction !== resolveParams.outcome)
-
-          // Winners should have actual winnings
-          for (const winner of winners) {
-            expect(winner.actual_winnings).toBeGreaterThan(0)
+          for (const participant of participants) {
+            expect(participant.actual_winnings).toBeNull() // Should remain null
           }
-
-          // Losers should have zero winnings
-          for (const loser of losers) {
-            expect(loser.actual_winnings).toBe(0)
-          }
-
-          // Verify transaction records were created
-          const allTransactions = await MarketService.getMarketTransactions(scenario.market.id)
-          const winningsTransactions = allTransactions.filter(t => t.type === 'winnings')
-          const creatorRewardTransactions = allTransactions.filter(t => t.type === 'creator_reward')
-          const platformFeeTransactions = allTransactions.filter(t => t.type === 'platform_fee')
-
-          expect(winningsTransactions).toHaveLength(winners.length)
-          expect(creatorRewardTransactions).toHaveLength(1)
-          expect(platformFeeTransactions).toHaveLength(1)
         }
       ),
       { numRuns: 100 }
@@ -204,6 +197,10 @@ describe('MarketService Property Tests', () => {
             endTime: edgeParams.endTime,
             isPublic: true,
             creatorId: creator.id,
+            homeTeamId: 1,
+            homeTeamName: 'Home Team',
+            awayTeamId: 2,
+            awayTeamName: 'Away Team',
           }
 
           // Test edge case handling

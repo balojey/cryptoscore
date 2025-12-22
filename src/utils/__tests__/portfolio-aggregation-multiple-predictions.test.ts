@@ -5,7 +5,7 @@
  * **Validates: Requirements 8.4, 8.5**
  */
 
-import { describe, it, beforeEach, expect } from 'vitest'
+import { describe, it, beforeEach, afterEach, expect } from 'vitest'
 import fc from 'fast-check'
 import { MockDatabaseService } from '../../lib/supabase/__tests__/mock-database-service'
 import { MockDatabaseTestUtils } from '../../lib/supabase/__tests__/test-utils'
@@ -22,9 +22,9 @@ const multipleParticipationsArb = fc.record({
       predictions: fc.uniqueArray(
         fc.record({
           prediction: predictionArb,
-          entry_amount: fc.float({ min: Math.fround(0.1), max: Math.fround(5.0) }),
-          potential_winnings: fc.float({ min: Math.fround(0.1), max: Math.fround(50.0) }),
-          actual_winnings: fc.option(fc.float({ min: Math.fround(0.0), max: Math.fround(50.0) }), { nil: null })
+          entry_amount: fc.float({ min: Math.fround(0.1), max: Math.fround(5.0), noNaN: true, noDefaultInfinity: true }),
+          potential_winnings: fc.float({ min: Math.fround(0.1), max: Math.fround(50.0), noNaN: true, noDefaultInfinity: true }),
+          actual_winnings: fc.option(fc.float({ min: Math.fround(0.0), max: Math.fround(50.0), noNaN: true, noDefaultInfinity: true }), { nil: null })
         }),
         { 
           minLength: 1, 
