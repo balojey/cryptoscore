@@ -194,6 +194,35 @@ vi.mock('uuid', () => ({
   v4: () => `test-uuid-${Math.random().toString(36).substr(2, 9)}`,
 }))
 
+// Mock MNEE service for testing
+vi.mock('../../mnee/mnee-service', () => ({
+  MneeService: class MockMneeService {
+    async transfer() {
+      return {
+        ticketId: 'test-ticket-id',
+        transactionId: 'test-transaction-id',
+        status: 'success',
+      }
+    }
+    
+    async getBalance() {
+      return {
+        address: 'test-address',
+        amount: 1000000, // 10 MNEE in atomic units
+        decimalAmount: 10,
+        lastUpdated: Date.now(),
+      }
+    }
+    
+    async validateTransfer() {
+      return true
+    }
+  },
+}))
+
+// Mock environment variables for testing
+process.env.MNEE_PLATFORM_PRIVATE_KEY = 'test-private-key-for-testing'
+
 // Global test utilities
 global.console = {
   ...console,

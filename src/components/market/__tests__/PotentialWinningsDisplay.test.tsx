@@ -72,7 +72,7 @@ describe('PotentialWinningsDisplay Logic', () => {
     expect(result.breakdown.Home).toBe(10000)
     expect(result.breakdown.Draw).toBe(10000)
     expect(result.breakdown.Away).toBe(10000)
-    expect(result.average).toBe(100000000)
+    expect(result.average).toBe(10000)
     expect(result.explanation).toContain('No participants yet')
   })
 

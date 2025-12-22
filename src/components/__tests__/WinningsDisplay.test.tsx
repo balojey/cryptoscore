@@ -122,7 +122,7 @@ const mockActualWinnings: WinningsResult = {
   amount: 23750, // 0.2375 MNEE
   breakdown: {
     participantWinnings: 23750,
-    totalPool: 1000000000,
+    totalPool: 100000, // 1 MNEE in atomic units
     winnerCount: 4,
   },
   status: 'won',
@@ -413,11 +413,11 @@ describe('Performance optimizations', () => {
     }
 
     // Test that changing winnings amount would trigger re-render
-    const changedWinnings = { ...mockPotentialWinnings, amount: 300000000 }
+    const changedWinnings = { ...mockPotentialWinnings, amount: 3000000 }
     const propsWithChangedAmount = { ...baseProps, winnings: changedWinnings }
 
     expect(baseProps.winnings.amount).toBe(25000)
-    expect(propsWithChangedAmount.winnings.amount).toBe(30000)
+    expect(propsWithChangedAmount.winnings.amount).toBe(3000000)
   })
 })
 
