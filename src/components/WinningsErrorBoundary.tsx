@@ -138,7 +138,7 @@ export class WinningsErrorBoundary extends Component<Props, State> {
           </p>
           {marketData && (
             <p className="text-xs text-[var(--text-secondary)] truncate">
-              Entry fee: ◎{(marketData.entryFee / 1_000_000_000).toFixed(4)}
+              Entry fee: {(marketData.entryFee / 100_000).toFixed(5)} MNEE
             </p>
           )}
           {exchangeRateError && (
@@ -211,7 +211,7 @@ export class WinningsErrorBoundary extends Component<Props, State> {
               <div className="border-t border-[var(--border-default)] pt-4">
                 <div className="flex items-center gap-2 text-sm text-[var(--accent-amber)]">
                   <AlertTriangle className="h-4 w-4" />
-                  <span>Currency conversion unavailable - amounts shown in SOL</span>
+                  <span>Currency conversion unavailable - amounts shown in MNEE</span>
                 </div>
               </div>
             )}
@@ -227,13 +227,13 @@ export class WinningsErrorBoundary extends Component<Props, State> {
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-[var(--text-secondary)]">Entry Fee:</span>
                     <span className="font-medium text-[var(--text-primary)]">
-                      ◎{(marketData.entryFee / 1_000_000_000).toFixed(4)}
+                      {(marketData.entryFee / 100_000).toFixed(5)} MNEE
                     </span>
                   </div>
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-[var(--text-secondary)]">Total Pool:</span>
                     <span className="font-medium text-[var(--text-primary)]">
-                      ◎{(marketData.totalPool / 1_000_000_000).toFixed(4)}
+                      {(marketData.totalPool / 100_000).toFixed(5)} MNEE
                     </span>
                   </div>
                   <div className="flex justify-between items-center text-sm">

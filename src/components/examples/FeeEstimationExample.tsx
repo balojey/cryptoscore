@@ -17,7 +17,7 @@ export function FeeEstimationExample() {
       matchId: 'example-match-123',
       title: 'Example Match Market',
       description: 'This is an example prediction market for demonstration purposes',
-      entryFee: 0.001, // 0.001 SOL equivalent in decimal format
+      entryFee: 0.001, // 0.001 MNEE equivalent in decimal format
       endTime: Math.floor(Date.now() / 1000) + 7200, // 2 hours from now
       isPublic: true,
     })

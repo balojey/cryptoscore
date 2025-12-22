@@ -229,7 +229,7 @@ export default function Account({ address, walletName, walletIcon, user }: Accou
             <div className="flex flex-col flex-1 min-w-0">
               <span className="font-bold text-sm sm:text-base">Get Test Tokens</span>
               <span className="text-xs sm:text-sm truncate" style={{ color: 'var(--text-secondary)' }}>
-                Use the faucet for free SOL
+                Use the faucet for free MNEE
               </span>
             </div>
             <span className="icon-[mdi--open-in-new] w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />

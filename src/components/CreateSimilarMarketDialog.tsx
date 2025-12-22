@@ -42,7 +42,7 @@ export function CreateSimilarMarketDialog({
   const [visibility, setVisibility] = useState<'public' | 'private'>('public')
   const [errors, setErrors] = useState<{ entryFee?: string }>({})
 
-  // Force SOL currency for Create Similar Market dialog - no currency selection allowed
+  // Force MNEE currency for Create Similar Market dialog - no currency selection allowed
 
   // MNEE-only validation
   const validateEntryFee = (value: string): string | undefined => {
@@ -164,7 +164,7 @@ export function CreateSimilarMarketDialog({
               </p>
             )}
             <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-              Entry fees are processed in SOL only for similar markets
+              Entry fees are processed in MNEE only for similar markets
             </p>
           </div>
 

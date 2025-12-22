@@ -192,21 +192,40 @@ export function MneeProvider({ children }: { children: React.ReactNode }) {
   }, [mneeService, isInitialized, walletAddress, supabaseUser?.id, handleError])
 
   /**
-   * Transfer MNEE tokens with enhanced error handling and optimistic updates
+   * Transfer MNEE tokens with enhanced validation, error handling and optimistic updates
    */
   const transfer = useCallback(async (recipients: TransferRecipient[]): Promise<TransferResult> => {
     if (!isInitialized) {
       throw new Error('MNEE service not initialized')
     }
 
+    if (!walletAddress) {
+      throw new Error('Wallet address not available')
+    }
+
     // For now, we'll need to get the private key from the wallet context
     // This is a placeholder - in production, you'd use proper key management
     const privateKey = 'placeholder-private-key' // TODO: Implement proper private key access
+    
+    // Pre-transfer validation using MNEE SDK
+    const validationResult = await mneeService.validateTransfer(recipients, privateKey)
+    if (!validationResult) {
+      const error = new Error('Transfer validation failed')
+      handleError(error, 'transfer_validation')
+      throw error
+    }
     
     // Calculate total transfer amount for optimistic update
     const totalAmount = recipients.reduce((sum, recipient) => 
       sum + MNEE_UNITS.toAtomicUnits(recipient.amount), 0
     )
+    
+    // Additional balance check
+    if (balance !== null && balance < totalAmount) {
+      const error = new Error(`Insufficient balance. Required: ${MNEE_UNITS.formatMneeAmount(totalAmount)}, Available: ${MNEE_UNITS.formatMneeAmount(balance)}`)
+      handleError(error, 'insufficient_balance')
+      throw error
+    }
     
     // Store original balance for rollback
     const originalBalance = balance
@@ -214,6 +233,11 @@ export function MneeProvider({ children }: { children: React.ReactNode }) {
     
     const operation = async () => {
       try {
+        // Show validation success
+        toast.info('Transfer Validated', {
+          description: `Transfer of ${MNEE_UNITS.formatMneeAmount(totalAmount)} MNEE to ${recipients.length} recipient(s) validated successfully`
+        })
+
         // Optimistic update - subtract transfer amount immediately
         if (balance !== null && decimalBalance !== null) {
           const newBalance = balance - totalAmount
@@ -231,11 +255,37 @@ export function MneeProvider({ children }: { children: React.ReactNode }) {
           
           const error = new Error(result.error || 'Transfer failed')
           handleError(error, 'transfer')
-        } else {
-          // Show success notification
-          toast.success('Transfer Initiated', {
-            description: `Transfer of ${MNEE_UNITS.formatMneeAmount(totalAmount)} MNEE has been initiated`
+          
+          toast.error('Transfer Failed', {
+            description: result.error || 'Transfer could not be completed'
           })
+        } else {
+          // Show success notification with ticket ID
+          toast.success('Transfer Initiated', {
+            description: `Transfer of ${MNEE_UNITS.formatMneeAmount(totalAmount)} MNEE has been initiated${result.ticketId ? ` (Ticket: ${result.ticketId.slice(0, 8)}...)` : ''}`
+          })
+          
+          // Start monitoring transaction status if ticket ID is available
+          if (result.ticketId) {
+            setTimeout(async () => {
+              try {
+                const status = await mneeService.getTransactionStatusWithRetry(result.ticketId!)
+                if (status.status === 'confirmed') {
+                  toast.success('Transfer Confirmed', {
+                    description: `Transfer of ${MNEE_UNITS.formatMneeAmount(totalAmount)} MNEE has been confirmed on the blockchain`
+                  })
+                } else if (status.status === 'failed') {
+                  toast.error('Transfer Failed', {
+                    description: `Transfer failed: ${status.error || 'Unknown error'}`
+                  })
+                  // Refresh balance to get accurate state
+                  refreshBalance()
+                }
+              } catch (statusError) {
+                console.warn('Failed to check transaction status:', statusError)
+              }
+            }, 5000) // Check status after 5 seconds
+          }
           
           // Refresh balance after successful transfer to get accurate amount
           setTimeout(() => {
@@ -250,13 +300,18 @@ export function MneeProvider({ children }: { children: React.ReactNode }) {
         setDecimalBalance(originalDecimalBalance)
         
         handleError(error, 'transfer')
+        
+        toast.error('Transfer Error', {
+          description: error instanceof Error ? error.message : 'An unexpected error occurred'
+        })
+        
         throw error
       }
     }
 
     setLastFailedOperation(() => operation)
     return await operation()
-  }, [mneeService, isInitialized, refreshBalance, balance, decimalBalance, handleError])
+  }, [mneeService, isInitialized, refreshBalance, balance, decimalBalance, walletAddress, handleError])
 
   /**
    * Enable real-time balance subscription with enhanced error handling

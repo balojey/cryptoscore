@@ -267,24 +267,148 @@ export class MneeService implements MneeServiceInterface {
   }
 
   /**
-   * Validate transfer before execution
+   * Validate transfer before execution with comprehensive checks
    */
-  async validateTransfer(recipients: TransferRecipient[], privateKey: string): Promise<boolean> {
+  async validateTransfer(recipients: TransferRecipient[], _privateKey: string): Promise<boolean> {
     this.ensureInitialized()
     
     try {
-      this.validatePrivateKey(privateKey)
+      // Basic validation
+      this.validatePrivateKey(_privateKey)
       this.validateTransferRecipients(recipients)
 
-      // Additional validation: check if sender has sufficient balance
-      // This would require deriving the sender address from private key
-      // For now, we'll do basic validation
+      // Enhanced validation: check if sender has sufficient balance
+      const senderAddress = this.deriveAddressFromPrivateKey(_privateKey)
+      const senderBalance = await this.getBalance(senderAddress)
       
+      const totalTransferAmount = recipients.reduce((sum, recipient) => {
+        return sum + this.toAtomicUnits(recipient.amount)
+      }, 0)
+
+      // Estimate fees for the transfer
+      const estimatedFee = await this.estimateTransferFee(recipients)
+      const totalRequired = totalTransferAmount + estimatedFee
+
+      if (senderBalance.amount < totalRequired) {
+        throw new MneeValidationError(
+          `Insufficient balance. Required: ${this.formatMneeAmount(totalRequired)}, Available: ${this.formatMneeAmount(senderBalance.amount)}`
+        )
+      }
+
+      // Validate each recipient address format
+      for (const recipient of recipients) {
+        if (!this.isValidRecipientAddress(recipient.address)) {
+          throw new MneeValidationError(`Invalid recipient address: ${recipient.address}`)
+        }
+      }
+
+      // Check for duplicate recipients
+      const uniqueAddresses = new Set(recipients.map(r => r.address.toLowerCase()))
+      if (uniqueAddresses.size !== recipients.length) {
+        throw new MneeValidationError('Duplicate recipient addresses are not allowed')
+      }
+
+      // Validate against rate limits
+      await this.validateTransferRateLimit(senderAddress, recipients.length)
+
       return true
     } catch (error) {
       console.error('Transfer validation failed:', error)
       return false
     }
+  }
+
+  /**
+   * Enhanced transaction status tracking with retry logic
+   */
+  async getTransactionStatusWithRetry(ticketId: string, maxRetries = 3): Promise<TransactionStatus> {
+    this.ensureInitialized()
+    
+    if (!ticketId) {
+      throw new MneeValidationError('Ticket ID is required')
+    }
+
+    const correlationId = generateCorrelationId()
+    let lastError: Error | null = null
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`[${correlationId}] Checking transaction status (attempt ${attempt}/${maxRetries}): ${ticketId}`)
+        
+        const status = await this.getTransactionStatus(ticketId)
+        
+        // Cache the status for future reference
+        await this.cacheTransactionStatus(ticketId, status)
+        
+        return status
+      } catch (error) {
+        lastError = error as Error
+        console.warn(`[${correlationId}] Transaction status check failed (attempt ${attempt}/${maxRetries}):`, error)
+        
+        if (attempt < maxRetries) {
+          // Wait before retry with exponential backoff
+          const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000)
+          await new Promise(resolve => setTimeout(resolve, delay))
+        }
+      }
+    }
+
+    // If all retries failed, try to get cached status
+    const cachedStatus = await this.getCachedTransactionStatus(ticketId)
+    if (cachedStatus) {
+      console.warn(`[${correlationId}] Using cached transaction status for ${ticketId}`)
+      return cachedStatus
+    }
+
+    throw new MneeNetworkError(
+      `Failed to get transaction status after ${maxRetries} attempts: ${lastError?.message}`,
+      lastError
+    )
+  }
+
+  /**
+   * Batch transaction status checking
+   */
+  async getBatchTransactionStatus(ticketIds: string[]): Promise<Map<string, TransactionStatus>> {
+    this.ensureInitialized()
+    
+    const results = new Map<string, TransactionStatus>()
+    const correlationId = generateCorrelationId()
+    
+    console.log(`[${correlationId}] Checking batch transaction status for ${ticketIds.length} tickets`)
+
+    // Process in batches to avoid overwhelming the API
+    const batchSize = 5
+    for (let i = 0; i < ticketIds.length; i += batchSize) {
+      const batch = ticketIds.slice(i, i + batchSize)
+      
+      const batchPromises = batch.map(async (ticketId) => {
+        try {
+          const status = await this.getTransactionStatusWithRetry(ticketId, 2)
+          results.set(ticketId, status)
+        } catch (error) {
+          console.error(`[${correlationId}] Failed to get status for ticket ${ticketId}:`, error)
+          // Set a failed status for tracking
+          results.set(ticketId, {
+            ticketId,
+            status: 'failed',
+            confirmations: 0,
+            error: error instanceof Error ? error.message : 'Unknown error',
+            timestamp: Date.now()
+          })
+        }
+      })
+
+      await Promise.all(batchPromises)
+      
+      // Small delay between batches to be respectful to the API
+      if (i + batchSize < ticketIds.length) {
+        await new Promise(resolve => setTimeout(resolve, 100))
+      }
+    }
+
+    console.log(`[${correlationId}] Batch status check completed: ${results.size} results`)
+    return results
   }
 
   /**
@@ -481,6 +605,97 @@ export class MneeService implements MneeServiceInterface {
         )
       }
     })
+  }
+
+  /**
+   * Derive EVM address from private key
+   */
+  private deriveAddressFromPrivateKey(_privateKey: string): string {
+    // This is a placeholder - in a real implementation, you would use
+    // the MNEE SDK or a crypto library to derive the address
+    // For now, we'll throw an error to indicate this needs implementation
+    throw new MneeValidationError('Address derivation from private key not yet implemented')
+  }
+
+  /**
+   * Estimate transfer fee for recipients
+   */
+  private async estimateTransferFee(recipients: TransferRecipient[]): Promise<number> {
+    // This is a placeholder - in a real implementation, you would use
+    // the MNEE SDK to estimate fees based on current network conditions
+    // For now, return a basic fee calculation
+    const baseFeePer = 1000 // 0.01 MNEE in atomic units (fallback value)
+    return baseFeePer * recipients.length
+  }
+
+  /**
+   * Validate recipient address format
+   */
+  private isValidRecipientAddress(address: string): boolean {
+    // Use the existing address validation
+    try {
+      this.validateAddress(address)
+      return true
+    } catch {
+      return false
+    }
+  }
+
+  /**
+   * Validate transfer rate limits
+   */
+  private async validateTransferRateLimit(_senderAddress: string, recipientCount: number): Promise<void> {
+    // This is a placeholder for rate limiting logic
+    // In a real implementation, you would check against rate limits
+    // based on sender address and recent transaction history
+    
+    const maxRecipientsPerTransfer = 10
+    if (recipientCount > maxRecipientsPerTransfer) {
+      throw new MneeValidationError(`Too many recipients. Maximum: ${maxRecipientsPerTransfer}`)
+    }
+  }
+
+  /**
+   * Cache transaction status for future reference
+   */
+  private async cacheTransactionStatus(ticketId: string, status: TransactionStatus): Promise<void> {
+    try {
+      // Store in localStorage with expiration
+      const cacheKey = `mnee_tx_status_${ticketId}`
+      const cacheData = {
+        status,
+        timestamp: Date.now(),
+        expiresAt: Date.now() + (5 * 60 * 1000) // 5 minutes
+      }
+      localStorage.setItem(cacheKey, JSON.stringify(cacheData))
+    } catch (error) {
+      console.warn('Failed to cache transaction status:', error)
+    }
+  }
+
+  /**
+   * Get cached transaction status
+   */
+  private async getCachedTransactionStatus(ticketId: string): Promise<TransactionStatus | null> {
+    try {
+      const cacheKey = `mnee_tx_status_${ticketId}`
+      const cached = localStorage.getItem(cacheKey)
+      
+      if (!cached) return null
+      
+      const cacheData = JSON.parse(cached)
+      
+      // Check if cache is expired
+      if (Date.now() > cacheData.expiresAt) {
+        localStorage.removeItem(cacheKey)
+        return null
+      }
+      
+      return cacheData.status
+    } catch (error) {
+      console.warn('Failed to get cached transaction status:', error)
+      return null
+    }
   }
 
   private getRetryConfig(): RetryConfig {

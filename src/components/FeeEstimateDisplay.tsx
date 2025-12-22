@@ -2,7 +2,7 @@ import { AlertCircle, Info } from 'lucide-react'
 
 interface FeeEstimate {
   fee: number
-  feeInSol: number
+  feeInMnee: number
   success: boolean
   error?: string
 }
@@ -16,7 +16,7 @@ interface FeeEstimateDisplayProps {
 
 /**
  * Component to display transaction fee estimates
- * Shows estimated fee in SOL with success/error states
+ * Shows estimated fee in MNEE with success/error states
  */
 export function FeeEstimateDisplay({
   feeEstimate,
@@ -55,14 +55,14 @@ export function FeeEstimateDisplay({
         <div className="flex items-center gap-2">
           <span style={{ color: 'var(--text-secondary)' }}>Estimated fee:</span>
           <span style={{ color: 'var(--text-primary)' }} className="font-mono font-semibold">
-            {(feeEstimate.fee / 1_000_000_000).toFixed(6)} SOL
+            {(feeEstimate.fee / 100_000).toFixed(5)} MNEE
           </span>
         </div>
         {showDetails && (
           <span style={{ color: 'var(--text-tertiary)' }} className="text-xs">
             {feeEstimate.fee.toLocaleString()}
             {' '}
-            lamports
+            atomic units
           </span>
         )}
       </div>

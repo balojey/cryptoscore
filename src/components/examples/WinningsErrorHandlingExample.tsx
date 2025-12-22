@@ -45,7 +45,7 @@ const mockMarketData: MarketData = {
 
 const mockWinningsResult: WinningsResult = {
   type: 'potential',
-  amount: 237_500_000, // ~0.2375 SOL
+  amount: 23750, // ~0.2375 MNEE
   status: 'eligible',
   message: 'Potential winnings for your Home prediction',
   displayVariant: 'info',
@@ -512,7 +512,7 @@ export function WinningsErrorHandlingExample() {
               <ul className="space-y-1 text-[var(--text-secondary)]">
                 <li>• Exchange rate fallbacks</li>
                 <li>• Basic market info display</li>
-                <li>• SOL-only calculations</li>
+                <li>• MNEE-only calculations</li>
                 <li>• Cached data usage</li>
                 <li>• Progressive enhancement</li>
               </ul>

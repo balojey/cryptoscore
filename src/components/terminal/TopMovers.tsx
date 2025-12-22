@@ -36,8 +36,8 @@ function calculateTopMovers(markets: Market[]): TopMover[] {
   const recentHighPoolMarkets = activeMarkets
     .filter(m => Number(m.startTime) >= oneDayAgo)
     .map((market) => {
-      // Convert lamports to SOL
-      const poolSize = (Number(market.entryFee) * Number(market.participantsCount)) / 1_000_000_000
+      // Convert atomic units to MNEE
+      const poolSize = (Number(market.entryFee) * Number(market.participantsCount)) / 100_000
       // Simulate change percentage based on pool size and participants
       const changePercent = Math.min(100, (Number(market.participantsCount) * 10))
 
@@ -212,7 +212,7 @@ function MoverCard({ mover }: { mover: TopMover }) {
             <span className="font-mono">
               {mover.poolSize.toFixed(2)}
               {' '}
-              SOL
+              MNEE
             </span>
           </div>
           <div className="flex items-center gap-1">

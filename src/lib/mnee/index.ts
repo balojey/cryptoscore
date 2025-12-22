@@ -5,6 +5,8 @@ export { MneeUnitConverter } from './unit-conversion.js'
 export { MneeErrorHandler } from './error-handler.js'
 export { DatabaseConsistencyService } from './database-consistency.js'
 export { MneeTransactionService } from './transaction-service.js'
+export { MneeTransactionMonitoringService } from './transaction-monitoring.js'
+export { MneePerformanceOptimizer } from './performance-optimizer.js'
 export { 
   MneeBalanceSubscriptionService, 
   getBalanceSubscriptionService, 

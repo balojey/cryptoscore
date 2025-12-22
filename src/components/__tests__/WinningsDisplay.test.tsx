@@ -22,8 +22,8 @@ import type { EnhancedMatchData } from '@/hooks/useMatchData'
 // Mock the currency context
 vi.mock('@/contexts/CurrencyContext', () => ({
   useCurrency: vi.fn(() => ({
-    formatCurrency: vi.fn((lamports: number) => `◎${(lamports / 1_000_000_000).toFixed(4)}`),
-    exchangeRates: { SOL_USD: 100, SOL_NGN: 50000 },
+    formatCurrency: vi.fn((atomicUnits: number) => `${(atomicUnits / 100_000).toFixed(5)} MNEE`),
+    exchangeRates: { MNEE_USD: 100, MNEE_NGN: 50000 },
     ratesError: null,
   })),
 }))
@@ -33,11 +33,11 @@ vi.mock('@/utils/accessibility', () => ({
   handleKeyboardClick: vi.fn(),
   announceToScreenReader: vi.fn(),
   formatForScreenReader: vi.fn((value: number | string, unit?: string) => {
-    const numValue = typeof value === 'string' ? parseFloat(value.replace(/[◎$,\s]/g, '')) : value
+    const numValue = typeof value === 'string' ? parseFloat(value.replace(/[MNEE$,\s]/g, '')) : value
     return unit ? `${numValue} ${unit}` : numValue.toString()
   }),
-  formatCurrencyForScreenReader: vi.fn((amount: number, currency: string = 'SOL') => {
-    return `${amount} ${currency === 'SOL' ? 'Solana' : currency}`
+  formatCurrencyForScreenReader: vi.fn((amount: number, currency: string = 'MNEE') => {
+    return `${amount} ${currency === 'MNEE' ? 'MNEE' : currency}`
   }),
   createWinningsStatusDescription: vi.fn((type, status, amount) => {
     return `${type} winnings, status: ${status}, amount: ${amount}`
@@ -55,8 +55,8 @@ vi.mock('@/utils/accessibility', () => ({
 const mockMarketData: MarketData = {
   creator: 'test-creator-address',
   matchId: '12345',
-  entryFee: 100000000, // 0.1 SOL in lamports
-  totalPool: 1000000000, // 1 SOL in lamports
+  entryFee: 10000, // 0.1 MNEE in atomic units
+  totalPool: 100000, // 1 MNEE in atomic units
   participantCount: 10,
   homeCount: 4,
   drawCount: 2,
@@ -110,7 +110,7 @@ const mockMatchData: EnhancedMatchData = {
 
 const mockPotentialWinnings: WinningsResult = {
   type: 'potential',
-  amount: 250000000, // 0.25 SOL
+  amount: 25000, // 0.25 MNEE
   status: 'eligible',
   message: 'Potential winnings for your Home prediction',
   displayVariant: 'info',
@@ -119,9 +119,9 @@ const mockPotentialWinnings: WinningsResult = {
 
 const mockActualWinnings: WinningsResult = {
   type: 'actual',
-  amount: 237500000, // 0.2375 SOL
+  amount: 23750, // 0.2375 MNEE
   breakdown: {
-    participantWinnings: 237500000,
+    participantWinnings: 23750,
     totalPool: 1000000000,
     winnerCount: 4,
   },
@@ -133,7 +133,7 @@ const mockActualWinnings: WinningsResult = {
 
 const mockCreatorReward: WinningsResult = {
   type: 'creator_reward',
-  amount: 20000000, // 0.02 SOL
+  amount: 2000, // 0.02 MNEE
   status: 'distributed',
   message: 'Creator reward has been distributed',
   displayVariant: 'success',
@@ -161,7 +161,7 @@ describe('WinningsDisplay', () => {
     }
 
     expect(props.winnings.type).toBe('potential')
-    expect(props.winnings.amount).toBe(250000000)
+    expect(props.winnings.amount).toBe(25000)
     expect(props.winnings.displayVariant).toBe('info')
     expect(props.winnings.message).toBe('Potential winnings for your Home prediction')
   })
@@ -178,7 +178,7 @@ describe('WinningsDisplay', () => {
     }
 
     expect(props.winnings.type).toBe('actual')
-    expect(props.winnings.amount).toBe(237500000)
+    expect(props.winnings.amount).toBe(23750)
     expect(props.winnings.displayVariant).toBe('success')
     expect(props.winnings.breakdown?.winnerCount).toBe(4)
     expect(props.showBreakdown).toBe(true)
@@ -195,7 +195,7 @@ describe('WinningsDisplay', () => {
     }
 
     expect(props.winnings.type).toBe('creator_reward')
-    expect(props.winnings.amount).toBe(20000000)
+    expect(props.winnings.amount).toBe(2000)
     expect(props.winnings.displayVariant).toBe('success')
     expect(props.winnings.message).toBe('Creator reward has been distributed')
   })
@@ -256,8 +256,8 @@ describe('DetailedWinningsDisplay', () => {
 
   it('handles breakdown data correctly', () => {
     expect(mockActualWinnings.breakdown).toBeDefined()
-    expect(mockActualWinnings.breakdown?.participantWinnings).toBe(237500000)
-    expect(mockActualWinnings.breakdown?.totalPool).toBe(1000000000)
+    expect(mockActualWinnings.breakdown?.participantWinnings).toBe(23750)
+    expect(mockActualWinnings.breakdown?.totalPool).toBe(100000)
     expect(mockActualWinnings.breakdown?.winnerCount).toBe(4)
   })
 })
@@ -298,15 +298,15 @@ describe('WinningsDisplay configuration', () => {
 describe('Currency formatting integration', () => {
   it('validates mock currency formatting function', () => {
     // Test that the mock currency formatter works as expected
-    const mockFormatCurrency = vi.fn((lamports: number) => `◎${(lamports / 1_000_000_000).toFixed(4)}`)
+    const mockFormatCurrency = vi.fn((atomicUnits: number) => `${(atomicUnits / 100_000).toFixed(5)} MNEE`)
     
     expect(mockFormatCurrency).toBeDefined()
     expect(typeof mockFormatCurrency).toBe('function')
     
     // Test the mock formatting
-    const formatted = mockFormatCurrency(250000000)
-    expect(formatted).toBe('◎0.2500')
-    expect(mockFormatCurrency).toHaveBeenCalledWith(250000000)
+    const formatted = mockFormatCurrency(25000)
+    expect(formatted).toBe('0.25000 MNEE')
+    expect(mockFormatCurrency).toHaveBeenCalledWith(25000)
   })
 })
 
@@ -334,19 +334,19 @@ describe('Accessibility features', () => {
   })
 
   it('generates proper screen reader content', () => {
-    const amount = 250000000 // 0.25 SOL
-    const formatted = formatForScreenReader(amount / 1_000_000_000, 'SOL')
+    const amount = 25000 // 0.25 MNEE
+    const formatted = formatForScreenReader(amount / 100_000, 'MNEE')
     
-    expect(formatForScreenReader).toHaveBeenCalledWith(0.25, 'SOL')
-    expect(formatted).toBe('0.25 SOL')
+    expect(formatForScreenReader).toHaveBeenCalledWith(0.25, 'MNEE')
+    expect(formatted).toBe('0.25 MNEE')
   })
 
   it('creates proper currency descriptions for screen readers', () => {
     const amount = 0.25
-    const description = formatCurrencyForScreenReader(amount, 'SOL')
+    const description = formatCurrencyForScreenReader(amount, 'MNEE')
     
-    expect(formatCurrencyForScreenReader).toHaveBeenCalledWith(0.25, 'SOL')
-    expect(description).toBe('0.25 Solana')
+    expect(formatCurrencyForScreenReader).toHaveBeenCalledWith(0.25, 'MNEE')
+    expect(description).toBe('0.25 MNEE')
   })
 
   it('generates accessibility IDs', () => {
@@ -416,8 +416,8 @@ describe('Performance optimizations', () => {
     const changedWinnings = { ...mockPotentialWinnings, amount: 300000000 }
     const propsWithChangedAmount = { ...baseProps, winnings: changedWinnings }
 
-    expect(baseProps.winnings.amount).toBe(250000000)
-    expect(propsWithChangedAmount.winnings.amount).toBe(300000000)
+    expect(baseProps.winnings.amount).toBe(25000)
+    expect(propsWithChangedAmount.winnings.amount).toBe(30000)
   })
 })
 

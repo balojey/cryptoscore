@@ -85,7 +85,7 @@ const mockMatchData: EnhancedMatchData = {
 const exampleWinnings: Record<string, WinningsResult> = {
   potential: {
     type: 'potential',
-    amount: 250000000, // 0.25 SOL
+    amount: 25000, // 0.25 MNEE
     status: 'eligible',
     message: 'Potential winnings for your Home prediction',
     displayVariant: 'info',
@@ -94,10 +94,10 @@ const exampleWinnings: Record<string, WinningsResult> = {
   
   actualWin: {
     type: 'actual',
-    amount: 237500000, // 0.2375 SOL (95% of pool / 4 winners)
+    amount: 23750, // 0.2375 MNEE (95% of pool / 4 winners)
     breakdown: {
-      participantWinnings: 237500000,
-      totalPool: 1000000000,
+      participantWinnings: 23750,
+      totalPool: 100000,
       winnerCount: 4,
     },
     status: 'won',
@@ -108,7 +108,7 @@ const exampleWinnings: Record<string, WinningsResult> = {
   
   creatorReward: {
     type: 'creator_reward',
-    amount: 20000000, // 0.02 SOL (2% of pool)
+    amount: 2000, // 0.02 MNEE (2% of pool)
     status: 'distributed',
     message: 'Creator reward has been distributed',
     displayVariant: 'success',
@@ -117,11 +117,11 @@ const exampleWinnings: Record<string, WinningsResult> = {
   
   creatorParticipant: {
     type: 'potential',
-    amount: 257500000, // 0.2575 SOL (participant + creator)
+    amount: 25750, // 0.2575 MNEE (participant + creator)
     breakdown: {
-      participantWinnings: 237500000,
-      creatorReward: 20000000,
-      totalPool: 1000000000,
+      participantWinnings: 23750,
+      creatorReward: 2000,
+      totalPool: 100000,
     },
     status: 'eligible',
     message: 'Potential winnings (Home prediction + creator reward)',
@@ -140,10 +140,10 @@ const exampleWinnings: Record<string, WinningsResult> = {
   
   pending: {
     type: 'actual',
-    amount: 237500000,
+    amount: 23750,
     breakdown: {
-      participantWinnings: 237500000,
-      totalPool: 1000000000,
+      participantWinnings: 23750,
+      totalPool: 100000,
       winnerCount: 4,
     },
     status: 'pending',
@@ -268,7 +268,7 @@ export function WinningsDisplayExample() {
               matchData={mockMatchData}
               winnings={{
                 ...exampleWinnings.potential,
-                amount: 1000000, // 0.001 SOL
+                amount: 100, // 0.001 MNEE
                 message: 'Very small potential winnings',
               }}
               variant="detailed"
@@ -282,7 +282,7 @@ export function WinningsDisplayExample() {
               matchData={mockMatchData}
               winnings={{
                 ...exampleWinnings.actualWin,
-                amount: 1000000000000, // 1000 SOL
+                amount: 100000000, // 1000 MNEE
                 message: 'Very large actual winnings',
               }}
               variant="detailed"

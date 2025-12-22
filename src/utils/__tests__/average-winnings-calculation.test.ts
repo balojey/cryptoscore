@@ -40,8 +40,8 @@ describe('Average Potential Winnings Calculation', () => {
     expect(result.breakdown.Draw).toBe(190000000)
     expect(result.breakdown.Away).toBe(190000000)
     expect(result.average).toBe(190000000)
-    expect(result.explanation).toContain('0.400 SOL')
-    expect(result.explanation).toContain('0.380 SOL')
+    expect(result.explanation).toContain('4000.00000 MNEE')
+    expect(result.explanation).toContain('3800.00000 MNEE')
   })
 
   it('should calculate correct average potential winnings for unbalanced market', () => {

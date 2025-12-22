@@ -8,11 +8,11 @@ const mockMarketData: MarketData = {
   matchId: 'test-match-123',
   title: 'Test Market',
   description: 'Test market description',
-  entry_fee: 100000000, // 0.1 SOL in lamports
+  entry_fee: 10000, // 0.1 MNEE in atomic units
   end_time: new Date(Date.now() + 7200000).toISOString(),
   status: 'active',
   resolution_outcome: null,
-  total_pool: 300000000, // 3 * 0.1 SOL = 0.3 SOL
+  total_pool: 30000, // 3 * 0.1 MNEE = 0.3 MNEE
   platform_fee_percentage: 5,
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
@@ -26,13 +26,13 @@ describe('PotentialWinningsDisplay Logic', () => {
   it('should calculate correct average potential winnings for balanced market', () => {
     const result = WinningsCalculator.calculateAveragePotentialWinnings(mockMarketData)
     
-    // All predictions should have same winnings (190M lamports each)
-    expect(result.breakdown.Home).toBe(190000000)
-    expect(result.breakdown.Draw).toBe(190000000)
-    expect(result.breakdown.Away).toBe(190000000)
-    expect(result.average).toBe(190000000)
-    expect(result.explanation).toContain('0.400 SOL') // New total pool
-    expect(result.explanation).toContain('0.380 SOL') // Participant pool
+    // All predictions should have same winnings (19000 atomic units each)
+    expect(result.breakdown.Home).toBe(19000)
+    expect(result.breakdown.Draw).toBe(19000)
+    expect(result.breakdown.Away).toBe(19000)
+    expect(result.average).toBe(19000)
+    expect(result.explanation).toContain('0.40000 MNEE') // New total pool
+    expect(result.explanation).toContain('0.38000 MNEE') // Participant pool
   })
 
   it('should show higher potential for unpopular predictions', () => {
@@ -69,9 +69,9 @@ describe('PotentialWinningsDisplay Logic', () => {
     const result = WinningsCalculator.calculateAveragePotentialWinnings(emptyMarket)
     
     // All predictions should return entry fee for empty market
-    expect(result.breakdown.Home).toBe(100000000)
-    expect(result.breakdown.Draw).toBe(100000000)
-    expect(result.breakdown.Away).toBe(100000000)
+    expect(result.breakdown.Home).toBe(10000)
+    expect(result.breakdown.Draw).toBe(10000)
+    expect(result.breakdown.Away).toBe(10000)
     expect(result.average).toBe(100000000)
     expect(result.explanation).toContain('No participants yet')
   })
