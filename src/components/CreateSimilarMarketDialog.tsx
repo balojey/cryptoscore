@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { useCurrency } from '@/hooks/useCurrency'
+import { useMnee } from '@/hooks/useMnee'
 
 import type { EnhancedMatchData } from '@/hooks/useMatchData'
 

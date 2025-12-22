@@ -1,7 +1,7 @@
 import type { Market } from '../../types'
 import { useMemo, useState } from 'react'
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { useCurrency } from '@/hooks/useCurrency'
+import { useMnee } from '@/hooks/useMnee'
 import { ErrorBoundary } from '../ErrorBoundary'
 
 type ChartType = 'tvl' | 'volume' | 'participants'

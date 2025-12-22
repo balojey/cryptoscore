@@ -31,14 +31,14 @@
     - **Property 8: Unit conversion accuracy**
     - **Validates: Requirements 7.2, 7.3, 7.5**
 
-- [ ] 3. Refactor currency system to MNEE-only
-  - [ ] 3.1 Remove ExchangeRateService and related code
+- [x] 3. Refactor currency system to MNEE-only
+  - [x] 3.1 Remove ExchangeRateService and related code
     - Delete src/lib/exchangeRateService.ts and all references
     - Remove currency conversion logic from components
     - Clean up localStorage exchange rate caching
     - _Requirements: 4.1, 4.4, 4.5_
 
-  - [ ] 3.2 Refactor CurrencyContext to MneeContext
+  - [x] 3.2 Refactor CurrencyContext to MneeContext
     - Replace CurrencyContext with MneeContext focused on MNEE operations
     - Remove multi-currency support and exchange rate management
     - Add MNEE balance state management and formatting functions
@@ -48,19 +48,19 @@
     - **Property 1: MNEE display consistency**
     - **Validates: Requirements 1.1, 1.5, 4.3, 9.3**
 
-  - [ ] 3.4 Update useCurrency hook to useMnee
+  - [x] 3.4 Update useCurrency hook to useMnee
     - Rename and refactor hook to provide MNEE-specific functionality
     - Remove exchange rate logic and add MNEE balance queries
     - Update all hook consumers throughout the application
     - _Requirements: 9.2, 9.4_
 
-  - [ ] 3.5 Remove currency selector components
+  - [x] 3.5 Remove currency selector components
     - Delete CurrencySelector component and related UI elements
     - Update all components that used currency selection
     - Remove multi-currency UI elements from layouts
     - _Requirements: 4.2, 9.5_
 
-- [ ] 4. Update database schema for MNEE atomic units
+- [-] 4. Update database schema for MNEE atomic units
   - [ ] 4.1 Create database migration for MNEE atomic units
     - Update markets, participants, and transactions tables to use BIGINT for amounts
     - Add MNEE-specific columns (mnee_transaction_id, ticket_id)

@@ -1,46 +1,37 @@
-import { useEffect, useState } from 'react'
 import { useUnifiedWallet } from '@/contexts/UnifiedWalletContext'
-import { useCurrency } from '@/hooks/useCurrency'
+import { useMnee } from '@/hooks/useMnee'
 
 export default function Balance() {
-  const { publicKey } = useUnifiedWallet()
-  const { currency, formatCurrency } = useCurrency()
-  const [balance, setBalance] = useState<number>(0)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<Error | null>(null)
+  const { evmAddress } = useUnifiedWallet()
+  const { balance, decimalBalance, isLoadingBalance, balanceError, formatAmount } = useMnee()
 
-  useEffect(() => {
-    if (!publicKey) {
-      setBalance(0)
-      setIsLoading(false)
-      return
-    }
-
-    // TODO: Implement Supabase balance fetching
-    // For now, show a placeholder balance
-    setBalance(1000) // Placeholder balance
-    setIsLoading(false)
-  }, [publicKey])
-
-  if (isLoading) {
+  if (isLoadingBalance) {
     return <div className="h-9 w-24 rounded animate-pulse skeleton" />
   }
 
-  if (error) {
+  if (balanceError) {
     return <span className="font-sans text-lg font-bold" style={{ color: 'var(--accent-red)' }}>Error</span>
   }
 
-  // Format the primary display value
-  const primaryValue = formatCurrency(balance, { showSymbol: false })
+  if (!evmAddress) {
+    return <span className="font-sans text-lg font-bold" style={{ color: 'var(--text-tertiary)' }}>Connect Wallet</span>
+  }
+
+  // Use decimal balance for display, fallback to formatted atomic balance
+  const displayBalance = decimalBalance !== null 
+    ? decimalBalance.toFixed(5)
+    : balance !== null 
+      ? formatAmount(balance, { includeSymbol: false })
+      : '0.00000'
 
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-baseline gap-2">
         <span className="font-jakarta font-bold text-2xl" style={{ color: 'var(--text-primary)' }}>
-          {primaryValue}
+          {displayBalance}
         </span>
         <span className="font-sans font-semibold" style={{ color: 'var(--text-tertiary)' }}>
-          {currency}
+          MNEE
         </span>
       </div>
     </div>

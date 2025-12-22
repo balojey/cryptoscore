@@ -7,7 +7,7 @@
 
 import { useMemo } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
-import { useCurrency } from '@/hooks/useCurrency'
+import { useMnee } from '@/hooks/useMnee'
 import { useSupabasePortfolioSummary, useSupabaseUserBalance } from '@/hooks/useSupabaseDashboardData'
 import type { SupabaseMarketDashboardInfo } from '@/hooks/useSupabaseDashboardData'
 

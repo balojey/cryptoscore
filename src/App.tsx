@@ -5,7 +5,7 @@ import Footer from './components/layout/Footer'
 import Header from './components/layout/Header'
 import ToastProvider from './components/ui/ToastProvider'
 import { TooltipProvider } from './components/ui/tooltip'
-import { CurrencyProvider } from './contexts/CurrencyContext'
+import { MneeProvider } from './contexts/MneeContext'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { useScrollLockCleanup } from './hooks/useScrollLockCleanup'
 
@@ -40,7 +40,7 @@ function PageLoader() {
   )
 }
 
-// Inner component that can access CurrencyContext
+// Inner component that can access MneeContext
 function AppContent() {
   // Prevent body scroll lock issues with modals
   useScrollLockCleanup()
@@ -76,11 +76,11 @@ function AppContent() {
 function App() {
   return (
     <ThemeProvider>
-      <CurrencyProvider>
+      <MneeProvider>
         <TooltipProvider>
           <AppContent />
         </TooltipProvider>
-      </CurrencyProvider>
+      </MneeProvider>
     </ThemeProvider>
   )
 }

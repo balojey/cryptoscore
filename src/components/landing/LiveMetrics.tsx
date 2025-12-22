@@ -1,5 +1,5 @@
 import { memo, useMemo } from 'react'
-import { useCurrency } from '../../hooks/useCurrency'
+import { useMnee } from '../../hooks/useMnee'
 import { useSupabaseAllMarkets } from '../../hooks/useSupabaseMarketData'
 import AnimatedNumber from '../ui/AnimatedNumber'
 

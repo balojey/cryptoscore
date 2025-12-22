@@ -1,7 +1,7 @@
 import type { Market, MarketDashboardInfo } from '../../types'
 import { useMemo } from 'react'
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { useCurrency } from '@/hooks/useCurrency'
+import { useMnee } from '@/hooks/useMnee'
 
 interface PoolTrendChartProps {
   markets: (Market | MarketDashboardInfo)[]

@@ -33,7 +33,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
-import { useCurrency } from '@/contexts/CurrencyContext'
+import { useMnee } from '@/hooks/useMnee'
 import { WinningsLoadingSkeleton } from './WinningsLoadingSkeleton'
 import { WinningsErrorBoundary } from './WinningsErrorBoundary'
 import { 
@@ -122,7 +122,7 @@ const WinningsDisplayComponent = React.forwardRef<HTMLDivElement, WinningsDispla
   announceChanges = false,
   testId,
 }, ref) => {
-  const { formatCurrency, exchangeRates, ratesError } = useCurrency()
+  const { formatAmount } = useMnee()
   
   // Refs for focus management
   const containerRef = React.useRef<HTMLDivElement>(null)
@@ -158,21 +158,21 @@ const WinningsDisplayComponent = React.forwardRef<HTMLDivElement, WinningsDispla
     if (winnings.amount <= 0) return '—'
     
     try {
-      return formatCurrency(winnings.amount)
+      return formatAmount(winnings.amount)
     } catch (error) {
-      console.warn('[WinningsDisplay] Currency formatting error:', error)
-      // Fallback to SOL display
-      const solAmount = winnings.amount / 1_000_000_000
-      return `◎${solAmount.toFixed(4)}`
+      console.warn('[WinningsDisplay] MNEE formatting error:', error)
+      // Fallback to basic MNEE display
+      const mneeAmount = winnings.amount / 100000 // Convert from atomic units
+      return `${mneeAmount.toFixed(5)} MNEE`
     }
-  }, [winnings.amount, formatCurrency])
+  }, [winnings.amount, formatAmount])
 
   // Memoized screen reader formatted amount
   const screenReaderAmount = React.useMemo(() => {
     if (winnings.amount <= 0) return 'No winnings'
     
-    const solAmount = winnings.amount / 1_000_000_000
-    return formatForScreenReader(solAmount, 'SOL')
+    const mneeAmount = winnings.amount / 100000 // Convert from atomic units
+    return formatForScreenReader(mneeAmount, 'MNEE')
   }, [winnings.amount])
 
   // Show exchange rate warning if needed
@@ -188,11 +188,11 @@ const WinningsDisplayComponent = React.forwardRef<HTMLDivElement, WinningsDispla
     const formatSafely = (amount?: number) => {
       if (!amount) return undefined
       try {
-        return formatCurrency(amount)
+        return formatAmount(amount)
       } catch (error) {
         console.warn('[WinningsDisplay] Breakdown formatting error:', error)
-        const solAmount = amount / 1_000_000_000
-        return `◎${solAmount.toFixed(4)}`
+        const mneeAmount = amount / 100000 // Convert from atomic units
+        return `${mneeAmount.toFixed(5)} MNEE`
       }
     }
 
@@ -202,7 +202,7 @@ const WinningsDisplayComponent = React.forwardRef<HTMLDivElement, WinningsDispla
       totalPool: formatSafely(winnings.breakdown.totalPool),
       winnerCount: winnings.breakdown.winnerCount,
     }
-  }, [winnings.breakdown, formatCurrency])
+  }, [winnings.breakdown, formatAmount])
 
   // Memoized ARIA label
   const computedAriaLabel = React.useMemo(() => {

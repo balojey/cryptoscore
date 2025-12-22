@@ -9,7 +9,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { UserPredictionBadge } from '@/components/ui/UserPredictionBadge'
-import { useCurrency } from '@/hooks/useCurrency'
+import { useMnee } from '@/hooks/useMnee'
 import { useSupabaseMarketData, useSupabaseUserParticipantMarkets } from '../../hooks/useSupabaseMarketData'
 import { useMatchData } from '../../hooks/useMatchData'
 import { useSupabaseParticipantData } from '../../hooks/useSupabaseParticipantData'
