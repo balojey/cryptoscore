@@ -2,7 +2,7 @@ import { useUnifiedWallet } from '@/contexts/UnifiedWalletContext'
 import { useMnee } from '@/hooks/useMnee'
 
 export default function Balance() {
-  const { evmAddress } = useUnifiedWallet()
+  const { walletAddress } = useUnifiedWallet()
   const { balance, decimalBalance, isLoadingBalance, balanceError, formatAmount } = useMnee()
 
   if (isLoadingBalance) {
@@ -13,7 +13,7 @@ export default function Balance() {
     return <span className="font-sans text-lg font-bold" style={{ color: 'var(--accent-red)' }}>Error</span>
   }
 
-  if (!evmAddress) {
+  if (!walletAddress) {
     return <span className="font-sans text-lg font-bold" style={{ color: 'var(--text-tertiary)' }}>Connect Wallet</span>
   }
 
@@ -33,6 +33,10 @@ export default function Balance() {
         <span className="font-sans font-semibold" style={{ color: 'var(--text-tertiary)' }}>
           MNEE
         </span>
+      </div>
+      {/* Display EVM address for MNEE operations */}
+      <div className="text-xs text-[var(--text-tertiary)] font-mono">
+        {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
       </div>
     </div>
   )

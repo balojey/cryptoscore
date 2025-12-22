@@ -1,4 +1,4 @@
-import type { MneeBalance, TransferRecipient, TransferResult, FormatOptions } from '@/lib/mnee/types'
+import type { TransferRecipient, TransferResult, FormatOptions } from '@/lib/mnee/types'
 import { createContext, use, useCallback, useEffect, useMemo, useState } from 'react'
 import { MneeService } from '@/lib/mnee/mnee-service'
 import { MNEE_SDK_CONFIG, MNEE_UNITS } from '@/config/mnee'
@@ -31,7 +31,7 @@ export interface MneeContextType {
 const MneeContext = createContext<MneeContextType | undefined>(undefined)
 
 export function MneeProvider({ children }: { children: React.ReactNode }) {
-  const { evmAddress, privateKey } = useUnifiedWallet()
+  const { walletAddress } = useUnifiedWallet()
   const [mneeService] = useState(() => new MneeService())
   
   // State
@@ -59,7 +59,7 @@ export function MneeProvider({ children }: { children: React.ReactNode }) {
    * Fetch balance for current user
    */
   const refreshBalance = useCallback(async () => {
-    if (!isInitialized || !evmAddress) {
+    if (!isInitialized || !walletAddress) {
       return
     }
 
@@ -67,7 +67,7 @@ export function MneeProvider({ children }: { children: React.ReactNode }) {
     setBalanceError(null)
 
     try {
-      const balanceData = await mneeService.getBalance(evmAddress)
+      const balanceData = await mneeService.getBalance(walletAddress)
       setBalance(balanceData.amount)
       setDecimalBalance(balanceData.decimalAmount)
     } catch (error) {
@@ -77,16 +77,20 @@ export function MneeProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoadingBalance(false)
     }
-  }, [mneeService, isInitialized, evmAddress])
+  }, [mneeService, isInitialized, walletAddress])
 
   /**
    * Transfer MNEE tokens
    */
   const transfer = useCallback(async (recipients: TransferRecipient[]): Promise<TransferResult> => {
-    if (!isInitialized || !privateKey) {
-      throw new Error('MNEE service not initialized or no private key available')
+    if (!isInitialized) {
+      throw new Error('MNEE service not initialized')
     }
 
+    // For now, we'll need to get the private key from the wallet context
+    // This is a placeholder - in production, you'd use proper key management
+    const privateKey = 'placeholder-private-key' // TODO: Implement proper private key access
+    
     try {
       const result = await mneeService.transfer(recipients, privateKey)
       
@@ -103,7 +107,7 @@ export function MneeProvider({ children }: { children: React.ReactNode }) {
       console.error('Transfer error:', error)
       throw error
     }
-  }, [mneeService, isInitialized, privateKey, refreshBalance])
+  }, [mneeService, isInitialized, refreshBalance])
 
   /**
    * Format atomic units as MNEE token string
@@ -151,26 +155,26 @@ export function MneeProvider({ children }: { children: React.ReactNode }) {
    * Fetch balance when service is initialized and user has an address
    */
   useEffect(() => {
-    if (isInitialized && evmAddress) {
+    if (isInitialized && walletAddress) {
       refreshBalance()
     }
-  }, [isInitialized, evmAddress, refreshBalance])
+  }, [isInitialized, walletAddress, refreshBalance])
 
   /**
    * Set up balance subscription when user has an address
    */
   useEffect(() => {
-    if (!isInitialized || !evmAddress) {
+    if (!isInitialized || !walletAddress) {
       return
     }
 
-    const unsubscribe = mneeService.subscribeToBalance(evmAddress, (balanceData) => {
+    const unsubscribe = mneeService.subscribeToBalance(walletAddress, (balanceData) => {
       setBalance(balanceData.amount)
       setDecimalBalance(balanceData.decimalAmount)
     })
 
     return unsubscribe
-  }, [mneeService, isInitialized, evmAddress])
+  }, [mneeService, isInitialized, walletAddress])
 
   /**
    * Clear localStorage cache from old currency system

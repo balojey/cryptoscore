@@ -115,8 +115,8 @@
     - **Property 6: Fee calculation consistency**
     - **Validates: Requirements 1.4, 5.4**
 
-- [ ] 7. Implement EVM wallet integration
-  - [ ] 7.1 Update authentication to use EVM addresses for MNEE
+- [x] 7. Implement EVM wallet integration
+  - [x] 7.1 Update authentication to use EVM addresses for MNEE
     - Modify user authentication to store EVM wallet addresses
     - Update user profile creation to include MNEE-compatible addresses
     - Ensure all MNEE operations use EVM addresses from Crossmint
@@ -126,7 +126,7 @@
     - **Property 9: EVM wallet integration**
     - **Validates: Requirements 8.1, 8.2, 8.4, 8.5**
 
-  - [ ] 7.3 Update balance queries to use EVM addresses
+  - [x] 7.3 Update balance queries to use EVM addresses
     - Modify all balance query operations to use EVM wallet addresses
     - Update balance display components to show EVM addresses
     - Ensure address formatting is MNEE-compatible

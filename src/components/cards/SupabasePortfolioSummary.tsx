@@ -20,7 +20,7 @@ export default function SupabasePortfolioSummary({
   userId, 
   allMarkets = [] 
 }: SupabasePortfolioSummaryProps) {
-  const { formatCurrency, currency } = useCurrency()
+  const { formatAmount } = useMnee()
   
   // Fetch portfolio summary from Supabase
   const { 
@@ -30,7 +30,6 @@ export default function SupabasePortfolioSummary({
 
   // Fetch user balance from Supabase
   const { 
-    data: userBalance, 
     isLoading: isLoadingBalance 
   } = useSupabaseUserBalance(userId)
 
@@ -46,23 +45,27 @@ export default function SupabasePortfolioSummary({
 
     // Calculate active positions (markets user joined that are still active)
     const activePositions = allMarkets.filter(market => 
-      market.status === 'active' && market.userParticipation
+      (market.status === 'SCHEDULED' || market.status === 'LIVE' || market.status === 'IN_PLAY') && 
+      market.user_participation
     ).length
 
     // Calculate claimable winnings (resolved markets where user won but hasn't withdrawn)
     const claimableWinnings = allMarkets
       .filter(market => 
-        market.status === 'resolved' && 
-        market.userParticipation?.actual_winnings && 
-        market.userParticipation.actual_winnings > 0
+        market.status === 'FINISHED' && 
+        market.user_participation?.actual_winnings && 
+        market.user_participation.actual_winnings > 0
       )
-      .reduce((sum, market) => sum + (market.userParticipation?.actual_winnings || 0), 0)
+      .reduce((sum, market) => sum + (market.user_participation?.actual_winnings || 0), 0)
 
     // Calculate total portfolio value
     // Active positions: entry amounts at risk
     const activePositionsValue = allMarkets
-      .filter(market => market.status === 'active' && market.userParticipation)
-      .reduce((sum, market) => sum + (market.userParticipation?.entry_amount || 0), 0)
+      .filter(market => 
+        (market.status === 'SCHEDULED' || market.status === 'LIVE' || market.status === 'IN_PLAY') && 
+        market.user_participation
+      )
+      .reduce((sum, market) => sum + (market.user_participation?.entry_amount || 0), 0)
 
     const totalValue = activePositionsValue + claimableWinnings
 
@@ -160,20 +163,14 @@ export default function SupabasePortfolioSummary({
     </Card>
   )
 
-  // Format portfolio value (convert from decimal to lamports for display)
-  const portfolioValueLamports = stats.totalValue * 1_000_000_000
-  const portfolioValueFormatted = formatCurrency(portfolioValueLamports, { showSymbol: true })
-  const portfolioValueSubtitle = currency !== 'SOL'
-    ? formatCurrency(portfolioValueLamports, { targetCurrency: 'SOL', showSymbol: true })
-    : 'Invested + claimable'
+  // Format portfolio value using MNEE formatting
+  const portfolioValueFormatted = formatAmount(stats.totalValue, { includeSymbol: true })
+  const portfolioValueSubtitle = 'Invested + claimable'
 
-  // Format P&L (convert from decimal to lamports for display)
-  const pnlLamports = Math.abs(stats.netProfitLoss) * 1_000_000_000
+  // Format P&L using MNEE formatting
   const pnlSign = stats.netProfitLoss >= 0 ? '+' : '-'
-  const pnlFormatted = `${pnlSign}${formatCurrency(pnlLamports, { showSymbol: true })}`
-  const pnlSubtitle = currency !== 'SOL'
-    ? formatCurrency(pnlLamports, { targetCurrency: 'SOL', showSymbol: true })
-    : stats.netProfitLoss >= 0 ? 'Profit' : 'Loss'
+  const pnlFormatted = `${pnlSign}${formatAmount(Math.abs(stats.netProfitLoss), { includeSymbol: true })}`
+  const pnlSubtitle = stats.netProfitLoss >= 0 ? 'Profit' : 'Loss'
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

@@ -179,6 +179,42 @@ export class UserService {
   }
 
   /**
+   * Get user's EVM address for MNEE operations
+   *
+   * @param userId - User ID
+   * @returns EVM wallet address or null if not found
+   */
+  static async getUserEvmAddress(userId: string): Promise<string | null> {
+    try {
+      const user = await this.getUserById(userId)
+      return user?.wallet_address || null
+    } catch (error) {
+      console.error('[UserService] Error getting user EVM address:', error)
+      return null
+    }
+  }
+
+  /**
+   * Update user's EVM wallet address
+   *
+   * @param userId - User ID
+   * @param walletAddress - New EVM wallet address
+   * @returns Updated user data
+   */
+  static async updateEvmAddress(userId: string, walletAddress: string): Promise<User> {
+    if (!this.isValidEvmAddress(walletAddress)) {
+      throw new Error(`Invalid EVM address format: ${walletAddress}`)
+    }
+
+    const updates: UserUpdate = {
+      wallet_address: walletAddress,
+      updated_at: new Date().toISOString(),
+    }
+
+    return await DatabaseService.updateUser(userId, updates)
+  }
+
+  /**
    * Validate EVM wallet address format
    *
    * @param address - Wallet address to validate
