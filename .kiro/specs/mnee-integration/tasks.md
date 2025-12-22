@@ -60,8 +60,8 @@
     - Remove multi-currency UI elements from layouts
     - _Requirements: 4.2, 9.5_
 
-- [-] 4. Update database schema for MNEE atomic units
-  - [ ] 4.1 Create database migration for MNEE atomic units
+- [x] 4. Update database schema for MNEE atomic units
+  - [x] 4.1 Create database migration for MNEE atomic units
     - Update markets, participants, and transactions tables to use BIGINT for amounts
     - Add MNEE-specific columns (mnee_transaction_id, ticket_id)
     - Create mnee_balances table for caching user balances
@@ -71,7 +71,7 @@
     - **Property 7: Atomic unit storage consistency**
     - **Validates: Requirements 5.5, 7.1, 11.4**
 
-  - [ ] 4.3 Update database service methods for MNEE
+  - [x] 4.3 Update database service methods for MNEE
     - Modify all database operations to handle atomic units
     - Update query methods to return both atomic and decimal amounts
     - Add balance caching and retrieval methods

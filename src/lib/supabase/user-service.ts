@@ -3,9 +3,11 @@
  *
  * Handles user authentication, profile management, and session persistence
  * with Crossmint authentication and Supabase database storage.
+ * Updated to handle MNEE balance caching and atomic units.
  */
 
 import { DatabaseService } from './database-service'
+import { atomicToMnee } from './mnee-utils'
 import type { Database } from '@/types/supabase'
 
 type User = Database['public']['Tables']['users']['Row']
@@ -192,14 +194,16 @@ export class UserService {
    * Get user portfolio summary
    *
    * @param userId - User ID to get portfolio for
-   * @returns Portfolio summary with participation and transaction data
+   * @returns Portfolio summary with participation and transaction data (amounts in MNEE tokens)
    */
   static async getUserPortfolio(userId: string): Promise<{
     totalMarkets: number
     activeMarkets: number
-    totalWinnings: number
-    totalSpent: number
+    totalWinnings: number // in MNEE tokens
+    totalSpent: number // in MNEE tokens
     winRate: number
+    totalWinningsAtomic: number // in atomic units
+    totalSpentAtomic: number // in atomic units
   }> {
     // Get user participation data
     const participation = await DatabaseService.getUserParticipation(userId)
@@ -212,11 +216,11 @@ export class UserService {
       (p as any).markets?.status === 'active'
     ).length
 
-    const totalWinnings = transactions
+    const totalWinningsAtomic = transactions
       .filter(t => t.type === 'winnings')
       .reduce((sum, t) => sum + t.amount, 0)
 
-    const totalSpent = transactions
+    const totalSpentAtomic = transactions
       .filter(t => t.type === 'market_entry')
       .reduce((sum, t) => sum + t.amount, 0)
 
@@ -229,10 +233,44 @@ export class UserService {
     return {
       totalMarkets,
       activeMarkets,
-      totalWinnings,
-      totalSpent,
+      totalWinnings: atomicToMnee(totalWinningsAtomic),
+      totalSpent: atomicToMnee(totalSpentAtomic),
       winRate,
+      totalWinningsAtomic,
+      totalSpentAtomic,
     }
+  }
+
+  /**
+   * Update user's MNEE balance cache
+   *
+   * @param userId - User ID
+   * @param address - EVM wallet address
+   * @param balanceAtomic - Balance in atomic units
+   */
+  static async updateMneeBalance(userId: string, address: string, balanceAtomic: number): Promise<void> {
+    await DatabaseService.updateMneeBalanceCache(userId, address, balanceAtomic)
+  }
+
+  /**
+   * Get user's cached MNEE balance
+   *
+   * @param userId - User ID
+   * @param address - EVM wallet address
+   * @returns Cached balance or null if not found
+   */
+  static async getMneeBalance(userId: string, address: string) {
+    return await DatabaseService.getMneeBalanceCache(userId, address)
+  }
+
+  /**
+   * Get all cached MNEE balances for a user
+   *
+   * @param userId - User ID
+   * @returns Array of cached balances
+   */
+  static async getAllMneeBalances(userId: string) {
+    return await DatabaseService.getUserMneeBalances(userId)
   }
 
   /**

@@ -40,11 +40,11 @@ export interface Database {
           away_team_name: string | null
           title: string
           description: string
-          entry_fee: number
+          entry_fee: number // BIGINT - atomic units
           end_time: string
           status: 'SCHEDULED' | 'LIVE' | 'IN_PLAY' | 'PAUSED' | 'FINISHED' | 'POSTPONED' | 'CANCELLED' | 'SUSPENDED'
           resolution_outcome: string | null
-          total_pool: number
+          total_pool: number // BIGINT - atomic units
           platform_fee_percentage: number
           creator_reward_percentage: number | null
           created_at: string
@@ -60,11 +60,11 @@ export interface Database {
           away_team_name?: string | null
           title: string
           description: string
-          entry_fee: number
+          entry_fee: number // BIGINT - atomic units
           end_time: string
           status?: 'SCHEDULED' | 'LIVE' | 'IN_PLAY' | 'PAUSED' | 'FINISHED' | 'POSTPONED' | 'CANCELLED' | 'SUSPENDED'
           resolution_outcome?: string | null
-          total_pool?: number
+          total_pool?: number // BIGINT - atomic units
           platform_fee_percentage?: number
           creator_reward_percentage?: number | null
           created_at?: string
@@ -80,11 +80,11 @@ export interface Database {
           away_team_name?: string | null
           title?: string
           description?: string
-          entry_fee?: number
+          entry_fee?: number // BIGINT - atomic units
           end_time?: string
           status?: 'SCHEDULED' | 'LIVE' | 'IN_PLAY' | 'PAUSED' | 'FINISHED' | 'POSTPONED' | 'CANCELLED' | 'SUSPENDED'
           resolution_outcome?: string | null
-          total_pool?: number
+          total_pool?: number // BIGINT - atomic units
           platform_fee_percentage?: number
           creator_reward_percentage?: number | null
           updated_at?: string
@@ -96,9 +96,9 @@ export interface Database {
           market_id: string
           user_id: string
           prediction: string
-          entry_amount: number
-          potential_winnings: number
-          actual_winnings: number | null
+          entry_amount: number // BIGINT - atomic units
+          potential_winnings: number // BIGINT - atomic units
+          actual_winnings: number | null // BIGINT - atomic units
           joined_at: string
         }
         Insert: {
@@ -106,9 +106,9 @@ export interface Database {
           market_id: string
           user_id: string
           prediction: string
-          entry_amount: number
-          potential_winnings: number
-          actual_winnings?: number | null
+          entry_amount: number // BIGINT - atomic units
+          potential_winnings: number // BIGINT - atomic units
+          actual_winnings?: number | null // BIGINT - atomic units
           joined_at?: string
         }
         Update: {
@@ -116,9 +116,9 @@ export interface Database {
           market_id?: string
           user_id?: string
           prediction?: string
-          entry_amount?: number
-          potential_winnings?: number
-          actual_winnings?: number | null
+          entry_amount?: number // BIGINT - atomic units
+          potential_winnings?: number // BIGINT - atomic units
+          actual_winnings?: number | null // BIGINT - atomic units
         }
       }
       transactions: {
@@ -127,10 +127,12 @@ export interface Database {
           user_id: string
           market_id: string | null
           type: 'market_entry' | 'winnings' | 'platform_fee' | 'creator_reward' | 'automated_transfer'
-          amount: number
+          amount: number // BIGINT - atomic units
           description: string
           status: 'PENDING' | 'COMPLETED' | 'FAILED'
           metadata: any | null
+          mnee_transaction_id: string | null
+          ticket_id: string | null
           created_at: string
           updated_at: string
         }
@@ -139,10 +141,12 @@ export interface Database {
           user_id: string
           market_id?: string | null
           type: 'market_entry' | 'winnings' | 'platform_fee' | 'creator_reward' | 'automated_transfer'
-          amount: number
+          amount: number // BIGINT - atomic units
           description: string
           status?: 'PENDING' | 'COMPLETED' | 'FAILED'
           metadata?: any | null
+          mnee_transaction_id?: string | null
+          ticket_id?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -151,10 +155,12 @@ export interface Database {
           user_id?: string
           market_id?: string | null
           type?: 'market_entry' | 'winnings' | 'platform_fee' | 'creator_reward' | 'automated_transfer'
-          amount?: number
+          amount?: number // BIGINT - atomic units
           description?: string
           status?: 'PENDING' | 'COMPLETED' | 'FAILED'
           metadata?: any | null
+          mnee_transaction_id?: string | null
+          ticket_id?: string | null
           updated_at?: string
         }
       }
@@ -175,6 +181,34 @@ export interface Database {
           updated_at?: string
         }
       }
+      mnee_balances: {
+        Row: {
+          id: string
+          user_id: string
+          address: string
+          balance_atomic: number // BIGINT - atomic units
+          balance_decimal: number // DECIMAL(20,5) - MNEE tokens
+          last_updated: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          address: string
+          balance_atomic: number // BIGINT - atomic units
+          balance_decimal: number // DECIMAL(20,5) - MNEE tokens
+          last_updated?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          address?: string
+          balance_atomic?: number // BIGINT - atomic units
+          balance_decimal?: number // DECIMAL(20,5) - MNEE tokens
+          last_updated?: string
+        }
+      }
     }
   }
 }
@@ -185,12 +219,15 @@ export type Market = Database['public']['Tables']['markets']['Row']
 export type Participant = Database['public']['Tables']['participants']['Row']
 export type Transaction = Database['public']['Tables']['transactions']['Row']
 export type PlatformConfig = Database['public']['Tables']['platform_config']['Row']
+export type MneeBalance = Database['public']['Tables']['mnee_balances']['Row']
 
 export type CreateUser = Database['public']['Tables']['users']['Insert']
 export type CreateMarket = Database['public']['Tables']['markets']['Insert']
 export type CreateParticipant = Database['public']['Tables']['participants']['Insert']
 export type CreateTransaction = Database['public']['Tables']['transactions']['Insert']
+export type CreateMneeBalance = Database['public']['Tables']['mnee_balances']['Insert']
 
 export type UpdateUser = Database['public']['Tables']['users']['Update']
 export type UpdateMarket = Database['public']['Tables']['markets']['Update']
 export type UpdateParticipant = Database['public']['Tables']['participants']['Update']
+export type UpdateMneeBalance = Database['public']['Tables']['mnee_balances']['Update']

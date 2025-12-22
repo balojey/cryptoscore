@@ -3,16 +3,17 @@
  *
  * Handles market creation, participation, resolution, and data retrieval
  * replacing Solana program functionality with database operations.
+ * Updated to handle MNEE atomic units (1 MNEE = 100,000 atomic units).
  */
 
 import { DatabaseService } from './database-service'
+import { mneeToAtomic, atomicToMnee } from './mnee-utils'
 import type { Database } from '@/types/supabase'
 
 type Market = Database['public']['Tables']['markets']['Row']
 type MarketInsert = Database['public']['Tables']['markets']['Insert']
 type MarketUpdate = Database['public']['Tables']['markets']['Update']
 type Participant = Database['public']['Tables']['participants']['Row']
-type ParticipantInsert = Database['public']['Tables']['participants']['Insert']
 
 /**
  * Market creation parameters
@@ -21,7 +22,7 @@ export interface CreateMarketParams {
   matchId: string
   title: string
   description: string
-  entryFee: number // in decimal format (e.g., 0.1 for 0.1 SOL equivalent)
+  entryFee: number // in MNEE tokens (will be converted to atomic units)
   endTime: string // ISO timestamp
   isPublic: boolean
   creatorId: string
@@ -38,7 +39,7 @@ export interface JoinMarketParams {
   marketId: string
   userId: string
   prediction: 'HOME_WIN' | 'DRAW' | 'AWAY_WIN'
-  entryAmount: number
+  entryAmount: number // in MNEE tokens (will be converted to atomic units)
 }
 
 /**
@@ -82,6 +83,9 @@ export class MarketService {
     const creatorRewardConfig = await DatabaseService.getPlatformConfig('default_creator_reward_percentage')
     const creatorRewardPercentage = creatorRewardConfig?.value ? parseFloat(creatorRewardConfig.value as string) : 0.02
 
+    // Convert entry fee from MNEE tokens to atomic units
+    const entryFeeAtomic = mneeToAtomic(params.entryFee)
+
     const marketData: MarketInsert = {
       creator_id: params.creatorId,
       match_id: parseInt(params.matchId),
@@ -91,7 +95,7 @@ export class MarketService {
       away_team_name: params.awayTeamName,
       title: params.title,
       description: params.description,
-      entry_fee: params.entryFee,
+      entry_fee: entryFeeAtomic, // Store in atomic units
       end_time: params.endTime,
       status: 'SCHEDULED',
       total_pool: 0, // Will be updated as participants join
@@ -134,6 +138,9 @@ export class MarketService {
       throw new Error('Market has ended')
     }
 
+    // Convert entry amount from MNEE tokens to atomic units
+    const entryAmountAtomic = mneeToAtomic(params.entryAmount)
+
     // Check if user already has this specific prediction
     const existingParticipants = await DatabaseService.getMarketParticipants(params.marketId)
     const userParticipants = existingParticipants.filter(p => p.user_id === params.userId)
@@ -153,43 +160,42 @@ export class MarketService {
       throw new Error('User cannot place more than 3 predictions per market')
     }
 
-    // Get current participants to calculate potential winnings using same logic as WinningsCalculator
+    // Get current participants to calculate potential winnings using atomic units
     const currentParticipants = await DatabaseService.getMarketParticipants(params.marketId)
-    const newTotalPool = market.total_pool + params.entryAmount
+    const newTotalPoolAtomic = market.total_pool + entryAmountAtomic
 
     // Use the same fee structure as WinningsCalculator (95% participant pool)
-    const newParticipantPool = Math.floor((newTotalPool * 9500) / 10000)
+    const newParticipantPoolAtomic = Math.floor((newTotalPoolAtomic * 9500) / 10000)
     
     // Count current predictions for the same outcome
     const currentPredictionCount = currentParticipants.filter(p => p.prediction === dbPrediction).length
     
-    // Calculate potential winnings: if no one has made this prediction yet, user gets full participant pool
-    // Otherwise, divide by the number of people who will have made this prediction (including this user)
-    const potentialWinnings = currentPredictionCount === 0 
-      ? newParticipantPool 
-      : Math.floor(newParticipantPool / (currentPredictionCount + 1))
+    // Calculate potential winnings in atomic units
+    const potentialWinningsAtomic = currentPredictionCount === 0 
+      ? newParticipantPoolAtomic 
+      : Math.floor(newParticipantPoolAtomic / (currentPredictionCount + 1))
 
-    // Create participant record
+    // Create participant record with atomic units
     const participant = await DatabaseService.joinMarket({
       market_id: params.marketId,
       user_id: params.userId,
       prediction: dbPrediction,
-      entry_amount: params.entryAmount,
-      potential_winnings: potentialWinnings,
+      entry_amount: entryAmountAtomic, // Store in atomic units
+      potential_winnings: potentialWinningsAtomic, // Store in atomic units
     })
 
-    // Update market total pool
+    // Update market total pool with atomic units
     await DatabaseService.updateMarket(params.marketId, {
-      total_pool: newTotalPool,
+      total_pool: newTotalPoolAtomic,
       updated_at: new Date().toISOString(),
     })
 
-    // Create transaction record
+    // Create transaction record with atomic units
     await DatabaseService.createTransaction({
       user_id: params.userId,
       market_id: params.marketId,
       type: 'market_entry',
-      amount: params.entryAmount,
+      amount: entryAmountAtomic, // Store in atomic units
       description: `Joined market with ${dbPrediction} prediction`,
     })
 
@@ -200,7 +206,7 @@ export class MarketService {
    * Resolve a market with the winning outcome
    * @deprecated Manual resolution is deprecated in favor of automated resolution
    */
-  static async resolveMarket(params: ResolveMarketParams): Promise<void> {
+  static async resolveMarket(_params: ResolveMarketParams): Promise<void> {
     throw new Error('Manual market resolution has been disabled. Markets are now resolved automatically.')
   }
 
@@ -260,14 +266,16 @@ export class MarketService {
     homeCount: number
     drawCount: number
     awayCount: number
-    totalPool: number
+    totalPool: number // in MNEE tokens
+    totalPoolAtomic: number // in atomic units
   }> {
     const participants = await DatabaseService.getMarketParticipants(marketId)
     
     const homeCount = participants.filter(p => p.prediction === 'Home').length
     const drawCount = participants.filter(p => p.prediction === 'Draw').length
     const awayCount = participants.filter(p => p.prediction === 'Away').length
-    const totalPool = participants.reduce((sum, p) => sum + p.entry_amount, 0)
+    const totalPoolAtomic = participants.reduce((sum, p) => sum + p.entry_amount, 0)
+    const totalPool = atomicToMnee(totalPoolAtomic)
 
     return {
       totalParticipants: participants.length,
@@ -275,21 +283,15 @@ export class MarketService {
       drawCount,
       awayCount,
       totalPool,
+      totalPoolAtomic,
     }
   }
 
   /**
-   * Check if user can resolve a market
-   *
-   * @param marketId - Market ID to check
-   * @param userId - User ID to check permissions for
-   * @returns True if user can resolve the market
-   */
-  /**
    * Check if a user can resolve a market
    * @deprecated Manual resolution is deprecated in favor of automated resolution
    */
-  static async canUserResolveMarket(marketId: string, userId: string): Promise<boolean> {
+  static async canUserResolveMarket(_marketId: string, _userId: string): Promise<boolean> {
     return false // Manual resolution is disabled
   }
 
@@ -353,8 +355,8 @@ export class MarketService {
       throw new Error('Only market creator can cancel')
     }
 
-    if (market.status !== 'active') {
-      throw new Error('Can only cancel active markets')
+    if (market.status !== 'SCHEDULED') {
+      throw new Error('Can only cancel scheduled markets')
     }
 
     const participants = await DatabaseService.getMarketParticipants(marketId)
@@ -363,7 +365,7 @@ export class MarketService {
     }
 
     await DatabaseService.updateMarket(marketId, {
-      status: 'cancelled',
+      status: 'CANCELLED',
       updated_at: new Date().toISOString(),
     })
   }
@@ -372,20 +374,23 @@ export class MarketService {
    * Calculate user balance from all transactions
    *
    * @param userId - User ID to calculate balance for
-   * @returns User's current balance
+   * @returns User's current balance in MNEE tokens and atomic units
    */
-  static async getUserBalance(userId: string): Promise<number> {
+  static async getUserBalance(userId: string): Promise<{
+    balanceMnee: number
+    balanceAtomic: number
+  }> {
     const transactions = await DatabaseService.getUserTransactions(userId)
     
-    let balance = 0
+    let balanceAtomic = 0
     for (const transaction of transactions) {
       switch (transaction.type) {
         case 'winnings':
         case 'creator_reward':
-          balance += transaction.amount
+          balanceAtomic += transaction.amount
           break
         case 'market_entry':
-          balance -= transaction.amount
+          balanceAtomic -= transaction.amount
           break
         case 'platform_fee':
           // Platform fees are deducted from winnings, not user balance
@@ -393,19 +398,25 @@ export class MarketService {
       }
     }
     
-    return balance
+    return {
+      balanceMnee: atomicToMnee(balanceAtomic),
+      balanceAtomic
+    }
   }
 
   /**
    * Get user's portfolio summary
    *
    * @param userId - User ID to get portfolio for
-   * @returns Portfolio summary with P&L, win rate, etc.
+   * @returns Portfolio summary with P&L, win rate, etc. (amounts in MNEE tokens)
    */
   static async getUserPortfolio(userId: string): Promise<{
-    totalWinnings: number
-    totalSpent: number
-    netProfitLoss: number
+    totalWinnings: number // in MNEE tokens
+    totalSpent: number // in MNEE tokens
+    netProfitLoss: number // in MNEE tokens
+    totalWinningsAtomic: number // in atomic units
+    totalSpentAtomic: number // in atomic units
+    netProfitLossAtomic: number // in atomic units
     marketsParticipated: number
     marketsWon: number
     winRate: number
@@ -414,20 +425,20 @@ export class MarketService {
     const transactions = await DatabaseService.getUserTransactions(userId)
     const participation = await DatabaseService.getUserParticipation(userId)
     
-    let totalWinnings = 0
-    let totalSpent = 0
-    let creatorRewards = 0
+    let totalWinningsAtomic = 0
+    let totalSpentAtomic = 0
+    let creatorRewardsAtomic = 0
     
     for (const transaction of transactions) {
       switch (transaction.type) {
         case 'winnings':
-          totalWinnings += transaction.amount
+          totalWinningsAtomic += transaction.amount
           break
         case 'creator_reward':
-          creatorRewards += transaction.amount
+          creatorRewardsAtomic += transaction.amount
           break
         case 'market_entry':
-          totalSpent += transaction.amount
+          totalSpentAtomic += transaction.amount
           break
       }
     }
@@ -436,12 +447,15 @@ export class MarketService {
     const marketsWon = participation.filter(p => p.actual_winnings && p.actual_winnings > 0).length
     const activeMarkets = participation.filter(p => p.actual_winnings === null).length
     const winRate = marketsParticipated > 0 ? (marketsWon / marketsParticipated) * 100 : 0
-    const netProfitLoss = totalWinnings + creatorRewards - totalSpent
+    const netProfitLossAtomic = totalWinningsAtomic + creatorRewardsAtomic - totalSpentAtomic
     
     return {
-      totalWinnings: totalWinnings + creatorRewards,
-      totalSpent,
-      netProfitLoss,
+      totalWinnings: atomicToMnee(totalWinningsAtomic + creatorRewardsAtomic),
+      totalSpent: atomicToMnee(totalSpentAtomic),
+      netProfitLoss: atomicToMnee(netProfitLossAtomic),
+      totalWinningsAtomic: totalWinningsAtomic + creatorRewardsAtomic,
+      totalSpentAtomic,
+      netProfitLossAtomic,
       marketsParticipated,
       marketsWon,
       winRate,

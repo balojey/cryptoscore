@@ -1,5 +1,6 @@
 import { supabase } from '@/config/supabase'
 import type { Database } from '@/types/supabase'
+import { mneeToAtomic, atomicToMnee } from './mnee-utils'
 
 type Tables = Database['public']['Tables']
 type User = Tables['users']['Row']
@@ -7,6 +8,7 @@ type Market = Tables['markets']['Row']
 type Participant = Tables['participants']['Row']
 type Transaction = Tables['transactions']['Row']
 type PlatformConfig = Tables['platform_config']['Row']
+type MneeBalance = Tables['mnee_balances']['Row']
 
 export class DatabaseService {
   // Expose supabase client for advanced operations
@@ -321,6 +323,160 @@ export class DatabaseService {
     return data || []
   }
 
+  // MNEE Balance operations
+  static async updateMneeBalanceCache(
+    userId: string,
+    address: string,
+    balanceAtomic: number
+  ): Promise<MneeBalance> {
+    const balanceDecimal = atomicToMnee(balanceAtomic)
+    
+    const { data, error } = await supabase
+      .from('mnee_balances')
+      .upsert({
+        user_id: userId,
+        address,
+        balance_atomic: balanceAtomic,
+        balance_decimal: balanceDecimal,
+        last_updated: new Date().toISOString()
+      })
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  }
+
+  static async getMneeBalanceCache(userId: string, address: string): Promise<MneeBalance | null> {
+    const { data, error } = await supabase
+      .from('mnee_balances')
+      .select()
+      .eq('user_id', userId)
+      .eq('address', address)
+      .single()
+
+    if (error && error.code !== 'PGRST116') throw error
+    return data
+  }
+
+  static async getUserMneeBalances(userId: string): Promise<MneeBalance[]> {
+    const { data, error } = await supabase
+      .from('mnee_balances')
+      .select()
+      .eq('user_id', userId)
+      .order('last_updated', { ascending: false })
+
+    if (error) throw error
+    return data || []
+  }
+
+  static async deleteMneeBalanceCache(userId: string, address: string): Promise<void> {
+    const { error } = await supabase
+      .from('mnee_balances')
+      .delete()
+      .eq('user_id', userId)
+      .eq('address', address)
+
+    if (error) throw error
+  }
+
+  // Enhanced transaction operations with MNEE support
+  static async createTransactionWithMnee(transactionData: Tables['transactions']['Insert'] & {
+    mneeTransactionId?: string
+    ticketId?: string
+  }): Promise<Transaction> {
+    // Set default status and metadata if not provided
+    const enhancedTransactionData = {
+      status: 'PENDING' as const,
+      metadata: null,
+      ...transactionData,
+      mnee_transaction_id: transactionData.mneeTransactionId || null,
+      ticket_id: transactionData.ticketId || null,
+      created_at: transactionData.created_at || new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }
+
+    const { data, error } = await supabase
+      .from('transactions')
+      .insert(enhancedTransactionData)
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  }
+
+  static async getTransactionByMneeId(mneeTransactionId: string): Promise<Transaction | null> {
+    const { data, error } = await supabase
+      .from('transactions')
+      .select()
+      .eq('mnee_transaction_id', mneeTransactionId)
+      .single()
+
+    if (error && error.code !== 'PGRST116') throw error
+    return data
+  }
+
+  static async getTransactionByTicketId(ticketId: string): Promise<Transaction | null> {
+    const { data, error } = await supabase
+      .from('transactions')
+      .select()
+      .eq('ticket_id', ticketId)
+      .single()
+
+    if (error && error.code !== 'PGRST116') throw error
+    return data
+  }
+
+  // Enhanced query methods that return both atomic and decimal amounts
+  static async getMarketWithAmounts(marketId: string): Promise<(Market & {
+    entry_fee_mnee: number
+    total_pool_mnee: number
+  }) | null> {
+    const market = await this.getMarketById(marketId)
+    if (!market) return null
+
+    return {
+      ...market,
+      entry_fee_mnee: atomicToMnee(market.entry_fee),
+      total_pool_mnee: atomicToMnee(market.total_pool)
+    }
+  }
+
+  static async getParticipantWithAmounts(participantId: string): Promise<(Participant & {
+    entry_amount_mnee: number
+    potential_winnings_mnee: number
+    actual_winnings_mnee: number | null
+  }) | null> {
+    const { data, error } = await supabase
+      .from('participants')
+      .select()
+      .eq('id', participantId)
+      .single()
+
+    if (error && error.code !== 'PGRST116') throw error
+    if (!data) return null
+
+    return {
+      ...data,
+      entry_amount_mnee: atomicToMnee(data.entry_amount),
+      potential_winnings_mnee: atomicToMnee(data.potential_winnings),
+      actual_winnings_mnee: data.actual_winnings ? atomicToMnee(data.actual_winnings) : null
+    }
+  }
+
+  static async getTransactionWithAmounts(transactionId: string): Promise<(Transaction & {
+    amount_mnee: number
+  }) | null> {
+    const transaction = await this.getTransactionById(transactionId)
+    if (!transaction) return null
+
+    return {
+      ...transaction,
+      amount_mnee: atomicToMnee(transaction.amount)
+    }
+  }
+
   // Market resolution
   // Note: Manual resolution is deprecated in favor of automated resolution
   static async resolveMarket(marketId: string, winningOutcome: string): Promise<void> {
@@ -399,6 +555,24 @@ export class DatabaseService {
           event: '*', 
           schema: 'public', 
           table: 'participants',
+          filter: `user_id=eq.${userId}`
+        },
+        callback
+      )
+      .subscribe()
+  }
+
+  /**
+   * Subscribe to user's MNEE balance changes
+   */
+  static subscribeToUserMneeBalances(userId: string, callback: (payload: any) => void) {
+    return supabase
+      .channel(`user-${userId}-mnee-balances`)
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'mnee_balances',
           filter: `user_id=eq.${userId}`
         },
         callback
