@@ -19,7 +19,7 @@ interface PortfolioSummaryProps {
 export default function PortfolioSummary({ userAddress, joinedMarkets = [], allMarkets }: PortfolioSummaryProps) {
   const { publicKey } = useUnifiedWallet()
   const { connection } = useSolanaConnection()
-  const { formatCurrency, currency } = useCurrency()
+  const { formatAmount } = useMnee()
   const walletAddress = userAddress || publicKey?.toString()
 
   // Use allMarkets if provided, otherwise fall back to joinedMarkets
@@ -153,16 +153,16 @@ export default function PortfolioSummary({ userAddress, joinedMarkets = [], allM
     console.log('[PortfolioSummary] Active positions:', activePositions)
     console.log('[PortfolioSummary] Resolved positions:', resolvedPositions)
 
-    // Calculate total invested (entry fees for all participated markets) - in lamports
-    const totalInvestedLamports = userMarketData.reduce((sum, data) => {
+    // Calculate total invested (entry fees for all participated markets) - in atomic units
+    const totalInvestedAtomic = userMarketData.reduce((sum, data) => {
       return sum + data.entryFee
     }, 0)
 
     // Calculate wins and losses based on actual predictions
     let totalWins = 0
     let totalLosses = 0
-    let totalClaimableRewardsLamports = 0
-    let totalWithdrawnRewardsLamports = 0
+    let totalClaimableRewardsAtomic = 0
+    let totalWithdrawnRewardsAtomic = 0
 
     userMarketData.forEach((data) => {
       const { market, prediction, reward, hasWithdrawn } = data
@@ -179,10 +179,10 @@ export default function PortfolioSummary({ userAddress, joinedMarkets = [], allM
 
           // Track rewards
           if (hasWithdrawn) {
-            totalWithdrawnRewardsLamports += reward
+            totalWithdrawnRewardsAtomic += reward
           }
           else {
-            totalClaimableRewardsLamports += reward
+            totalClaimableRewardsAtomic += reward
           }
         }
         else {
@@ -196,21 +196,21 @@ export default function PortfolioSummary({ userAddress, joinedMarkets = [], allM
 
     // P&L = (Total rewards received/claimable) - Total invested
     // Rewards already include the entry fee, so this gives true profit/loss
-    const totalRewardsLamports = totalWithdrawnRewardsLamports + totalClaimableRewardsLamports
-    const totalPnLLamports = totalRewardsLamports - totalInvestedLamports
+    const totalRewardsAtomic = totalWithdrawnRewardsAtomic + totalClaimableRewardsAtomic
+    const totalPnLAtomic = totalRewardsAtomic - totalInvestedAtomic
 
     // Portfolio Value = Invested in active positions + Claimable rewards from resolved wins
     // For active positions, we count the entry fee (what's at stake)
     // For resolved wins, we count claimable rewards (what we can withdraw)
-    const activePositionsValueLamports = userMarketData
+    const activePositionsValueAtomic = userMarketData
       .filter(data => !data.market.resolved)
       .reduce((sum, data) => sum + data.entryFee, 0)
 
-    const totalValueLamports = activePositionsValueLamports + totalClaimableRewardsLamports
+    const totalValueAtomic = activePositionsValueAtomic + totalClaimableRewardsAtomic
 
-    // Convert to SOL for display
-    const totalValue = totalValueLamports / 1_000_000_000
-    const totalPnL = totalPnLLamports / 1_000_000_000
+    // Convert to MNEE tokens for display
+    const totalValue = totalValueAtomic / 100000 // Convert from atomic units
+    const totalPnL = totalPnLAtomic / 100000 // Convert from atomic units
 
     console.log('[PortfolioSummary] Final Stats:', {
       totalValue,
@@ -220,10 +220,10 @@ export default function PortfolioSummary({ userAddress, joinedMarkets = [], allM
       totalLosses,
       winRate,
       totalPnL,
-      totalInvestedLamports,
-      totalClaimableRewardsLamports,
-      totalWithdrawnRewardsLamports,
-      activePositionsValueLamports,
+      totalInvestedAtomic,
+      totalClaimableRewardsAtomic,
+      totalWithdrawnRewardsAtomic,
+      activePositionsValueAtomic,
     })
 
     return {
@@ -282,20 +282,14 @@ export default function PortfolioSummary({ userAddress, joinedMarkets = [], allM
     </Card>
   )
 
-  // Format portfolio value with SOL equivalent
-  const portfolioValueLamports = stats.totalValue * 1_000_000_000
-  const portfolioValueFormatted = formatCurrency(portfolioValueLamports, { showSymbol: true })
-  const portfolioValueSubtitle = currency !== 'SOL'
-    ? formatCurrency(portfolioValueLamports, { targetCurrency: 'SOL', showSymbol: true })
-    : 'Invested + profits'
+  // Format portfolio value using MNEE formatting
+  const portfolioValueFormatted = formatAmount(stats.totalValue * 100000, { includeSymbol: true }) // Convert back to atomic units
+  const portfolioValueSubtitle = 'Invested + profits'
 
-  // Format P&L with SOL equivalent
-  const pnlLamports = Math.abs(stats.totalPnL) * 1_000_000_000
+  // Format P&L using MNEE formatting
   const pnlSign = stats.totalPnL >= 0 ? '+' : '-'
-  const pnlFormatted = `${pnlSign}${formatCurrency(pnlLamports, { showSymbol: true })}`
-  const pnlSubtitle = currency !== 'SOL'
-    ? formatCurrency(pnlLamports, { targetCurrency: 'SOL', showSymbol: true })
-    : stats.totalPnL >= 0 ? 'Profit' : 'Loss'
+  const pnlFormatted = `${pnlSign}${formatAmount(Math.abs(stats.totalPnL) * 100000, { includeSymbol: true })}` // Convert back to atomic units
+  const pnlSubtitle = stats.totalPnL >= 0 ? 'Profit' : 'Loss'
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

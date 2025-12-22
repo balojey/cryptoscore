@@ -132,20 +132,20 @@
     - Ensure address formatting is MNEE-compatible
     - _Requirements: 8.2, 8.4_
 
-- [ ] 8. Update UI components for MNEE display
-  - [ ] 8.1 Update all balance display components
+- [x] 8. Update UI components for MNEE display
+  - [x] 8.1 Update all balance display components
     - Modify Balance, WinningsDisplay, and portfolio components for MNEE
     - Update formatting to show MNEE symbols and amounts
     - Remove SOL references and update loading states
     - _Requirements: 1.5, 9.3, 9.4_
 
-  - [ ] 8.2 Update market card and list components
+  - [x] 8.2 Update market card and list components
     - Modify EnhancedMarketCard to display MNEE entry fees
     - Update market lists to show MNEE amounts consistently
     - Remove currency conversion displays
     - _Requirements: 1.1, 4.3_
 
-  - [ ] 8.3 Update portfolio and dashboard components
+  - [x] 8.3 Update portfolio and dashboard components
     - Modify SupabasePortfolioSummary for MNEE calculations
     - Update dashboard metrics to use MNEE amounts
     - Implement MNEE-based profit/loss calculations

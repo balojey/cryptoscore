@@ -8,7 +8,7 @@ interface PoolTrendChartProps {
 }
 
 export default function PoolTrendChart({ markets }: PoolTrendChartProps) {
-  const { currency, convertFromLamports, formatCurrency } = useCurrency()
+  const { formatAmount, fromAtomicUnits } = useMnee()
 
   const chartData = useMemo(() => {
     if (!markets || markets.length === 0)
@@ -19,38 +19,38 @@ export default function PoolTrendChart({ markets }: PoolTrendChartProps) {
       Number(a.startTime) - Number(b.startTime),
     )
 
-    // Group by date and calculate average pool size in lamports
-    const dataByDate = new Map<string, { totalLamports: number, count: number }>()
+    // Group by date and calculate average pool size in atomic units
+    const dataByDate = new Map<string, { totalAtomic: number, count: number }>()
 
     sortedMarkets.forEach((market) => {
       const date = new Date(Number(market.startTime) * 1000)
       const dateKey = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 
-      // Calculate pool size in lamports
-      const poolSizeLamports = Number(market.entryFee) * Number(market.participantsCount)
+      // Calculate pool size in atomic units (MNEE)
+      const poolSizeAtomic = Number(market.entryFee) * Number(market.participantsCount)
 
-      const existing = dataByDate.get(dateKey) || { totalLamports: 0, count: 0 }
+      const existing = dataByDate.get(dateKey) || { totalAtomic: 0, count: 0 }
       dataByDate.set(dateKey, {
-        totalLamports: existing.totalLamports + poolSizeLamports,
+        totalAtomic: existing.totalAtomic + poolSizeAtomic,
         count: existing.count + 1,
       })
     })
 
-    // Convert to chart data with currency conversion
+    // Convert to chart data with MNEE conversion
     return Array.from(dataByDate.entries()).map(([date, data]) => {
-      const avgLamports = data.totalLamports / data.count
-      const totalLamports = data.totalLamports
+      const avgAtomic = data.totalAtomic / data.count
+      const totalAtomic = data.totalAtomic
 
       return {
         date,
-        avgPool: Number(convertFromLamports(avgLamports).toFixed(currency === 'SOL' ? 4 : 2)),
-        totalPool: Number(convertFromLamports(totalLamports).toFixed(currency === 'SOL' ? 4 : 2)),
-        avgPoolLamports: avgLamports,
-        totalPoolLamports: totalLamports,
+        avgPool: Number(fromAtomicUnits(avgAtomic).toFixed(5)),
+        totalPool: Number(fromAtomicUnits(totalAtomic).toFixed(5)),
+        avgPoolAtomic: avgAtomic,
+        totalPoolAtomic: totalAtomic,
         markets: data.count,
       }
     })
-  }, [markets, convertFromLamports, currency])
+  }, [markets, fromAtomicUnits])
 
   if (chartData.length === 0) {
     return (
@@ -66,8 +66,8 @@ export default function PoolTrendChart({ markets }: PoolTrendChartProps) {
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
-      const avgPoolLamports = payload[0].payload.avgPoolLamports
-      const totalPoolLamports = payload[0].payload.totalPoolLamports
+      const avgPoolAtomic = payload[0].payload.avgPoolAtomic
+      const totalPoolAtomic = payload[0].payload.totalPoolAtomic
 
       return (
         <div
@@ -83,12 +83,12 @@ export default function PoolTrendChart({ markets }: PoolTrendChartProps) {
           <p className="text-xs" style={{ color: 'var(--accent-cyan)' }}>
             Avg Pool:
             {' '}
-            {formatCurrency(avgPoolLamports, { showSOLEquivalent: currency !== 'SOL' })}
+            {formatAmount(avgPoolAtomic)}
           </p>
           <p className="text-xs" style={{ color: 'var(--accent-green)' }}>
             Total:
             {' '}
-            {formatCurrency(totalPoolLamports, { showSOLEquivalent: currency !== 'SOL' })}
+            {formatAmount(totalPoolAtomic)}
           </p>
           <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
             Markets:
@@ -116,7 +116,7 @@ export default function PoolTrendChart({ markets }: PoolTrendChartProps) {
             stroke="var(--text-tertiary)"
             style={{ fontSize: '12px' }}
             label={{
-              value: currency,
+              value: 'MNEE',
               angle: -90,
               position: 'insideLeft',
               style: { fill: 'var(--text-tertiary)' },

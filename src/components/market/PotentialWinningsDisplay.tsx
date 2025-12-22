@@ -15,7 +15,7 @@ export function PotentialWinningsDisplay({
   className = '' 
 }: PotentialWinningsDisplayProps) {
   const [showBreakdown, setShowBreakdown] = useState(false)
-  const { formatCurrency } = useCurrency()
+  const { formatAmount } = useMnee()
   
   const averageWinnings = WinningsCalculator.calculateAveragePotentialWinnings(marketData)
   
@@ -50,15 +50,15 @@ export function PotentialWinningsDisplay({
         {selectedPrediction && selectedWinnings !== null ? (
           <div className="space-y-1">
             <div className="font-semibold text-lg" style={{ color: 'var(--accent-cyan)' }}>
-              {formatCurrency(selectedWinnings)}
+              {formatAmount(selectedWinnings)}
             </div>
             <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-              Average across all predictions: {formatCurrency(averageWinnings.average)}
+              Average across all predictions: {formatAmount(averageWinnings.average)}
             </div>
           </div>
         ) : (
           <div className="font-semibold text-lg" style={{ color: 'var(--accent-cyan)' }}>
-            {formatCurrency(averageWinnings.average)}
+            {formatAmount(averageWinnings.average)}
           </div>
         )}
       </div>
@@ -79,7 +79,7 @@ export function PotentialWinningsDisplay({
               <div className="flex flex-col items-center p-2 rounded bg-white/5">
                 <span style={{ color: 'var(--text-secondary)' }}>Home</span>
                 <span className="font-medium" style={{ color: 'var(--accent-cyan)' }}>
-                  {formatCurrency(averageWinnings.breakdown.Home)}
+                  {formatAmount(averageWinnings.breakdown.Home)}
                 </span>
                 <span style={{ color: 'var(--text-tertiary)' }}>
                   {marketData.homeCount + 1} winners
@@ -89,7 +89,7 @@ export function PotentialWinningsDisplay({
               <div className="flex flex-col items-center p-2 rounded bg-white/5">
                 <span style={{ color: 'var(--text-secondary)' }}>Draw</span>
                 <span className="font-medium" style={{ color: 'var(--accent-cyan)' }}>
-                  {formatCurrency(averageWinnings.breakdown.Draw)}
+                  {formatAmount(averageWinnings.breakdown.Draw)}
                 </span>
                 <span style={{ color: 'var(--text-tertiary)' }}>
                   {marketData.drawCount === 0 ? '1 winner' : `${marketData.drawCount + 1} winners`}
@@ -99,7 +99,7 @@ export function PotentialWinningsDisplay({
               <div className="flex flex-col items-center p-2 rounded bg-white/5">
                 <span style={{ color: 'var(--text-secondary)' }}>Away</span>
                 <span className="font-medium" style={{ color: 'var(--accent-cyan)' }}>
-                  {formatCurrency(averageWinnings.breakdown.Away)}
+                  {formatAmount(averageWinnings.breakdown.Away)}
                 </span>
                 <span style={{ color: 'var(--text-tertiary)' }}>
                   {marketData.awayCount + 1} winners

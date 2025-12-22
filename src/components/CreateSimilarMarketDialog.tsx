@@ -37,13 +37,14 @@ export function CreateSimilarMarketDialog({
   onCreateMarket,
   isLoading = false,
 }: CreateSimilarMarketDialogProps) {
-  const { exchangeRates } = useCurrency()
+  const { formatAmount, toAtomicUnits } = useMnee()
   const [entryFee, setEntryFee] = useState('')
   const [visibility, setVisibility] = useState<'public' | 'private'>('public')
   const [errors, setErrors] = useState<{ entryFee?: string }>({})
 
   // Force SOL currency for Create Similar Market dialog - no currency selection allowed
 
+  // MNEE-only validation
   const validateEntryFee = (value: string): string | undefined => {
     const numValue = parseFloat(value)
     if (!value || isNaN(numValue)) {
@@ -52,9 +53,9 @@ export function CreateSimilarMarketDialog({
     if (numValue <= 0) {
       return 'Entry fee must be greater than 0'
     }
-    // SOL-only validation - minimum 0.001 SOL
-    if (numValue < 0.001) {
-      return 'Minimum entry fee is 0.001 SOL'
+    // MNEE minimum validation - minimum 0.00001 MNEE
+    if (numValue < 0.00001) {
+      return 'Minimum entry fee is 0.00001 MNEE'
     }
     return undefined
   }
@@ -73,9 +74,9 @@ export function CreateSimilarMarketDialog({
       return
     }
 
-    // Convert entry fee to lamports - SOL only
+    // Convert entry fee to atomic units - MNEE only
     const entryFeeValue = parseFloat(entryFee)
-    const entryFeeInLamports = Math.round(entryFeeValue * 1_000_000_000) // SOL to lamports
+    const entryFeeInAtomic = toAtomicUnits(entryFeeValue)
 
     // Generate title and description based on match data
     const title = `${matchData.homeTeam.name} vs ${matchData.awayTeam.name}`
@@ -86,7 +87,7 @@ export function CreateSimilarMarketDialog({
         matchId: matchData.id.toString(),
         title,
         description,
-        entryFee: entryFeeInLamports,
+        entryFee: entryFeeInAtomic,
         isPublic: visibility === 'public',
       })
       
@@ -137,7 +138,7 @@ export function CreateSimilarMarketDialog({
             </div>
           </div>
 
-          {/* Entry Fee - SOL Only */}
+          {/* Entry Fee - MNEE Only */}
           <div className="space-y-2">
             <label className="font-sans text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>
               Entry Fee
@@ -145,16 +146,15 @@ export function CreateSimilarMarketDialog({
             <div className="relative">
               <Input
                 type="number"
-                placeholder="Enter amount in SOL"
+                placeholder="Enter amount in MNEE"
                 value={entryFee}
                 onChange={(e) => handleEntryFeeChange(e.target.value)}
-                step="0.001"
-                min="0.001"
+                step="0.00001"
+                min="0.00001"
               />
               <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                <span className="text-base leading-none">◎</span>
                 <span className="text-xs font-mono" style={{ color: 'var(--text-tertiary)' }}>
-                  SOL
+                  MNEE
                 </span>
               </div>
             </div>
@@ -163,21 +163,6 @@ export function CreateSimilarMarketDialog({
                 {errors.entryFee}
               </p>
             )}
-            {entryFee && !errors.entryFee && exchangeRates && (
-              <div className="text-xs space-y-1" style={{ color: 'var(--text-tertiary)' }}>
-                <p>
-                  ≈ ${(parseFloat(entryFee) * exchangeRates.SOL_USD).toLocaleString('en-US', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })} USD
-                </p>
-                <p>
-                  ≈ ₦{(parseFloat(entryFee) * exchangeRates.SOL_NGN).toLocaleString('en-US', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })} NGN
-                </p>
-              </div>
             )}
             <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
               Entry fees are processed in SOL only for similar markets

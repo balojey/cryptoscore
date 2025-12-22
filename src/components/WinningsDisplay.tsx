@@ -175,11 +175,8 @@ const WinningsDisplayComponent = React.forwardRef<HTMLDivElement, WinningsDispla
     return formatForScreenReader(mneeAmount, 'MNEE')
   }, [winnings.amount])
 
-  // Show exchange rate warning if needed
-  const showRateWarning = React.useMemo(() => 
-    ratesError && !exchangeRates, 
-    [ratesError, exchangeRates]
-  )
+  // Exchange rate warning is no longer needed with MNEE-only system
+  const showRateWarning = false
 
   // Memoized breakdown formatting
   const formattedBreakdown = React.useMemo(() => {
@@ -417,17 +414,7 @@ const WinningsDisplayComponent = React.forwardRef<HTMLDivElement, WinningsDispla
                 </div>
               )}
               
-              {/* Exchange rate warning */}
-              {showRateWarning && (
-                <div 
-                  className="flex items-center justify-center gap-1 text-xs text-[var(--accent-amber)] mt-1"
-                  role="alert"
-                  aria-live="polite"
-                >
-                  <AlertTriangle className="h-3 w-3" aria-hidden="true" />
-                  <span>Exchange rates unavailable - showing SOL values</span>
-                </div>
-              )}
+              {/* Exchange rate warning - removed for MNEE-only system */}
             </div>
           </div>
 

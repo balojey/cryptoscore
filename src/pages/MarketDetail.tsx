@@ -13,7 +13,7 @@ import { useSupabaseMarketData } from '../hooks/useSupabaseMarketData'
 import { useMatchData, type EnhancedMatchData } from '../hooks/useMatchData'
 import { useSupabaseParticipantData } from '../hooks/useSupabaseParticipantData'
 import { useWinnings } from '../hooks/useWinnings'
-import { formatCurrency, shortenAddress } from '../utils/formatters'
+import { shortenAddress } from '../utils/formatters'
 import { CreateSimilarMarketDialog, type CreateSimilarMarketParams } from '../components/CreateSimilarMarketDialog'
 import { WinningsDisplay } from '../components/WinningsDisplay'
 
@@ -349,7 +349,7 @@ function MarketStats({ marketInfo, poolSize, participantsCount, marketStatus, is
           label="Pool Size"
           value={(
             <div className="text-right">
-              <div className="font-mono">{formatCurrency(poolSize, 'MNEE', null)}</div>
+              <div className="font-mono">{formatAmount(poolSize)}</div>
             </div>
           )}
           icon="mdi--database-outline"
@@ -358,7 +358,7 @@ function MarketStats({ marketInfo, poolSize, participantsCount, marketStatus, is
           label="Entry Fee"
           value={(
             <div className="text-right">
-              <div className="font-mono">{formatCurrency(entryFeeValue, 'MNEE', null)}</div>
+              <div className="font-mono">{formatAmount(entryFeeValue)}</div>
             </div>
           )}
           icon="mdi--login"

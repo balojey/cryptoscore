@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { formatSOL } from '../utils/formatters'
+import { useMnee } from '@/hooks/useMnee'
 
 interface RecentActivityProps {
   markets: (Market | MarketDashboardInfo)[]
@@ -55,6 +55,7 @@ function RecentActivityLoading({ count = 5 }: { count?: number }) {
 }
 
 export default function RecentActivity({ markets, limit = 10, isLoading = false, error, onRetry }: RecentActivityProps) {
+  const { formatAmount } = useMnee()
   const containerRef = useRef<HTMLDivElement>(null)
   const prevMarketsLengthRef = useRef(markets.length)
   // Auto-scroll to top on new activity
@@ -295,9 +296,7 @@ export default function RecentActivity({ markets, limit = 10, isLoading = false,
                         <span>•</span>
                         <span className="icon-[mdi--database-outline] w-3 h-3" />
                         <span>
-                          {formatSOL(market.entryFee, 4, false)}
-                          {' '}
-                          SOL
+                          {formatAmount(market.entryFee)}
                         </span>
                       </div>
                     </div>

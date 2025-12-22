@@ -67,20 +67,20 @@ const MetricCard = memo(({ label, value, suffix = '', icon, color, decimals = 0,
 export default function LiveMetrics() {
   // Fetch all markets and calculate statistics
   const { data: marketsData, isLoading } = useSupabaseAllMarkets()
-  const { currency, convertFromLamports } = useCurrency()
+  const { fromAtomicUnits } = useMnee()
 
   // Calculate metrics from market data
   const metrics = useMemo(() => {
     if (!marketsData || marketsData.length === 0) {
       return {
         totalMarkets: 0,
-        totalValueLockedLamports: 0,
+        totalValueLockedAtomic: 0,
         activeTraders: 0,
         marketsResolved: 0,
       }
     }
 
-    let totalValueLockedLamports = 0
+    let totalValueLockedAtomic = 0
     let activeTraders = 0
     let marketsResolved = 0
     let activeMarkets = 0
@@ -95,8 +95,8 @@ export default function LiveMetrics() {
         activeMarkets++
       }
 
-      // Sum total value locked (all markets for all time) - keep in lamports
-      totalValueLockedLamports += market.totalPool
+      // Sum total value locked (all markets for all time) - keep in atomic units
+      totalValueLockedAtomic += market.totalPool
 
       // Sum unique participants
       activeTraders += market.participantCount
@@ -104,7 +104,7 @@ export default function LiveMetrics() {
 
     return {
       totalMarkets: activeMarkets,
-      totalValueLockedLamports,
+      totalValueLockedAtomic,
       activeTraders,
       marketsResolved,
     }
@@ -137,17 +137,12 @@ export default function LiveMetrics() {
           />
           <MetricCard
             label="Total Value Locked"
-            value={convertFromLamports(metrics.totalValueLockedLamports)}
-            suffix={currency === 'SOL' ? ' SOL' : currency === 'USD' ? ' USD' : ' NGN'}
+            value={fromAtomicUnits(metrics.totalValueLockedAtomic).toFixed(5)}
+            suffix=" MNEE"
             icon="mdi--safe-square-outline"
             color="var(--accent-green)"
-            decimals={currency === 'SOL' ? 4 : 2}
+            decimals={5}
             isLoading={isLoading}
-            solEquivalent={
-              currency !== 'SOL'
-                ? `◎${(metrics.totalValueLockedLamports / 1_000_000_000).toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 4 })} SOL`
-                : undefined
-            }
           />
           <MetricCard
             label="Active Traders"

@@ -1,4 +1,4 @@
-import type { Market } from '../../types'
+import type { MarketDashboardInfo } from '../../types'
 import { Link } from 'react-router-dom'
 import { useUnifiedWallet } from '../../contexts/UnifiedWalletContext'
 import { Badge } from '@/components/ui/badge'
@@ -13,12 +13,12 @@ import { useMnee } from '@/hooks/useMnee'
 import { useSupabaseMarketData, useSupabaseUserParticipantMarkets } from '../../hooks/useSupabaseMarketData'
 import { useMatchData } from '../../hooks/useMatchData'
 import { useSupabaseParticipantData } from '../../hooks/useSupabaseParticipantData'
-import { formatCurrency, formatSOL, formatWithSOLEquivalent, shortenAddress } from '../../utils/formatters'
+import { shortenAddress } from '../../utils/formatters'
 import { determinePredictionOutcome } from '../../utils/prediction-outcome'
 import { PotentialWinningsDisplay } from '../market/PotentialWinningsDisplay'
 
 interface EnhancedMarketCardProps {
-  market: Market
+  market: MarketDashboardInfo // Use MarketDashboardInfo which has matchId
   onQuickJoin?: (marketAddress: string, prediction: number) => void
 }
 
@@ -79,8 +79,8 @@ function usePredictionDistribution(marketAddress: string): PredictionDistributio
 }
 
 // Status badge component
-function StatusBadge({ market, matchDate, matchStatus }: { market: Market, matchDate: Date, matchStatus?: string }) {
-  if (market.resolved) {
+function StatusBadge({ market, matchDate, matchStatus }: { market: MarketDashboardInfo, matchDate: Date, matchStatus?: string }) {
+  if (market.status === 'resolved') {
     return <Badge variant="success">Resolved</Badge>
   }
 
@@ -186,14 +186,14 @@ function PredictionBar({
 export default function EnhancedMarketCard({ market }: EnhancedMarketCardProps) {
   const { publicKey: userAddress } = useUnifiedWallet()
   const { data: matchData, loading, error } = useMatchData(Number(market.matchId))
-  const distribution = usePredictionDistribution(market.marketAddress)
+  const distribution = usePredictionDistribution(market.id)
   const { data: userParticipantMarkets } = useSupabaseUserParticipantMarkets(userAddress?.toString())
-  const { data: participantData } = useSupabaseParticipantData(market.marketAddress, userAddress?.toString())
-  const { currency, exchangeRates } = useCurrency()
+  const { data: participantData } = useSupabaseParticipantData(market.id, userAddress?.toString())
+  const { formatAmount } = useMnee()
 
   // Check if user has joined this market
   const hasJoined = userParticipantMarkets?.some(
-    m => m.marketAddress === market.marketAddress,
+    m => m.marketAddress === market.id,
   ) || false
 
   // Determine prediction outcome for user
@@ -222,12 +222,12 @@ export default function EnhancedMarketCard({ market }: EnhancedMarketCardProps) 
   }
 
   const matchDate = new Date(matchData.utcDate)
-  const poolSize = (Number(market.entryFee) / 1_000_000_000) * Number(market.participantsCount) // Convert lamports to SOL
-  const isOwner = userAddress?.toString() === market.creator
+  const poolSize = Number(market.entry_fee) * Number(market.participantsCount) // Pool size in atomic units
+  const isOwner = userAddress?.toString() === market.creator_id
 
   return (
     <Link
-      to={`/markets/${market.marketAddress}`}
+      to={`/markets/${market.id}`}
       className="block"
       style={{ textDecoration: 'none' }}
     >
@@ -253,13 +253,8 @@ export default function EnhancedMarketCard({ market }: EnhancedMarketCardProps) 
             </div>
             <div className="flex gap-2">
               <StatusBadge market={market} matchDate={matchDate} matchStatus={matchData.status} />
-              {market.isPublic
-                ? (
-                    <Badge variant="info">Public</Badge>
-                  )
-                : (
-                    <Badge variant="neutral">Private</Badge>
-                  )}
+              {/* Remove isPublic check since it doesn't exist in Market type */}
+              <Badge variant="info">Public</Badge>
             </div>
           </div>
 
@@ -343,24 +338,24 @@ export default function EnhancedMarketCard({ market }: EnhancedMarketCardProps) 
           </div>
 
           {/* Potential Winnings - Show only for non-participants when market is open */}
-          {!market.resolved && !hasJoined && (
+          {market.status === 'active' && !hasJoined && (
             <div className="mb-4">
               <PotentialWinningsDisplay 
                 marketData={{
-                  marketAddress: market.marketAddress,
-                  creator: market.creator,
+                  marketAddress: market.id,
+                  creator: market.creator_id,
                   matchId: market.matchId.toString(),
-                  entryFee: Number(market.entryFee),
+                  entryFee: Number(market.entry_fee),
                   kickoffTime: 0, // Not needed for potential winnings calculation
                   endTime: 0, // Not needed for potential winnings calculation
-                  status: market.resolved ? 'Resolved' : 'Open',
+                  status: 'Open', // Always 'Open' since we're in the active status block
                   outcome: null, // Market is not resolved yet
-                  totalPool: Math.floor(poolSize * 1_000_000_000), // Convert back to lamports
+                  totalPool: poolSize, // Already in atomic units
                   participantCount: Number(market.participantsCount),
                   homeCount: distribution.home,
                   drawCount: distribution.draw,
                   awayCount: distribution.away,
-                  isPublic: market.isPublic,
+                  isPublic: true, // Default to true since we removed isPublic from Market type
                 }}
                 className="text-xs"
               />
@@ -377,24 +372,12 @@ export default function EnhancedMarketCard({ market }: EnhancedMarketCardProps) 
                     <span>Pool Size</span>
                   </div>
                   <div className="info-value font-mono">
-                    <div>
-                      {formatCurrency(Math.floor(poolSize * 1_000_000_000), currency, exchangeRates, { decimals: 2 })}
-                    </div>
-                    {currency !== 'SOL' && (
-                      <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                        {formatWithSOLEquivalent(Math.floor(poolSize * 1_000_000_000), currency, exchangeRates).equivalent}
-                      </div>
-                    )}
+                    {formatAmount(poolSize)}
                   </div>
                 </div>
               </TooltipTrigger>
               <TooltipContent>
                 <p>Total value locked in this market</p>
-                {currency !== 'SOL' && (
-                  <p className="text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>
-                    {formatSOL(poolSize * 1_000_000_000, 4)}
-                  </p>
-                )}
               </TooltipContent>
             </Tooltip>
 
@@ -431,24 +414,12 @@ export default function EnhancedMarketCard({ market }: EnhancedMarketCardProps) 
                     <span>Entry Fee</span>
                   </div>
                   <div className="info-value font-mono">
-                    <div>
-                      {formatCurrency(Number(market.entryFee), currency, exchangeRates, { decimals: currency === 'SOL' ? 4 : 2 })}
-                    </div>
-                    {currency !== 'SOL' && (
-                      <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                        {formatWithSOLEquivalent(Number(market.entryFee), currency, exchangeRates).equivalent}
-                      </div>
-                    )}
+                    {formatAmount(Number(market.entry_fee))}
                   </div>
                 </div>
               </TooltipTrigger>
               <TooltipContent>
                 <p>Cost to join and make a prediction</p>
-                {currency !== 'SOL' && (
-                  <p className="text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>
-                    {formatSOL(market.entryFee, 4)}
-                  </p>
-                )}
               </TooltipContent>
             </Tooltip>
           </div>
@@ -460,7 +431,7 @@ export default function EnhancedMarketCard({ market }: EnhancedMarketCardProps) 
           <div className="flex items-center justify-between w-full text-xs">
             <div className="flex items-center gap-2" style={{ color: 'var(--text-tertiary)' }}>
               <span className="icon-[mdi--account-edit-outline] w-4 h-4" />
-              <span className="font-mono">{shortenAddress(market.creator)}</span>
+              <span className="font-mono">{shortenAddress(market.creator_id)}</span>
               {isOwner && (
                 <Badge variant="info" className="text-[10px] px-2 py-0">
                   You
