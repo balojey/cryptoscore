@@ -155,8 +155,8 @@
     - **Property 15: Portfolio calculation accuracy**
     - **Validates: Requirements 3.3, 3.4**
 
-- [ ] 9. Implement real-time balance subscriptions
-  - [ ] 9.1 Create balance subscription service
+- [x] 9. Implement real-time balance subscriptions
+  - [x] 9.1 Create balance subscription service
     - Implement WebSocket or polling-based balance subscriptions
     - Add subscription management for active users
     - Create balance change notification system
@@ -166,7 +166,7 @@
     - **Property 12: Balance subscription processing**
     - **Validates: Requirements 12.3**
 
-  - [ ] 9.3 Integrate balance subscriptions in components
+  - [x] 9.3 Integrate balance subscriptions in components
     - Add real-time balance updates to relevant components
     - Implement optimistic updates with rollback capability
     - Update loading states and error handling for subscriptions

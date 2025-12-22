@@ -37,7 +37,7 @@ export function CreateSimilarMarketDialog({
   onCreateMarket,
   isLoading = false,
 }: CreateSimilarMarketDialogProps) {
-  const { formatAmount, toAtomicUnits } = useMnee()
+  const { toAtomicUnits } = useMnee()
   const [entryFee, setEntryFee] = useState('')
   const [visibility, setVisibility] = useState<'public' | 'private'>('public')
   const [errors, setErrors] = useState<{ entryFee?: string }>({})
@@ -162,7 +162,6 @@ export function CreateSimilarMarketDialog({
               <p className="text-xs" style={{ color: 'var(--error)' }}>
                 {errors.entryFee}
               </p>
-            )}
             )}
             <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
               Entry fees are processed in SOL only for similar markets

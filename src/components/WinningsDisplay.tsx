@@ -34,6 +34,7 @@ import {
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { useMnee } from '@/hooks/useMnee'
+import { useBalanceSubscription } from '@/hooks/useBalanceSubscription'
 import { WinningsLoadingSkeleton } from './WinningsLoadingSkeleton'
 import { WinningsErrorBoundary } from './WinningsErrorBoundary'
 import { 
@@ -123,6 +124,12 @@ const WinningsDisplayComponent = React.forwardRef<HTMLDivElement, WinningsDispla
   testId,
 }, ref) => {
   const { formatAmount } = useMnee()
+  
+  // Enable balance subscription for real-time updates
+  const { isSubscribed } = useBalanceSubscription({
+    autoEnable: true,
+    enableNotifications: false // Don't show notifications in winnings display
+  })
   
   // Refs for focus management
   const containerRef = React.useRef<HTMLDivElement>(null)

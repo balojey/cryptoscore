@@ -1,9 +1,17 @@
 import { useUnifiedWallet } from '@/contexts/UnifiedWalletContext'
 import { useMnee } from '@/hooks/useMnee'
+import { useBalanceSubscriptionWithToasts } from '@/hooks/useBalanceSubscription'
 
 export default function Balance() {
   const { walletAddress } = useUnifiedWallet()
   const { balance, decimalBalance, isLoadingBalance, balanceError, formatAmount } = useMnee()
+  
+  // Enable real-time balance updates with toast notifications
+  const { isSubscribed, subscriptionError } = useBalanceSubscriptionWithToasts({
+    enablePolling: true,
+    pollingInterval: 30000,
+    enableNotifications: true
+  })
 
   if (isLoadingBalance) {
     return <div className="h-9 w-24 rounded animate-pulse skeleton" />
@@ -33,6 +41,21 @@ export default function Balance() {
         <span className="font-sans font-semibold" style={{ color: 'var(--text-tertiary)' }}>
           MNEE
         </span>
+        {/* Real-time indicator */}
+        {isSubscribed && (
+          <div 
+            className="w-2 h-2 rounded-full animate-pulse" 
+            style={{ backgroundColor: 'var(--accent-green)' }}
+            title="Real-time updates enabled"
+          />
+        )}
+        {subscriptionError && (
+          <div 
+            className="w-2 h-2 rounded-full" 
+            style={{ backgroundColor: 'var(--accent-red)' }}
+            title={`Subscription error: ${subscriptionError}`}
+          />
+        )}
       </div>
       {/* Display EVM address for MNEE operations */}
       <div className="text-xs text-[var(--text-tertiary)] font-mono">

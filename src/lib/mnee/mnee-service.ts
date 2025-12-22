@@ -33,6 +33,8 @@ import {
   generateCorrelationId
 } from './utils'
 import { MNEE_TOKEN_CONFIG, MNEE_FEE_CONFIG } from '../../config/mnee'
+import { getBalanceSubscriptionService } from './balance-subscription-service'
+import type { BalanceSubscriptionOptions } from './balance-subscription-service'
 
 export class MneeService implements MneeServiceInterface {
   private sdk: Mnee | null = null
@@ -195,29 +197,16 @@ export class MneeService implements MneeServiceInterface {
   /**
    * Subscribe to balance changes for an address
    */
-  subscribeToBalance(address: string, callback: BalanceCallback): () => void {
+  subscribeToBalance(
+    address: string, 
+    callback: BalanceCallback, 
+    options?: BalanceSubscriptionOptions
+  ): () => void {
     this.validateAddress(address)
 
-    if (!this.balanceSubscriptions.has(address)) {
-      this.balanceSubscriptions.set(address, new Set())
-    }
-
-    const callbacks = this.balanceSubscriptions.get(address)!
-    callbacks.add(callback)
-
-    // Start polling for this address if it's the first subscription
-    if (callbacks.size === 1) {
-      this.startBalancePolling(address)
-    }
-
-    // Return unsubscribe function
-    return () => {
-      callbacks.delete(callback)
-      if (callbacks.size === 0) {
-        this.balanceSubscriptions.delete(address)
-        // Stop polling when no more subscribers
-      }
-    }
+    // Use the enhanced balance subscription service
+    const subscriptionService = getBalanceSubscriptionService(this)
+    return subscriptionService.subscribe(address, callback, options)
   }
 
   /**
@@ -488,34 +477,10 @@ export class MneeService implements MneeServiceInterface {
     }
   }
 
-  private startBalancePolling(address: string): void {
-    // Simple polling implementation - in production, you might want WebSocket subscriptions
-    const pollInterval = 30000 // 30 seconds
-    
-    const poll = async () => {
-      try {
-        const balance = await this.getBalance(address)
-        const callbacks = this.balanceSubscriptions.get(address)
-        if (callbacks) {
-          callbacks.forEach(callback => {
-            try {
-              callback(balance)
-            } catch (error) {
-              console.error('Balance callback error:', error)
-            }
-          })
-        }
-      } catch (error) {
-        console.error(`Balance polling error for ${address}:`, error)
-      }
-
-      // Continue polling if there are still subscribers
-      if (this.balanceSubscriptions.has(address)) {
-        setTimeout(poll, pollInterval)
-      }
-    }
-
-    // Start polling after a short delay
-    setTimeout(poll, 1000)
+  /**
+   * Get the balance subscription service instance
+   */
+  getBalanceSubscriptionService() {
+    return getBalanceSubscriptionService(this)
   }
 }

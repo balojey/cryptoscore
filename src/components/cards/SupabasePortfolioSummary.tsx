@@ -8,6 +8,7 @@
 import { useMemo } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { useMnee } from '@/hooks/useMnee'
+import { useBalanceSubscriptionWithToasts } from '@/hooks/useBalanceSubscription'
 import { useSupabasePortfolioSummary, useSupabaseUserBalance } from '@/hooks/useSupabaseDashboardData'
 import type { SupabaseMarketDashboardInfo } from '@/hooks/useSupabaseDashboardData'
 
@@ -21,6 +22,17 @@ export default function SupabasePortfolioSummary({
   allMarkets = [] 
 }: SupabasePortfolioSummaryProps) {
   const { formatAmount } = useMnee()
+  
+  // Enable real-time balance updates for portfolio calculations
+  const { isSubscribed } = useBalanceSubscriptionWithToasts({
+    enablePolling: true,
+    pollingInterval: 30000,
+    enableNotifications: false, // Don't show notifications in portfolio
+    onBalanceChange: () => {
+      // Portfolio will automatically recalculate when balance changes
+      console.log('Balance updated, portfolio will refresh')
+    }
+  })
   
   // Fetch portfolio summary from Supabase
   const { 

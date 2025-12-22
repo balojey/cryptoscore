@@ -74,7 +74,7 @@ export interface MneeServiceInterface {
   // Balance Operations
   getBalance(address: string): Promise<MneeBalance>
   getBalances(addresses: string[]): Promise<MneeBalance[]>
-  subscribeToBalance(address: string, callback: BalanceCallback): () => void
+  subscribeToBalance(address: string, callback: BalanceCallback, options?: BalanceSubscriptionOptions): () => void
   
   // Transfer Operations
   transfer(recipients: TransferRecipient[], privateKey: string): Promise<TransferResult>
@@ -88,6 +88,13 @@ export interface MneeServiceInterface {
   toAtomicUnits(mneeAmount: number): number
   fromAtomicUnits(atomicAmount: number): number
   formatMneeAmount(atomicAmount: number, options?: FormatOptions): string
+}
+
+export interface BalanceSubscriptionOptions {
+  enablePolling?: boolean
+  pollingInterval?: number
+  enableNotifications?: boolean
+  cacheTimeout?: number
 }
 
 export interface MneeConfig {
